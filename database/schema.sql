@@ -34,7 +34,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `mydb`.`account` (
   `account_id` INT NOT NULL AUTO_INCREMENT,
   `user_id` INT NOT NULL,
-  `acct_number` VARCHAR(512) NOT NULL,
+  `account_number` VARCHAR(512) NOT NULL,
   `account_type` VARCHAR(10) NOT NULL,
   `account_balance` DECIMAL(17,2) NOT NULL,
   PRIMARY KEY (`account_id`),
