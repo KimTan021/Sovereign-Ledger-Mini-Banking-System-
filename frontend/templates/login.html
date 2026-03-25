@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Sovereign Ledger | Secure Authentication</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary-fixed-dim": "#adc7f7",
+                "on-secondary": "#ffffff",
+                "on-tertiary-fixed": "#002113",
+                "error-container": "#ffdad6",
+                "inverse-surface": "#2d3133",
+                "on-surface-variant": "#43474e",
+                "on-primary-fixed-variant": "#2d476f",
+                "background": "#f7f9fb",
+                "primary-container": "#1a365d",
+                "on-secondary-fixed-variant": "#38485d",
+                "surface-dim": "#d8dadc",
+                "tertiary-container": "#003e28",
+                "tertiary": "#002617",
+                "surface-variant": "#e0e3e5",
+                "error": "#ba1a1a",
+                "surface-container-lowest": "#ffffff",
+                "surface": "#f7f9fb",
+                "surface-container-low": "#f2f4f6",
+                "on-secondary-container": "#54647a",
+                "on-secondary-fixed": "#0b1c30",
+                "on-surface": "#191c1e",
+                "secondary": "#505f76",
+                "outline": "#74777f",
+                "on-primary-container": "#86a0cd",
+                "tertiary-fixed-dim": "#4edea3",
+                "surface-container-highest": "#e0e3e5",
+                "inverse-on-surface": "#eff1f3",
+                "on-tertiary": "#ffffff",
+                "secondary-container": "#d0e1fb",
+                "surface-container": "#eceef0",
+                "surface-bright": "#f7f9fb",
+                "surface-tint": "#455f88",
+                "primary": "#002045",
+                "tertiary-fixed": "#6ffbbe",
+                "secondary-fixed-dim": "#b7c8e1",
+                "on-error-container": "#93000a",
+                "primary-fixed": "#d6e3ff",
+                "on-primary-fixed": "#001b3c",
+                "on-tertiary-fixed-variant": "#005236",
+                "inverse-primary": "#adc7f7",
+                "surface-container-high": "#e6e8ea",
+                "on-background": "#191c1e",
+                "outline-variant": "#c4c6cf",
+                "on-primary": "#ffffff",
+                "on-tertiary-container": "#00b47d",
+                "on-error": "#ffffff",
+                "secondary-fixed": "#d3e4fe"
+              },
+              fontFamily: {
+                "headline": ["Manrope"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #002045 0%, #1a365d 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface min-h-screen flex flex-col md:flex-row overflow-hidden">
+<!-- Left Column: Branding & Visual Anchor -->
+<section class="hidden md:flex md:w-1/2 primary-gradient relative p-16 flex-col justify-between overflow-hidden">
+    <!-- Abstract Decorative Elements -->
+    <div class="absolute top-[-10%] right-[-10%] w-96 h-96 bg-primary-container opacity-20 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-[-5%] left-[-5%] w-64 h-64 bg-tertiary opacity-10 rounded-full blur-3xl"></div>
+    <div class="relative z-10">
+        <h1 class="font-headline text-4xl font-extrabold tracking-tighter text-white mb-2">Sovereign Ledger</h1>
+        <p class="text-on-primary-container font-medium max-w-sm">Elevated financial oversight for the modern institution.</p>
+    </div>
+    <div class="relative z-10 space-y-8">
+        <div class="glass-panel p-8 rounded-xl max-w-md shadow-2xl shadow-primary/20 border border-white/10">
+            <span class="material-symbols-outlined text-tertiary-fixed-dim mb-4" style="font-variation-settings: 'FILL' 1;">security</span>
+            <h2 class="font-headline text-2xl font-bold text-primary-fixed mb-3">Institutional Grade Security</h2>
+            <p class="text-primary-fixed-dim text-sm leading-relaxed">Multi-factor authentication and real-time ledger encryption come standard. Your assets are secured by our proprietary sovereign protocol.</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex -space-x-3">
+                <img class="w-10 h-10 rounded-full border-2 border-primary" data-alt="Professional headshot of a male banking executive in a dark suit with soft office lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjPAtLSnKqw61GhEuXrG_N5lh2HnwyATR9zoUp07k_bnhmV8vh3wvf9EbVVZo0wmu4YxSOClVtXYPxIX4dBRSJAHoOiF97N_blSXLKL7YI2EB40Fz3LfPVNBuRr3UX_S1mJwzqVfiREmNld0CBpMQQAHfPNHvo5D_fDpiJ5AQY6hY3tGmoQYbYKNrKO0p2Kqyi_TWyu_Ps9joJTV0bUmj9klxQQoXPbLaaz1DuGyV8I5zD-TfjSA14CdyY7sUOSREw1gBhmBxDZMLV"/>
+                <img class="w-10 h-10 rounded-full border-2 border-primary" data-alt="Close-up portrait of a female financial advisor smiling in a brightly lit professional setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSciONAHJFApUKWCC9XP2Wwvv3_D_cQGIh0uZGwCy0Brq3dsZM9_4qG2ZJtbY7eoLjpUbvYsXa8iqAMvFWDwDXKEj5_yJYempjFQqPZmIE8qnr-nJ589e1a290wLvXY2-MUwFgKAUbiaP8biepVe0fv9iSUCc1Drjcvf7XOiKvmHTXeG3S3e79RSYBlrkzvErQbMwU7m4wf4RJPucs40I_KcbfmmRkR1ugXdeQSvppFKeN-J3EFpTuREffj7e0HFJGU1URzwlQO1zW"/>
+                <img class="w-10 h-10 rounded-full border-2 border-primary" data-alt="Confident businesswoman looking at the camera with a neutral background in a high-end office" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCL-igYEgjmGrtUCWsFiBuHOWZC2c9HVJPoz4bhxA6G8tnI6T6A5nQ7YaNXgSJb7Pud8bCvhm3Lr2shSNVpepqiHPXuFPaazfUPbuHR9rVUhfPoO8A7dEccKAVl2oDuPV1xtKHkCCy8HkMFT3k5eX-LVCVCy9IJ0oKlnGFPV1QQ1bOCHt6xSvHNG7m_N6myfM0E1W2SG12eSdkN3A6h_CtzUg0Vzqju1KtG9IddVWQCAAgF_7lss8Ea0fdmrrsDONgCuPxs7-DsCgC5"/>
+            </div>
+            <p class="text-xs text-on-primary-container font-semibold uppercase tracking-widest">Trusted by 5,000+ Leaders</p>
+        </div>
+    </div>
+    <div class="relative z-10">
+        <p class="text-primary-fixed-dim text-[10px] font-medium tracking-widest uppercase opacity-60">© 2024 Sovereign Financial Group. All Rights Reserved.</p>
+    </div>
+</section>
+<!-- Right Column: Authentication Form -->
+<main class="w-full md:w-1/2 flex items-center justify-center p-6 sm:p-12 md:p-24 bg-surface-bright relative">
+    <!-- Mobile Logo -->
+    <div class="absolute top-8 left-8 md:hidden">
+        <h1 class="font-headline text-xl font-bold tracking-tighter text-primary">Sovereign Ledger</h1>
+    </div>
+    <div class="w-full max-w-md">
+        <header class="mb-10 text-center md:text-left">
+            <h2 class="font-headline text-3xl font-bold text-on-surface tracking-tight mb-2">Welcome Back</h2>
+            <p class="text-on-surface-variant text-sm">Access your secure financial dashboard</p>
+        </header>
+        <!-- Role Selection Toggle -->
+        <div class="mb-8 p-1 bg-surface-container-low rounded-xl flex">
+            <button class="flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all bg-surface-container-lowest text-primary shadow-sm">
+                Customer
+            </button>
+            <button class="flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all text-on-surface-variant hover:text-on-surface">
+                Admin
+            </button>
+        </div>
+        <form class="space-y-6">
+            <!-- Email/Account Field -->
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="identifier">
+                    Email or Account Number
+                </label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-on-surface-variant group-focus-within:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-lg">person</span>
+                    </div>
+                    <input class="block w-full pl-11 pr-4 py-4 bg-surface-container-highest border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-t-lg text-on-surface placeholder:text-outline-variant font-medium" id="identifier" name="identifier" placeholder="e.g. SL-8829410" type="text"/>
+                </div>
+            </div>
+            <!-- Password Field -->
+            <div class="space-y-1.5">
+                <div class="flex justify-between items-center px-1">
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider" for="password">
+                        Secure Password
+                    </label>
+                    <a class="text-xs font-semibold text-primary hover:text-on-primary-container transition-colors" href="#">Forgot Password?</a>
+                </div>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-on-surface-variant group-focus-within:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-lg">lock</span>
+                    </div>
+                    <input class="block w-full pl-11 pr-12 py-4 bg-surface-container-highest border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-t-lg text-on-surface placeholder:text-outline-variant font-medium" id="password" name="password" placeholder="••••••••••••" type="password"/>
+                    <button class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline-variant hover:text-on-surface transition-colors" type="button">
+                        <span class="material-symbols-outlined text-lg">visibility</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Remember Me -->
+            <div class="flex items-center gap-3 px-1">
+                <input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary/20 bg-surface-container-highest" id="remember" type="checkbox"/>
+                <label class="text-sm text-on-surface-variant font-medium select-none" for="remember">Remember this device for 30 days</label>
+            </div>
+            <!-- Submit Button -->
+            <button class="w-full primary-gradient text-on-primary py-4 rounded-xl font-bold tracking-tight shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.01] active:scale-[0.98] transition-all flex justify-center items-center gap-2" type="submit">
+                Sign In to Ledger
+                <span class="material-symbols-outlined text-lg">arrow_forward</span>
+            </button>
+        </form>
+        <!-- Footer Actions -->
+        <footer class="mt-12 flex flex-col items-center gap-6">
+            <div class="flex items-center gap-2 text-on-surface-variant text-sm">
+                <span>New to Sovereign?</span>
+                <a class="font-bold text-primary hover:underline underline-offset-4 decoration-2" href="#">Request an Account</a>
+            </div>
+            <div class="w-full h-px bg-outline-variant/20"></div>
+            <div class="flex items-center gap-4">
+                <a class="flex items-center gap-2 py-2 px-4 rounded-full bg-surface-container-low text-secondary text-xs font-bold uppercase tracking-widest hover:bg-surface-container transition-all" href="#">
+                    <span class="material-symbols-outlined text-base">help_outline</span>
+                    Quick Help
+                </a>
+                <a class="flex items-center gap-2 py-2 px-4 rounded-full bg-surface-container-low text-secondary text-xs font-bold uppercase tracking-widest hover:bg-surface-container transition-all" href="#">
+                    <span class="material-symbols-outlined text-base">language</span>
+                    EN-US
+                </a>
+            </div>
+        </footer>
+    </div>
+    <!-- Decorative Subtle Grain Background Overlay -->
+    <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBHpgxV_b8OaLA6ONzXs1BI41OeIsTk5CkvLyxudRLB1mwMkWRWMwq0inZTKPPwlVnxC184im7SPdi10Iv37pbYZpBXotxzyM06lj8l4-M02-m_-VKkdgP8LsvGOOR1TSksYWRPShOYEou-LSiiYYBu9IX-Gw2fb8_vWnq-Xy5BjYXtc1N3xbH1xYI0AnRWcVI3xFO9dMXEIg9ibb2OlZqz6VuC4Fs8jBTMUuyqNdsA_t5FdnOItiholuB3YjaE0fEWee3QBvaY9Ac0');"></div>
+</main>
+</body></html>
