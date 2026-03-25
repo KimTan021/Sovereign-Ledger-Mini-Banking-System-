@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`user` (
   `first_name` VARCHAR(45) NOT NULL,
   `middle_name` VARCHAR(45) NOT NULL,
   `last_name` VARCHAR(45) NOT NULL,
+  `user_email` VARCHAR(512) NOT NULL,
   `password` VARCHAR(60) NOT NULL,
   `role` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`user_id`))
