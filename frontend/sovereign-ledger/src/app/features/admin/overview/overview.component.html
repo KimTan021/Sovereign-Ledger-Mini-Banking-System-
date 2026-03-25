@@ -1,0 +1,177 @@
+<div class="p-8 lg:p-12 space-y-12">
+  <!-- Top Navigation -->
+  <header class="flex justify-between items-end mb-8">
+    <div class="space-y-1">
+      <h1 class="text-3xl font-headline font-extrabold tracking-tighter text-primary">System Dashboard</h1>
+      <p class="text-on-surface-variant">Operational pulse of Sovereign Ledger Network</p>
+    </div>
+    <div class="flex gap-4">
+      <div class="flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-full text-sm font-medium text-secondary">
+        <span class="w-2 h-2 rounded-full bg-on-tertiary-container animate-pulse"></span>
+        System Status: Healthy
+      </div>
+    </div>
+  </header>
+
+  <!-- Overview Stats: Bento Grid Layout -->
+  <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Total Deposits -->
+    <div class="primary-gradient p-8 rounded-xl text-on-primary shadow-xl shadow-primary/10 relative overflow-hidden flex flex-col justify-between h-48">
+      <div class="relative z-10">
+        <p class="text-primary-fixed-dim text-xs font-bold uppercase tracking-widest opacity-80">Total Liquidity</p>
+        <h3 class="text-4xl font-headline font-bold mt-2">$42,890,211.50</h3>
+      </div>
+      <div class="flex items-center gap-2 text-tertiary-fixed text-sm relative z-10">
+        <span class="material-symbols-outlined text-sm">trending_up</span>
+        <span>+12.4% vs last month</span>
+      </div>
+      <div class="absolute inset-0 opacity-10 pointer-events-none"
+           style="background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0); background-size: 24px 24px;"></div>
+    </div>
+    <!-- Transaction Volume -->
+    <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10 flex flex-col justify-between h-48 group hover:shadow-md transition-shadow">
+      <div>
+        <div class="flex justify-between items-start">
+          <p class="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Daily Volume</p>
+          <span class="material-symbols-outlined text-primary/40 group-hover:text-primary transition-colors">sync_alt</span>
+        </div>
+        <h3 class="text-4xl font-headline font-bold mt-2 text-primary">2,482</h3>
+      </div>
+      <div class="h-12 w-full flex items-end gap-1">
+        <div class="flex-1 bg-primary-fixed h-[40%] rounded-t-sm"></div>
+        <div class="flex-1 bg-primary-fixed h-[60%] rounded-t-sm"></div>
+        <div class="flex-1 bg-primary-fixed h-[55%] rounded-t-sm"></div>
+        <div class="flex-1 bg-primary-fixed h-[80%] rounded-t-sm"></div>
+        <div class="flex-1 bg-primary h-[95%] rounded-t-sm"></div>
+        <div class="flex-1 bg-primary-fixed h-[70%] rounded-t-sm"></div>
+      </div>
+    </div>
+    <!-- Active Users -->
+    <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10 flex flex-col justify-between h-48 group hover:shadow-md transition-shadow">
+      <div>
+        <div class="flex justify-between items-start">
+          <p class="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Active Entities</p>
+          <span class="material-symbols-outlined text-primary/40 group-hover:text-primary transition-colors">group</span>
+        </div>
+        <h3 class="text-4xl font-headline font-bold mt-2 text-primary">12,104</h3>
+      </div>
+      <div class="flex -space-x-3 overflow-hidden">
+        <div class="inline-flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-white bg-primary-container text-on-primary text-[10px] font-bold">AB</div>
+        <div class="inline-flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-white bg-secondary-container text-primary text-[10px] font-bold">CD</div>
+        <div class="inline-flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-white bg-primary-fixed text-primary text-[10px] font-bold">EF</div>
+        <div class="inline-flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-white bg-surface-container-highest text-[10px] font-bold">+9k</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Accounts & Global Transactions -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <!-- All Accounts -->
+    <section class="lg:col-span-8 space-y-6">
+      <div class="flex justify-between items-center px-2">
+        <h2 class="text-xl font-headline font-bold text-primary">High-Value Accounts</h2>
+        <button class="text-sm font-semibold text-secondary flex items-center gap-1 hover:text-primary">
+          View All <span class="material-symbols-outlined text-sm">chevron_right</span>
+        </button>
+      </div>
+      <div class="bg-surface-container-low rounded-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-high/50 text-on-surface-variant text-[10px] uppercase tracking-[0.15em] font-bold">
+                <th class="px-6 py-4">Account Holder</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4 text-right">Current Balance</th>
+                <th class="px-6 py-4"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/10">
+              @for (acc of accounts; track acc.id) {
+                <tr class="bg-white hover:bg-surface-container-lowest transition-colors">
+                  <td class="px-6 py-5">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary font-bold text-xs">{{ acc.initials }}</div>
+                      <div>
+                        <p class="font-bold text-on-surface text-sm">{{ acc.holderName }}</p>
+                        <p class="text-xs text-on-surface-variant">ID: {{ acc.id }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-5">
+                    <span [class]="acc.status === 'verified'
+                      ? 'inline-flex items-center px-2 py-1 rounded-full bg-tertiary-container text-on-tertiary-container text-[10px] font-bold uppercase tracking-wider'
+                      : 'inline-flex items-center px-2 py-1 rounded-full bg-error-container text-on-error-container text-[10px] font-bold uppercase tracking-wider'">
+                      {{ acc.status === 'verified' ? 'Verified' : 'Flagged' }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-5 text-right font-headline font-bold text-primary">
+                    {{ acc.balance | currency:'USD':'symbol':'1.2-2' }}
+                  </td>
+                  <td class="px-6 py-5 text-right">
+                    <button class="material-symbols-outlined text-secondary hover:text-primary" aria-label="More options">more_vert</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Global Transaction Monitoring -->
+    <section class="lg:col-span-4 space-y-6">
+      <div class="flex justify-between items-center px-2">
+        <h2 class="text-xl font-headline font-bold text-primary">Live Audit Log</h2>
+        <span class="material-symbols-outlined text-on-tertiary-container animate-pulse">radio_button_checked</span>
+      </div>
+      <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant/10 space-y-4">
+        <div class="space-y-6">
+          @for (entry of auditLog; track entry.title) {
+            <div class="relative pl-6 border-l-2 border-surface-container-highest"
+                 [class.opacity-60]="entry.faded">
+              <div [class]="'absolute -left-[9px] top-0 w-4 h-4 rounded-full ring-4 ring-white ' + entry.dotColor"></div>
+              <div class="space-y-1">
+                <div class="flex justify-between items-start">
+                  <p [class]="entry.isError ? 'text-sm font-bold text-error' : 'text-sm font-bold text-primary'">{{ entry.title }}</p>
+                  <span class="text-[10px] font-medium text-on-surface-variant">{{ entry.time }}</span>
+                </div>
+                <p class="text-xs text-on-surface-variant">{{ entry.detail }}</p>
+                @if (entry.isError) {
+                  <p class="text-xs font-bold text-on-error-container bg-error-container px-2 py-0.5 rounded w-fit">{{ entry.amount }}</p>
+                } @else {
+                  <p [class]="'text-sm font-bold ' + entry.amountColor">{{ entry.amount }}</p>
+                }
+              </div>
+            </div>
+          }
+        </div>
+        <button class="w-full py-3 mt-4 text-sm font-bold text-primary bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors">
+          View Audit History
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Compliance Health Section -->
+  <section class="bg-surface-container-low rounded-2xl p-8 relative overflow-hidden">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
+      <div class="space-y-2">
+        <span class="text-[10px] font-bold text-primary bg-primary-fixed px-2 py-1 rounded uppercase tracking-widest">Compliance Health</span>
+        <h2 class="text-2xl font-headline font-bold text-primary leading-tight">System-wide transparency is the foundation of digital trust.</h2>
+        <p class="max-w-xl text-on-surface-variant text-sm">Automated auditing tools have scanned 100% of the ledger in the last 24 hours. No critical vulnerabilities detected.</p>
+      </div>
+      <div class="flex gap-4">
+        <div class="p-4 bg-white rounded-xl shadow-sm min-w-[140px]">
+          <p class="text-[10px] text-on-surface-variant font-bold uppercase">Uptime</p>
+          <p class="text-xl font-headline font-bold text-on-tertiary-fixed-variant">99.998%</p>
+        </div>
+        <div class="p-4 bg-white rounded-xl shadow-sm min-w-[140px]">
+          <p class="text-[10px] text-on-surface-variant font-bold uppercase">KYC Level</p>
+          <p class="text-xl font-headline font-bold text-primary">High Tier</p>
+        </div>
+      </div>
+    </div>
+    <!-- Large faint watermark for editorial look -->
+    <div class="absolute -bottom-10 -right-10 text-[180px] font-black text-primary/5 pointer-events-none select-none">TRUST</div>
+  </section>
+</div>
