@@ -1,0 +1,102 @@
+# ===========================
+#  OS generated files
+# ===========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ===========================
+#  IDEs and Editors
+# ===========================
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### Eclipse / STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+# ===========================
+#  Java / Maven (Backend)
+# ===========================
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+.mvn/wrapper/maven-wrapper.jar
+HELP.md
+
+# Spring Boot
+*.pid
+
+# ===========================
+#  Node / Angular (Frontend)
+# ===========================
+node_modules/
+dist/
+.angular/
+.cache/
+.tmp/
+*.tgz
+.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Compiled output
+tmp/
+out-tsc/
+bazel-out/
+
+# ===========================
+#  Environment & Secrets
+# ===========================
+.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+*.pem
+*.key
+
+# ===========================
+#  Misc
+# ===========================
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+.sass-cache/
