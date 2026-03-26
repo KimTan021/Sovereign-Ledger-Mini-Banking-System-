@@ -1,11 +1,13 @@
 package com.sovereign_ledger.service.service_implementation;
 
+import com.sovereign_ledger.dto.response.TopAccountDTO;
 import com.sovereign_ledger.entity.Transaction;
 import com.sovereign_ledger.repository.AccountRepository;
 import com.sovereign_ledger.repository.TransactionRepository;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.TransactionService;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class TransactionServiceImplementation implements TransactionService {
@@ -29,6 +31,14 @@ public class TransactionServiceImplementation implements TransactionService {
     public Transaction findTransactionById(Integer id){
         return transactionRepository.findById(id).orElse(null);
     }
+
+    public List<Transaction> findAllUserTransactions(Integer id){
+        return transactionRepository.findAllUserTransactions(id);
+    } //Q1
+
+    public Integer findTransactionVolumeToday(){
+        return transactionRepository.findTransactionVolumeToday();
+    } //Q2
 
     public Transaction saveTransaction(Transaction transaction){
         return transactionRepository.save(transaction);
