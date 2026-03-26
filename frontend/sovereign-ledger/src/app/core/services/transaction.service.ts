@@ -54,12 +54,12 @@ export class TransactionService {
   private readonly adminAuditLog = [
     {
       title: 'External Wire Transfer', time: '2m ago',
-      detail: 'From: Account ****4410', amount: '+$50,000.00',
+      detail: 'From: Account ****4410', amount: '+₱50,000.00',
       dotColor: 'bg-on-tertiary-container', amountColor: 'text-on-tertiary-fixed-variant',
     },
     {
       title: 'Internal Transfer', time: '15m ago',
-      detail: 'User SL-1102 to SL-9921', amount: '-$1,200.00',
+      detail: 'User SL-1102 to SL-9921', amount: '-₱1,200.00',
       dotColor: 'bg-primary', amountColor: 'text-secondary',
     },
     {
@@ -69,7 +69,7 @@ export class TransactionService {
     },
     {
       title: 'Asset Liquidation', time: '1h ago',
-      detail: 'Auto-rebalance triggered', amount: '-$4,105.00',
+      detail: 'Auto-rebalance triggered', amount: '-₱4,105.00',
       dotColor: 'bg-on-surface-variant', amountColor: 'text-secondary', faded: true,
     },
   ];

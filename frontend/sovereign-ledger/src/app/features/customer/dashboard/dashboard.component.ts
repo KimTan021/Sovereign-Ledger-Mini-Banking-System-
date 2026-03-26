@@ -5,12 +5,24 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 import { AccountService } from '../../../core/services/account.service';
 import { TransactionService } from '../../../core/services/transaction.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { CurrencyPipe } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CardComponent } from '../../../shared/components/card/card.component';
+import { TransactionItemComponent } from '../../../shared/components/transaction-item/transaction-item.component';
+import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 
 @Component({
   selector: 'app-customer-dashboard',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NavbarComponent, FooterComponent, RouterLink, CurrencyPipe],
+  imports: [
+    CommonModule,
+    NavbarComponent,
+    FooterComponent,
+    RouterLink,
+    CurrencyPipe,
+    CardComponent,
+    TransactionItemComponent,
+    BadgeComponent
+  ],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent {

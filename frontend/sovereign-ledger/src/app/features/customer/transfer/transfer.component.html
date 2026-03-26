@@ -1,20 +1,21 @@
 <app-navbar />
 
-<main class="max-w-screen-xl mx-auto px-6 pt-12 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-16">
+<main class="max-w-screen-2xl mx-auto px-6 py-12 lg:py-16">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
   <!-- Sidebar / Contextual Info -->
   <aside class="lg:col-span-4 space-y-8">
     <div class="space-y-2">
       <span class="text-on-surface-variant font-label text-xs uppercase tracking-widest">Active Account</span>
-      <div class="signature-gradient p-8 rounded-xl text-on-primary-fixed shadow-xl shadow-primary/10">
+      <app-card variant="primary" class="p-8 text-on-primary-fixed shadow-xl shadow-primary/10">
         <p class="font-headline text-lg opacity-80 mb-1">{{ account.type }}</p>
-        <p class="font-headline text-2xl font-bold tracking-tight mb-6">{{ account.balance | currency:'USD':'symbol':'1.2-2' }}</p>
+        <p class="font-headline text-2xl font-bold tracking-tight mb-6">{{ account.balance | currency:'PHP':'symbol':'1.2-2' }}</p>
         <div class="flex justify-between items-end">
           <span class="text-xs opacity-60 tracking-widest font-mono">**** {{ account.lastFour }}</span>
           <span class="material-symbols-outlined text-4xl opacity-40">account_balance_wallet</span>
         </div>
-      </div>
+      </app-card>
     </div>
-    <div class="bg-surface-container-low p-6 rounded-xl space-y-4">
+    <app-card variant="low" class="space-y-4">
       <div class="flex items-start gap-3">
         <span class="material-symbols-outlined text-primary mt-1">verified_user</span>
         <div>
@@ -29,7 +30,7 @@
           <p class="text-on-surface-variant text-xs leading-relaxed mt-1">Internal transfers are instant. External banks may take up to 24 hours.</p>
         </div>
       </div>
-    </div>
+    </app-card>
   </aside>
 
   <!-- Main Form Section -->
@@ -47,106 +48,108 @@
       </div>
     }
 
-    <div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm">
-      <form [formGroup]="transferForm" (ngSubmit)="onSubmit()" class="space-y-10">
-        <!-- Recipient Details -->
-        <div class="space-y-6">
-          <div class="flex items-center gap-2 border-b border-outline-variant/20 pb-2">
-            <span class="material-symbols-outlined text-secondary">person_add</span>
-            <h2 class="font-headline font-bold text-lg">Recipient Details</h2>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="recipientAccount">Recipient Account Number</label>
-              <input
-                id="recipientAccount"
-                formControlName="recipientAccount"
-                type="text"
-                placeholder="e.g. 0098 7762 1120"
-                class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface placeholder:text-outline/50 focus:ring-0 focus:bg-white transition-all border-b-2 border-transparent focus:border-primary" />
+    <app-card variant="lowest" [padding]="false" class="overflow-hidden">
+      <div class="p-8">
+        <form [formGroup]="transferForm" (ngSubmit)="onSubmit()" class="space-y-10">
+          <!-- Recipient Details -->
+          <div class="space-y-6">
+            <div class="flex items-center gap-2 border-b border-outline-variant/20 pb-2">
+              <span class="material-symbols-outlined text-secondary">person_add</span>
+              <h2 class="font-headline font-bold text-lg">Recipient Details</h2>
             </div>
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="recipientName">Account Name</label>
-              <input
-                id="recipientName"
-                formControlName="recipientName"
-                type="text"
-                placeholder="Full legal name"
-                class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface placeholder:text-outline/50 focus:ring-0 focus:bg-white transition-all border-b-2 border-transparent focus:border-primary" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Amount & Purpose -->
-        <div class="space-y-6 pt-4">
-          <div class="flex items-center gap-2 border-b border-outline-variant/20 pb-2">
-            <span class="material-symbols-outlined text-secondary">payments</span>
-            <h2 class="font-headline font-bold text-lg">Transaction Info</h2>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="amount">Amount ($)</label>
-              <div class="relative">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="recipientAccount">Recipient Account Number</label>
                 <input
-                  id="amount"
-                  formControlName="amount"
-                  type="number"
-                  placeholder="0.00"
-                  class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface font-headline font-bold text-xl placeholder:text-outline/30 focus:ring-0 focus:bg-white transition-all border-b-2 border-transparent focus:border-primary" />
-                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-label text-xs uppercase">USD</div>
+                  id="recipientAccount"
+                  formControlName="recipientAccount"
+                  type="text"
+                  placeholder="e.g. 0098 7762 1120"
+                  class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface placeholder:text-outline/50 focus:ring-0 focus:bg-white transition-all border-b-2 border-transparent focus:border-primary" />
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="recipientName">Account Name</label>
+                <input
+                  id="recipientName"
+                  formControlName="recipientName"
+                  type="text"
+                  placeholder="Full legal name"
+                  class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface placeholder:text-outline/50 focus:ring-0 focus:bg-white transition-all border-b-2 border-transparent focus:border-primary" />
               </div>
             </div>
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="purpose">Purpose</label>
-              <select
-                id="purpose"
-                formControlName="purpose"
-                class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-0 focus:bg-white transition-all border-b-2 border-transparent focus:border-primary cursor-pointer">
-                <option value="">Select purpose</option>
-                <option value="invoice">Business: Invoice Settlement</option>
-                <option value="family">Personal: Family Support</option>
-                <option value="bills">Bills: Utilities &amp; Rent</option>
-                <option value="investment">Investment: Asset Purchase</option>
-                <option value="other">Other: Misc. Transfer</option>
-              </select>
-            </div>
           </div>
-        </div>
 
-        <!-- Confirmation Section -->
-        <div class="pt-10 border-t border-outline-variant/10">
-          <div class="bg-surface-container-low p-6 rounded-xl flex items-center justify-between mb-10 flex-wrap gap-4">
-            <div class="flex items-center gap-4">
-              <div class="bg-primary/5 p-3 rounded-full">
-                <span class="material-symbols-outlined text-primary">info</span>
+          <!-- Amount & Purpose -->
+          <div class="space-y-6 pt-4">
+            <div class="flex items-center gap-2 border-b border-outline-variant/20 pb-2">
+              <span class="material-symbols-outlined text-secondary">payments</span>
+              <h2 class="font-headline font-bold text-lg">Transaction Info</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="amount">Amount (₱)</label>
+                <div class="relative">
+                  <input
+                    id="amount"
+                    formControlName="amount"
+                    type="number"
+                    placeholder="0.00"
+                    class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface font-headline font-bold text-xl placeholder:text-outline/30 focus:ring-0 focus:bg-white transition-all border-b-2 border-transparent focus:border-primary" />
+                  <div class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-label text-xs uppercase">PHP</div>
+                </div>
               </div>
-              <div>
-                <p class="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Total to be debited</p>
-                <p class="font-headline font-bold text-xl">{{ totalDebit | currency:'USD':'symbol':'1.2-2' }} <span class="text-xs font-normal text-on-surface-variant">+ {{ fee | currency:'USD':'symbol':'1.2-2' }} fee</span></p>
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="purpose">Purpose</label>
+                <select
+                  id="purpose"
+                  formControlName="purpose"
+                  class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-0 focus:bg-white transition-all border-b-2 border-transparent focus:border-primary cursor-pointer">
+                  <option value="">Select purpose</option>
+                  <option value="invoice">Business: Invoice Settlement</option>
+                  <option value="family">Personal: Family Support</option>
+                  <option value="bills">Bills: Utilities &amp; Rent</option>
+                  <option value="investment">Investment: Asset Purchase</option>
+                  <option value="other">Other: Misc. Transfer</option>
+                </select>
               </div>
             </div>
-            <div class="flex items-center gap-2 text-on-tertiary-fixed-variant bg-tertiary-fixed/20 px-4 py-2 rounded-full">
-              <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">lock</span>
-              <span class="text-xs font-bold uppercase tracking-tighter">End-to-End Encrypted</span>
+          </div>
+
+          <!-- Confirmation Section -->
+          <div class="pt-10 border-t border-outline-variant/10">
+            <app-card variant="low" class="mb-10" customClass="flex items-center justify-between flex-wrap gap-4">
+              <div class="flex items-center gap-4">
+                <div class="bg-primary/5 p-3 rounded-full">
+                  <span class="material-symbols-outlined text-primary">info</span>
+                </div>
+                <div>
+                  <p class="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Total to be debited</p>
+                  <p class="font-headline font-bold text-xl">{{ totalDebit() | currency:'PHP':'symbol':'1.2-2' }} <span class="text-xs font-normal text-on-surface-variant">+ {{ fee() | currency:'PHP':'symbol':'1.2-2' }} fee</span></p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 text-on-tertiary-fixed-variant bg-tertiary-fixed/20 px-4 py-2 rounded-full">
+                <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">lock</span>
+                <span class="text-xs font-bold uppercase tracking-tighter">End-to-End Encrypted</span>
+              </div>
+            </app-card>
+            <div class="flex flex-col md:flex-row gap-4 items-center justify-end">
+              <button
+                type="button"
+                (click)="onCancel()"
+                class="w-full md:w-auto px-8 py-4 font-headline font-bold text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all active:scale-95">
+                Cancel Transaction
+              </button>
+              <button
+                type="submit"
+                class="w-full md:w-64 bg-primary text-on-primary px-8 py-4 rounded-xl font-headline font-bold flex items-center justify-center gap-3 shadow-lg shadow-primary/20 hover:bg-primary-container transition-all active:scale-95 group">
+                <span>Confirm Transaction</span>
+                <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              </button>
             </div>
           </div>
-          <div class="flex flex-col md:flex-row gap-4 items-center justify-end">
-            <button
-              type="button"
-              (click)="onCancel()"
-              class="w-full md:w-auto px-8 py-4 font-headline font-bold text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all active:scale-95">
-              Cancel Transaction
-            </button>
-            <button
-              type="submit"
-              class="w-full md:w-64 bg-primary text-on-primary px-8 py-4 rounded-xl font-headline font-bold flex items-center justify-center gap-3 shadow-lg shadow-primary/20 hover:bg-primary-container transition-all active:scale-95 group">
-              <span>Confirm Transaction</span>
-              <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
+    </app-card>
 
     <!-- Recent Recipients (Quick Send) -->
     <div class="mt-16 space-y-6">
@@ -167,6 +170,7 @@
       </div>
     </div>
   </section>
+</div>
 </main>
 
 <app-footer />
