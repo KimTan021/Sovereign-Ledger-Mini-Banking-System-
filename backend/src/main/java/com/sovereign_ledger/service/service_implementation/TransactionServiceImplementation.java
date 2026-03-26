@@ -42,6 +42,14 @@ public class TransactionServiceImplementation implements TransactionService {
         return transactionRepository.findTransactionVolumeToday();
     } //Q2
 
+    public List<Transaction> findAllTransactionsLastMonthById(Integer id){
+        return transactionRepository.findAllTransactionsLastMonthById(id);
+    } //Q3
+
+    public Integer findSumAllTransactionsLastMonthById(Integer id){
+        return transactionRepository.findSumAllTransactionsLastMonthById(id);
+    } //Q4
+
     public Transaction saveTransaction(Transaction transaction){
         return transactionRepository.save(transaction);
     }

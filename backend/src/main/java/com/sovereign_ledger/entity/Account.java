@@ -34,6 +34,9 @@ public class Account {
     @Column(name = "account_balance")
     private BigDecimal accountBalance;
 
+    @Column(name = "account_status")
+    private String accountStatus;
+
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Transaction> transactions;
 }

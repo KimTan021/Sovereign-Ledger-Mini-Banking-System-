@@ -40,4 +40,10 @@ public class Transaction {
 
     @Column(name = "transaction_time")
     private LocalDateTime transactionTime;
+
+    @Column(name = "transaction_description")
+    private String transactionDescription;
+
+    @Column(name = "transaction_status")
+    private String transactionStatus;
 }

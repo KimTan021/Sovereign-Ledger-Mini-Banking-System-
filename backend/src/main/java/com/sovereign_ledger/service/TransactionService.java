@@ -12,6 +12,8 @@ public interface TransactionService {
     Transaction findTransactionById(Integer id);
     List<Transaction> findAllUserTransactions(Integer id);
     Integer findTransactionVolumeToday();
+    List<Transaction> findAllTransactionsLastMonthById(Integer id);
+    Integer findSumAllTransactionsLastMonthById(Integer id);
     Transaction saveTransaction(Transaction transaction);
     void deleteTransaction(Integer id);
 }

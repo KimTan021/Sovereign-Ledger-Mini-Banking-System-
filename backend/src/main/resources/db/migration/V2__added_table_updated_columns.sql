@@ -5,6 +5,10 @@ ADD COLUMN `transaction_status` VARCHAR(20) NOT NULL AFTER `transaction_descript
 ALTER TABLE `user`
 ADD UNIQUE INDEX `user_email_UNIQUE` (`user_email` ASC) VISIBLE ENGINE = InnoDB;
 
+ALTER TABLE `account`
+ADD COLUMN `account_status` VARCHAR(20) NOT NULL AFTER `account_balance` ENGINE = InnoDB;
+
+
 CREATE TABLE IF NOT EXISTS `pending_user` (
   `pending_user_id` INT NOT NULL,
   `first_name` VARCHAR(45) NOT NULL,
