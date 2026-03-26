@@ -3,16 +3,14 @@ import { NavbarComponent } from '../../../shared/components/navbar/navbar.compon
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { TransactionService, Transaction } from '../../../core/services/transaction.service';
 import { RouterLink } from '@angular/router';
-
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { CardComponent } from '../../../shared/components/card/card.component';
 
 @Component({
   selector: 'app-history',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, NavbarComponent, FooterComponent, RouterLink, BadgeComponent, CardComponent],
+  imports: [CommonModule, NavbarComponent, FooterComponent, RouterLink, BadgeComponent, CardComponent, CurrencyPipe],
   templateUrl: './history.component.html',
 })
 export class HistoryComponent {
@@ -52,15 +50,5 @@ export class HistoryComponent {
     }
   }
 
-  getAmountClass(tx: Transaction): string {
-    if (tx.status === 'declined') return 'text-outline line-through';
-    return tx.type === 'credit' ? 'text-on-tertiary-fixed-variant' : 'text-on-surface';
-  }
-
-  formatAmount(tx: Transaction): string {
-    const abs = Math.abs(tx.amount);
-    const formatted = abs.toLocaleString('en-PH', { style: 'currency', currency: 'PHP' });
-    if (tx.status === 'declined') return formatted;
-    return tx.type === 'credit' ? `+ ${formatted}` : `- ${formatted}`;
-  }
+  // Data presentation logic moved to template pipes/signals
 }

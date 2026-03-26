@@ -124,7 +124,7 @@
                 </div>
                 <div>
                   <p class="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Total to be debited</p>
-                  <p class="font-headline font-bold text-xl">{{ totalDebit | currency:'PHP':'symbol':'1.2-2' }} <span class="text-xs font-normal text-on-surface-variant">+ {{ fee | currency:'PHP':'symbol':'1.2-2' }} fee</span></p>
+                  <p class="font-headline font-bold text-xl">{{ totalDebit() | currency:'PHP':'symbol':'1.2-2' }} <span class="text-xs font-normal text-on-surface-variant">+ {{ fee() | currency:'PHP':'symbol':'1.2-2' }} fee</span></p>
                 </div>
               </div>
               <div class="flex items-center gap-2 text-on-tertiary-fixed-variant bg-tertiary-fixed/20 px-4 py-2 rounded-full">

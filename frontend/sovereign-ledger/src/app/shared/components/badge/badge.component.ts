@@ -1,13 +1,14 @@
-import { Component, Input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-badge',
-  standalone: true,
   imports: [CommonModule],
   template: `
-    <div [class]="getBadgeClasses()">
-      <span *ngIf="showDot" [class]="getDotClasses()"></span>
+    <div [class]="badgeClasses()">
+      @if (showDot()) {
+        <span [class]="dotClasses()"></span>
+      }
       <span class="uppercase tracking-wider">
         <ng-content></ng-content>
       </span>
@@ -15,14 +16,15 @@ import { CommonModule } from '@angular/common';
   `,
   styles: [`
     :host { display: inline-block; vertical-align: middle; }
-  `]
+  `],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BadgeComponent {
-  @Input() status: 'completed' | 'pending' | 'declined' | 'verified' | 'neutral' = 'neutral';
-  @Input() size: 'xs' | 'sm' | 'md' = 'sm';
-  @Input() showDot: boolean = true;
+  status = input<'completed' | 'pending' | 'declined' | 'verified' | 'neutral'>('neutral');
+  size = input<'xs' | 'sm' | 'md'>('sm');
+  showDot = input<boolean>(true);
 
-  getBadgeClasses(): string {
+  badgeClasses = computed(() => {
     const base = 'flex items-center gap-1.5 px-3 py-1 rounded-full w-fit font-bold ';
     const sizes = {
       xs: 'text-[9px] px-2 py-0.5',
@@ -31,17 +33,17 @@ export class BadgeComponent {
     };
 
     const colors = {
-      completed: 'text-on-tertiary-fixed bg-tertiary-fixed',
-      pending: 'text-on-secondary-fixed bg-secondary-fixed',
-      declined: 'text-on-error-container bg-error-container',
-      verified: 'text-on-primary-fixed bg-primary-fixed',
+      completed: 'text-tertiary-fixed bg-tertiary-container',
+      pending: 'text-secondary-fixed bg-secondary-container',
+      declined: 'text-error-fixed bg-error-container',
+      verified: 'text-primary-fixed bg-primary-container',
       neutral: 'text-on-surface-variant bg-surface-container-highest'
     };
 
-    return base + sizes[this.size] + ' ' + colors[this.status];
-  }
+    return base + sizes[this.size()] + ' ' + colors[this.status()];
+  });
 
-  getDotClasses(): string {
+  dotClasses = computed(() => {
     const base = 'rounded-full ';
     const sizes = {
       xs: 'w-1 h-1',
@@ -57,6 +59,6 @@ export class BadgeComponent {
       neutral: 'bg-outline'
     };
 
-    return base + sizes[this.size] + ' ' + colors[this.status];
-  }
+    return base + sizes[this.size()] + ' ' + colors[this.status()];
+  });
 }

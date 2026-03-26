@@ -1,15 +1,15 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { AccountService } from '../../../core/services/account.service';
 import { CommonModule, CurrencyPipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { CardComponent } from '../../../shared/components/card/card.component';
 
 @Component({
   selector: 'app-transfer',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NavbarComponent, FooterComponent, ReactiveFormsModule, CurrencyPipe, CardComponent, CommonModule],
   templateUrl: './transfer.component.html',
@@ -29,14 +29,13 @@ export class TransferComponent {
     purpose: ['', Validators.required],
   });
 
-  get totalDebit(): number {
-    const amount = this.transferForm.get('amount')?.value ?? 0;
-    return amount;
-  }
+  // Convert form value to a signal for reactive dependencies
+  private formValue = toSignal(this.transferForm.valueChanges, {
+    initialValue: this.transferForm.getRawValue()
+  });
 
-  get fee(): number {
-    return 0;
-  }
+  totalDebit = computed(() => this.formValue().amount ?? 0);
+  fee = computed(() => 0); // Fixed fee for now
 
   onSubmit(): void {
     if (this.transferForm.valid) {

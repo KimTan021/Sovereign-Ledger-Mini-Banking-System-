@@ -12,7 +12,6 @@ import { BadgeComponent } from '../../../shared/components/badge/badge.component
 
 @Component({
   selector: 'app-customer-dashboard',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

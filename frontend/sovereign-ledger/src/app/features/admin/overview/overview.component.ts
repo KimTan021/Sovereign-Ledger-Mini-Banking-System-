@@ -7,7 +7,6 @@ import { BadgeComponent } from '../../../shared/components/badge/badge.component
 
 @Component({
   selector: 'app-admin-overview',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, CurrencyPipe, CardComponent, BadgeComponent],
   templateUrl: './overview.component.html',
