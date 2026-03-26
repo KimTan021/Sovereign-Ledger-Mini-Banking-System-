@@ -3,12 +3,15 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { AccountService } from '../../../core/services/account.service';
-import { CurrencyPipe } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+
+import { CardComponent } from '../../../shared/components/card/card.component';
 
 @Component({
   selector: 'app-transfer',
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NavbarComponent, FooterComponent, ReactiveFormsModule, CurrencyPipe],
+  imports: [NavbarComponent, FooterComponent, ReactiveFormsModule, CurrencyPipe, CardComponent, CommonModule],
   templateUrl: './transfer.component.html',
 })
 export class TransferComponent {

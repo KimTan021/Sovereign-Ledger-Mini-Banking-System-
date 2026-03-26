@@ -4,10 +4,15 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 import { TransactionService, Transaction } from '../../../core/services/transaction.service';
 import { RouterLink } from '@angular/router';
 
+import { CommonModule } from '@angular/common';
+import { BadgeComponent } from '../../../shared/components/badge/badge.component';
+import { CardComponent } from '../../../shared/components/card/card.component';
+
 @Component({
   selector: 'app-history',
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NavbarComponent, FooterComponent, RouterLink],
+  imports: [CommonModule, NavbarComponent, FooterComponent, RouterLink, BadgeComponent, CardComponent],
   templateUrl: './history.component.html',
 })
 export class HistoryComponent {
@@ -47,37 +52,6 @@ export class HistoryComponent {
     }
   }
 
-  getStatusClasses(status: string): string {
-    switch (status) {
-      case 'completed':
-        return 'text-on-tertiary-container bg-tertiary-container/30';
-      case 'pending':
-        return 'bg-secondary-container/30';
-      case 'declined':
-        return 'bg-error-container/40';
-      default:
-        return '';
-    }
-  }
-
-  getStatusDotClass(status: string): string {
-    switch (status) {
-      case 'completed': return 'bg-on-tertiary-container';
-      case 'pending': return 'bg-secondary';
-      case 'declined': return 'bg-error';
-      default: return '';
-    }
-  }
-
-  getStatusTextClass(status: string): string {
-    switch (status) {
-      case 'completed': return 'text-on-tertiary-container';
-      case 'pending': return 'text-secondary';
-      case 'declined': return 'text-error';
-      default: return '';
-    }
-  }
-
   getAmountClass(tx: Transaction): string {
     if (tx.status === 'declined') return 'text-outline line-through';
     return tx.type === 'credit' ? 'text-on-tertiary-fixed-variant' : 'text-on-surface';
@@ -85,7 +59,7 @@ export class HistoryComponent {
 
   formatAmount(tx: Transaction): string {
     const abs = Math.abs(tx.amount);
-    const formatted = abs.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    const formatted = abs.toLocaleString('en-PH', { style: 'currency', currency: 'PHP' });
     if (tx.status === 'declined') return formatted;
     return tx.type === 'credit' ? `+ ${formatted}` : `- ${formatted}`;
   }

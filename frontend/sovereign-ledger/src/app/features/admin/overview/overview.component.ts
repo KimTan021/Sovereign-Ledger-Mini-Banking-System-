@@ -1,12 +1,15 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { AccountService } from '../../../core/services/account.service';
 import { TransactionService } from '../../../core/services/transaction.service';
-import { CurrencyPipe } from '@angular/common';
+import { CardComponent } from '../../../shared/components/card/card.component';
+import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 
 @Component({
   selector: 'app-admin-overview',
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CurrencyPipe],
+  imports: [CommonModule, CurrencyPipe, CardComponent, BadgeComponent],
   templateUrl: './overview.component.html',
 })
 export class OverviewComponent {

@@ -1,6 +1,6 @@
 <div class="p-8 lg:p-12 space-y-12">
-  <!-- Top Navigation -->
-  <header class="flex justify-between items-end mb-8">
+  <!-- Top Navigation (Hidden on Mobile, handled by layout) -->
+  <header class="hidden lg:flex justify-between items-end mb-8">
     <div class="space-y-1">
       <h1 class="text-3xl font-headline font-extrabold tracking-tighter text-primary">System Dashboard</h1>
       <p class="text-on-surface-variant">Operational pulse of Sovereign Ledger Network</p>
@@ -15,11 +15,10 @@
 
   <!-- Overview Stats: Bento Grid Layout -->
   <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Total Deposits -->
-    <div class="primary-gradient p-8 rounded-xl text-on-primary shadow-xl shadow-primary/10 relative overflow-hidden flex flex-col justify-between h-48">
+    <app-card variant="primary" class="h-48" customClass="flex flex-col justify-between">
       <div class="relative z-10">
         <p class="text-primary-fixed-dim text-xs font-bold uppercase tracking-widest opacity-80">Total Liquidity</p>
-        <h3 class="text-4xl font-headline font-bold mt-2">$42,890,211.50</h3>
+        <h3 class="text-4xl font-headline font-bold mt-2">₱42,890,211.50</h3>
       </div>
       <div class="flex items-center gap-2 text-tertiary-fixed text-sm relative z-10">
         <span class="material-symbols-outlined text-sm">trending_up</span>
@@ -27,9 +26,9 @@
       </div>
       <div class="absolute inset-0 opacity-10 pointer-events-none"
            style="background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0); background-size: 24px 24px;"></div>
-    </div>
-    <!-- Transaction Volume -->
-    <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10 flex flex-col justify-between h-48 group hover:shadow-md transition-shadow">
+    </app-card>
+
+    <app-card customClass="h-48 flex flex-col justify-between group hover:shadow-md transition-shadow">
       <div>
         <div class="flex justify-between items-start">
           <p class="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Daily Volume</p>
@@ -45,9 +44,9 @@
         <div class="flex-1 bg-primary h-[95%] rounded-t-sm"></div>
         <div class="flex-1 bg-primary-fixed h-[70%] rounded-t-sm"></div>
       </div>
-    </div>
-    <!-- Active Users -->
-    <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10 flex flex-col justify-between h-48 group hover:shadow-md transition-shadow">
+    </app-card>
+
+    <app-card customClass="h-48 flex flex-col justify-between group hover:shadow-md transition-shadow">
       <div>
         <div class="flex justify-between items-start">
           <p class="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Active Entities</p>
@@ -61,7 +60,7 @@
         <div class="inline-flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-white bg-primary-fixed text-primary text-[10px] font-bold">EF</div>
         <div class="inline-flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-white bg-surface-container-highest text-[10px] font-bold">+9k</div>
       </div>
-    </div>
+    </app-card>
   </section>
 
   <!-- Accounts & Global Transactions -->
@@ -98,14 +97,12 @@
                     </div>
                   </td>
                   <td class="px-6 py-5">
-                    <span [class]="acc.status === 'verified'
-                      ? 'inline-flex items-center px-2 py-1 rounded-full bg-tertiary-container text-on-tertiary-container text-[10px] font-bold uppercase tracking-wider'
-                      : 'inline-flex items-center px-2 py-1 rounded-full bg-error-container text-on-error-container text-[10px] font-bold uppercase tracking-wider'">
-                      {{ acc.status === 'verified' ? 'Verified' : 'Flagged' }}
-                    </span>
+                    <app-badge [status]="acc.status === 'verified' ? 'verified' : 'declined'">
+                      {{ acc.status }}
+                    </app-badge>
                   </td>
                   <td class="px-6 py-5 text-right font-headline font-bold text-primary">
-                    {{ acc.balance | currency:'USD':'symbol':'1.2-2' }}
+                    {{ acc.balance | currency:'PHP':'symbol':'1.2-2' }}
                   </td>
                   <td class="px-6 py-5 text-right">
                     <button class="material-symbols-outlined text-secondary hover:text-primary" aria-label="More options">more_vert</button>
