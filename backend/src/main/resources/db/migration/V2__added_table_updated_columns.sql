@@ -1,12 +1,12 @@
 ALTER TABLE `transaction`
 ADD COLUMN `transaction_description` VARCHAR(500) NOT NULL AFTER `transaction_time`,
-ADD COLUMN `transaction_status` VARCHAR(20) NOT NULL AFTER `transaction_description` ENGINE = InnoDB;
+ADD COLUMN `transaction_status` VARCHAR(20) NOT NULL AFTER `transaction_description`;
 
 ALTER TABLE `user`
-ADD UNIQUE INDEX `user_email_UNIQUE` (`user_email` ASC) VISIBLE ENGINE = InnoDB;
+ADD UNIQUE INDEX `user_email_UNIQUE` (`user_email` ASC) VISIBLE;
 
 ALTER TABLE `account`
-ADD COLUMN `account_status` VARCHAR(20) NOT NULL AFTER `account_balance` ENGINE = InnoDB;
+ADD COLUMN `account_status` VARCHAR(20) NOT NULL AFTER `account_balance`;
 
 
 CREATE TABLE IF NOT EXISTS `pending_user` (
