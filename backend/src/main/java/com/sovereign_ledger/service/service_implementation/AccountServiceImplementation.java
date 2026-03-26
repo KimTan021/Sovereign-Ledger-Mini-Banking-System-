@@ -6,9 +6,11 @@ import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.AccountService;
 import com.sovereign_ledger.service.UserService;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class AccountServiceImplementation implements AccountService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
