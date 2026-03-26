@@ -36,6 +36,16 @@ public class TransactionController {
         return transactionService.findTransactionVolumeToday();
     }
 
+    @GetMapping("/{userId}/all-transactions-last-month")
+    public List<Transaction> findAllTransactionsLastMonthById(Integer userId){
+        return transactionService.findAllTransactionsLastMonthById(userId);
+    }
+
+    @GetMapping("/{userId}/all-transactions-last-month-sum")
+    public Integer findSumAllTransactionsLastMonthById(Integer userId){
+        return transactionService.findSumAllTransactionsLastMonthById(userId);
+    }
+
     @PutMapping
     public Transaction saveTransaction(@RequestBody Transaction transaction){
         return transactionService.saveTransaction(transaction);

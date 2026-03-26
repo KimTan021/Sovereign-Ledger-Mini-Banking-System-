@@ -15,6 +15,8 @@ public interface AccountService {
     Integer findTotalUserAccounts();
     BigDecimal findTotalLiquidity();
     List<TopAccountDTO> findTop3MostValuableAccounts();
+
     Account saveAccount(Account account);
+
     void deleteAccount(Integer id);
 }

@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -13,12 +14,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "user")
-public class User {
-
+@Table(name = "pending_user")
+public class PendingUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
+    @Column(name = "pending_user_id")
     private Integer userId;
 
     @Column(name = "first_name", nullable = false)
@@ -36,10 +36,9 @@ public class User {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "role", nullable = false)
-    private String Role;
+    @Column(name = "request_time", nullable = false)
+    private LocalDateTime requestTime;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Account> accounts;
-
+    @Column(name = "request_account_type", nullable = false)
+    private String requestAccountType;
 }
