@@ -1,5 +1,6 @@
 package com.sovereign_ledger.controller;
 
+import com.sovereign_ledger.dto.response.TopAccountDTO;
 import com.sovereign_ledger.entity.Transaction;
 import com.sovereign_ledger.service.TransactionService;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,16 @@ public class TransactionController {
     @GetMapping("/{id}")
     public Transaction findTransactionById(@PathVariable Integer id){
         return transactionService.findTransactionById(id);
+    }
+
+    @GetMapping("/{userId}/transactions")
+    public List<Transaction> findAllUserTransactions(@PathVariable Integer userId){
+        return transactionService.findAllUserTransactions(userId);
+    }
+
+    @GetMapping("/total-volume-today")
+    public Integer findTransactionVolumeToday(){
+        return transactionService.findTransactionVolumeToday();
     }
 
     @PutMapping

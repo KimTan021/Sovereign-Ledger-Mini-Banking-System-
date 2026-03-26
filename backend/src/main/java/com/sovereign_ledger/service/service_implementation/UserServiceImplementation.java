@@ -3,9 +3,11 @@ package com.sovereign_ledger.service.service_implementation;
 import com.sovereign_ledger.entity.User;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.UserService;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class UserServiceImplementation implements UserService {
     private final UserRepository userRepository;
 

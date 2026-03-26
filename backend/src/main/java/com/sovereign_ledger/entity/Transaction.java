@@ -1,5 +1,6 @@
 package com.sovereign_ledger.entity;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -13,12 +14,30 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 public class Transaction {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "transaction_id")
     private Integer transactionId;
-    private Integer accountId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
+
+    @Column(name = "transaction_type")
     private String transactionType;
+
+    @Column(name = "transaction_amount")
     private BigDecimal transactionAmount;
+
+    @Column(name = "account_id_destination")
     private Integer accountIdDestination;
+
+    @Column(name = "logs")
     private String logs;
+
+    @Column(name = "transaction_time")
     private LocalDateTime transactionTime;
 }
