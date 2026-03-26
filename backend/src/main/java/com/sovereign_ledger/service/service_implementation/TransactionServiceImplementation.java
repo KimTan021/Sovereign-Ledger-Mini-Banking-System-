@@ -6,10 +6,12 @@ import com.sovereign_ledger.repository.AccountRepository;
 import com.sovereign_ledger.repository.TransactionRepository;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.TransactionService;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+@Service
 public class TransactionServiceImplementation implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
