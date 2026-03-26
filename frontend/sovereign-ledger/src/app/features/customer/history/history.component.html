@@ -125,16 +125,23 @@
                 <p class="text-[10px] text-on-surface-variant">{{ tx.date }} • {{ tx.time }}</p>
               </div>
             </div>
-            <div class="flex justify-between items-center">
-              <span [class]="tx.type === 'credit' 
-                ? 'text-[9px] font-bold px-2 py-0.5 bg-on-tertiary-container/10 rounded-full text-on-tertiary-container uppercase tracking-wider' 
-                : 'text-[9px] font-bold px-2 py-0.5 bg-surface-container-high rounded-full text-on-surface-variant uppercase tracking-wider'">
-                {{ tx.type }}
-              </span>
-              <app-badge [status]="tx.status" size="xs">
-                {{ tx.status }}
-              </app-badge>
+            <div class="text-right">
+              <p [class]="'text-sm font-extrabold ' + (tx.status === 'declined' ? 'text-outline line-through' : (tx.type === 'credit' ? 'text-on-tertiary-fixed-variant' : 'text-on-surface'))">
+                {{ tx.type === 'credit' ? '+' : '-' }} {{ tx.amount | currency:'PHP':'symbol':'1.2-2' }}
+              </p>
+              <span class="text-[9px] text-on-surface-variant font-mono">ID: {{ tx.id }}</span>
             </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <span [class]="tx.type === 'credit' 
+              ? 'text-[9px] font-bold px-2 py-0.5 bg-on-tertiary-container/10 rounded-full text-on-tertiary-container uppercase tracking-wider' 
+              : 'text-[9px] font-bold px-2 py-0.5 bg-surface-container-high rounded-full text-on-surface-variant uppercase tracking-wider'">
+              {{ tx.type }}
+            </span>
+            <app-badge [status]="tx.status" size="xs">
+              {{ tx.status }}
+            </app-badge>
+          </div>
         </div>
       }
     </div>

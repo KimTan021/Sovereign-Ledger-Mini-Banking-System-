@@ -58,7 +58,7 @@
           <span class="text-on-surface-variant font-bold text-xs uppercase tracking-widest">Savings Growth</span>
           <app-badge status="completed" [showDot]="true" size="xs">+12.4%</app-badge>
         </div>
-        <h3 class="text-3xl font-headline font-bold text-primary">₱42,102</h3>
+        <h3 class="text-3xl font-headline font-bold text-primary">{{ 42102 | currency:'PHP':'symbol':'1.0-0' }}</h3>
         <p class="text-on-surface-variant text-sm mt-1">Goal: Luxury Yacht Fund</p>
       </div>
       <div class="mt-6 h-24 flex items-end gap-1">
@@ -92,7 +92,7 @@
           <div class="absolute inset-0 w-full h-full rounded-full border-[16px] border-tertiary-container border-r-transparent border-b-transparent -rotate-12"></div>
           <div class="text-center">
             <p class="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Total</p>
-            <p class="text-2xl font-headline font-bold text-primary">₱4,582</p>
+            <p class="text-2xl font-headline font-bold text-primary">{{ 4582 | currency:'PHP':'symbol':'1.0-0' }}</p>
           </div>
         </div>
       </div>
@@ -102,21 +102,21 @@
             <div class="w-3 h-3 rounded-full bg-primary"></div>
             <span class="text-on-surface-variant font-medium">Technology &amp; Home</span>
           </div>
-          <span class="font-bold text-primary">₱2,499</span>
+          <span class="font-bold text-primary">{{ 2499 | currency:'PHP':'symbol':'1.0-0' }}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 rounded-full bg-tertiary-container"></div>
             <span class="text-on-surface-variant font-medium">Travel &amp; Leisure</span>
           </div>
-          <span class="font-bold text-primary">₱1,602</span>
+          <span class="font-bold text-primary">{{ 1602 | currency:'PHP':'symbol':'1.0-0' }}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 rounded-full bg-surface-container"></div>
             <span class="text-on-surface-variant font-medium">Other Expenses</span>
           </div>
-          <span class="font-bold text-primary">₱481</span>
+          <span class="font-bold text-primary">{{ 481 | currency:'PHP':'symbol':'1.0-0' }}</span>
         </div>
       </div>
     </app-card>
