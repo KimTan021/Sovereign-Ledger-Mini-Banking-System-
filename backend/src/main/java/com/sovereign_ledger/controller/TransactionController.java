@@ -66,15 +66,28 @@ public class TransactionController {
 
     @PostMapping("/new-transaction-log")
     public void insertNewTransactionLog(@RequestBody TransactionLogRequestDTO dto){
-        transactionService.insertNewTransactionLog(
-                dto.getSourceAccountId(),
-                dto.getTransactionType(),
-                dto.getTransactionAmount(),
-                dto.getTargetAccountId(),
-                dto.getLogs(),
-                dto.getTransactionDescription(),
-                dto.getTransactionStatus()
-        );
+        if (dto.getTransactionTime() != null) {
+            transactionService.insertNewTransactionLogWithDate(
+                    dto.getSourceAccountId(),
+                    dto.getTransactionType(),
+                    dto.getTransactionAmount(),
+                    dto.getTargetAccountId(),
+                    dto.getLogs(),
+                    dto.getTransactionTime(),
+                    dto.getTransactionDescription(),
+                    dto.getTransactionStatus()
+            );
+        } else {
+            transactionService.insertNewTransactionLog(
+                    dto.getSourceAccountId(),
+                    dto.getTransactionType(),
+                    dto.getTransactionAmount(),
+                    dto.getTargetAccountId(),
+                    dto.getLogs(),
+                    dto.getTransactionDescription(),
+                    dto.getTransactionStatus()
+            );
+        }
     }
 
     @PutMapping("/transfer-transaction")

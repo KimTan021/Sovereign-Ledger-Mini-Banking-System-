@@ -3,6 +3,7 @@ package com.sovereign_ledger.dto.request;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
@@ -14,4 +15,5 @@ public class TransactionLogRequestDTO {
     private String logs;
     private String transactionDescription;
     private String transactionStatus;
+    private LocalDateTime transactionTime;
 }

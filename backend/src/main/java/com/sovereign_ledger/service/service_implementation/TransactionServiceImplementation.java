@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -104,6 +105,26 @@ public class TransactionServiceImplementation implements TransactionService {
                 transactionStatus
         );
     } //Q7
+
+    public void insertNewTransactionLogWithDate(Integer sourceAccountId,
+                                                String transactionType,
+                                                BigDecimal transactionAmount,
+                                                Integer targetAccountId,
+                                                String logs,
+                                                LocalDateTime transactionTime,
+                                                String transactionDescription,
+                                                String transactionStatus) {
+        transactionRepository.insertNewTransactionLogWithDate(
+                sourceAccountId,
+                transactionType,
+                transactionAmount,
+                targetAccountId,
+                logs,
+                transactionTime,
+                transactionDescription,
+                transactionStatus
+        );
+    } //Q8
 
     public void deleteTransaction(Integer id){
         transactionRepository.deleteById(id);

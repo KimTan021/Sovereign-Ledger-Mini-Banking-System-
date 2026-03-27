@@ -7,6 +7,7 @@ import com.sovereign_ledger.entity.Transaction;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -26,6 +27,16 @@ public interface TransactionService {
             BigDecimal transactionAmount,
             Integer targetAccountId,
             String logs,
+            String transactionDescription,
+            String transactionStatus);
+
+    void insertNewTransactionLogWithDate(
+            Integer sourceAccountId,
+            String transactionType,
+            BigDecimal transactionAmount,
+            Integer targetAccountId,
+            String logs,
+            LocalDateTime transactionTime,
             String transactionDescription,
             String transactionStatus);
 

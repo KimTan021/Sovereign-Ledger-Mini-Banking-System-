@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
@@ -92,6 +93,38 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
                                  @Param("trans_desc") String transactionDescription,
                                  @Param("trans_status") String transactionStatus
                                  );
+    //Query for creating transactions
+    //Q7
+
+    @Modifying
+    @Query(value =
+            "INSERT INTO transaction (" +
+                    "account_id, " +
+                    "transaction_type, " +
+                    "transaction_amount, " +
+                    "account_id_destination, " +
+                    "logs, " +
+                    "transaction_time, " +
+                    "transaction_description, " +
+                    "transaction_status) " +
+                    "VALUES " +
+                    "(:src_acctId, " +
+                    ":trans_type, " +
+                    ":trans_amount, " +
+                    ":targ_acctId, " +
+                    ":logs, " +
+                    ":trans_time, " +
+                    ":trans_desc, " +
+                    ":trans_status);", nativeQuery = true)
+    void insertNewTransactionLogWithDate(@Param("src_acctId") Integer sourceAccountId,
+                                 @Param("trans_type") String transactionType,
+                                 @Param("trans_amount") BigDecimal transactionAmount,
+                                 @Param("targ_acctId") Integer targetAccountId,
+                                 @Param("logs") String logs,
+                                 @Param("trans_time") LocalDateTime transactionTime,
+                                 @Param("trans_desc") String transactionDescription,
+                                 @Param("trans_status") String transactionStatus
+    );
     //Query for creating transactions
     //Q7
 }
