@@ -24,7 +24,7 @@ INSERT INTO `user` (`first_name`, `middle_name`, `last_name`, `user_email`, `pas
 
 -- =============================================================
 -- ACCOUNTS
--- account_status: 'active' | 'inactive' | 'frozen'
+-- account_status: 'VERIFIED' | 'FLAGGED' | 'UNDER REVIEW' | 'FROZEN'
 -- user_id 1  = Alice    → ACC-0001 (savings),  ACC-0002 (checking)
 -- user_id 2  = Bob      → ACC-0003 (savings),  ACC-0004 (checking), ACC-0005 (savings)
 -- user_id 3  = Carol    → ACC-0006 (savings)
@@ -38,34 +38,34 @@ INSERT INTO `user` (`first_name`, `middle_name`, `last_name`, `user_email`, `pas
 -- =============================================================
 INSERT INTO `account` (`user_id`, `account_number`, `account_type`, `account_balance`, `account_status`) VALUES
 -- Alice (user_id = 1)
-(1,  'ACC-0001', 'savings',  28400.00, 'active'),
-(1,  'ACC-0002', 'checking',  4100.25, 'active'),
+(1,  'ACC-0001', 'savings',  28400.00, 'VERIFIED'),
+(1,  'ACC-0002', 'checking',  4100.25, 'VERIFIED'),
 -- Bob (user_id = 2)
-(2,  'ACC-0003', 'savings',  61500.00, 'active'),
-(2,  'ACC-0004', 'checking',  7350.75, 'active'),
-(2,  'ACC-0005', 'savings',  14200.00, 'active'),
+(2,  'ACC-0003', 'savings',  61500.00, 'VERIFIED'),
+(2,  'ACC-0004', 'checking',  7350.75, 'VERIFIED'),
+(2,  'ACC-0005', 'savings',  14200.00, 'FLAGGED'),
 -- Carol (user_id = 3)
-(3,  'ACC-0006', 'savings',  33100.00, 'active'),
+(3,  'ACC-0006', 'savings',  33100.00, 'VERIFIED'),
 -- David (user_id = 4)
-(4,  'ACC-0007', 'checking',  9500.00, 'active'),
-(4,  'ACC-0008', 'savings',  47000.00, 'active'),
+(4,  'ACC-0007', 'checking',  9500.00, 'VERIFIED'),
+(4,  'ACC-0008', 'savings',  47000.00, 'VERIFIED'),
 -- Eva (user_id = 5)
-(5,  'ACC-0009', 'savings',  21800.00, 'active'),
-(5,  'ACC-0010', 'checking',  6250.50, 'active'),
+(5,  'ACC-0009', 'savings',  21800.00, 'VERIFIED'),
+(5,  'ACC-0010', 'checking',  6250.50, 'VERIFIED'),
 -- Frank (user_id = 6)
-(6,  'ACC-0011', 'savings',  18500.00, 'active'),
-(6,  'ACC-0012', 'checking',  3900.00, 'active'),
+(6,  'ACC-0011', 'savings',  18500.00, 'VERIFIED'),
+(6,  'ACC-0012', 'checking',  3900.00, 'VERIFIED'),
 -- Grace (user_id = 7)
-(7,  'ACC-0013', 'savings',  25600.00, 'active'),
+(7,  'ACC-0013', 'savings',  25600.00, 'VERIFIED'),
 -- Henry (user_id = 8)
-(8,  'ACC-0014', 'checking',  5100.00, 'active'),
-(8,  'ACC-0015', 'savings',  39200.00, 'active'),
+(8,  'ACC-0014', 'checking',  5100.00, 'VERIFIED'),
+(8,  'ACC-0015', 'savings',  39200.00, 'VERIFIED'),
 -- Isabel (user_id = 9)
-(9,  'ACC-0016', 'savings',  52000.00, 'active'),
-(9,  'ACC-0017', 'checking',  8750.00, 'active'),
-(9,  'ACC-0018', 'savings',  11300.00, 'active'),
+(9,  'ACC-0016', 'savings',  52000.00, 'VERIFIED'),
+(9,  'ACC-0017', 'checking',  8750.00, 'VERIFIED'),
+(9,  'ACC-0018', 'savings',  11300.00, 'VERIFIED'),
 -- James (user_id = 10)
-(10, 'ACC-0019', 'checking',  6800.00, 'active');
+(10, 'ACC-0019', 'checking',  6800.00, 'VERIFIED');
 
 -- =============================================================
 -- TRANSACTIONS

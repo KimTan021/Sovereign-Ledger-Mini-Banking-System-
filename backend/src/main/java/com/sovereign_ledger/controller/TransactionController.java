@@ -1,19 +1,25 @@
 package com.sovereign_ledger.controller;
 
+import com.sovereign_ledger.dto.request.TransferRequestDTO;
 import com.sovereign_ledger.dto.response.TopAccountDTO;
 import com.sovereign_ledger.entity.Transaction;
+import com.sovereign_ledger.service.AccountService;
 import com.sovereign_ledger.service.TransactionService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
 @RequestMapping("/transaction")
 public class TransactionController {
     private final TransactionService transactionService;
+    private final AccountService accountService;
 
-    public TransactionController(TransactionService transactionService){
+    public TransactionController(TransactionService transactionService, AccountService accountService){
         this.transactionService = transactionService;
+        this.accountService = accountService;
     }
 
     @GetMapping
@@ -54,5 +60,36 @@ public class TransactionController {
     @DeleteMapping("/{id}")
     public void deleteTransaction(@PathVariable Integer id){
         transactionService.deleteTransaction(id);
+    }
+
+    @PostMapping("/{id}/new-transaction-log")
+    public void insertNewTransactionLog(@PathVariable Integer sourceAccountId,
+                                        String transactionType,
+                                        BigDecimal transactionAmount,
+                                        Integer targetAccountId,
+                                        String logs,
+                                        String transactionDescription,
+                                        String transactionStatus){
+        transactionService.insertNewTransactionLog(
+                sourceAccountId,
+                transactionType,
+                transactionAmount,
+                targetAccountId,
+                logs,
+                transactionDescription,
+                transactionStatus
+        );
+    }
+
+    @PutMapping("/transfer-transaction")
+    public ResponseEntity<String> initiateTransaction(@RequestBody TransferRequestDTO request){
+        transactionService.initiateTransaction(
+                accountService.findAccountById(request.getSourceAccountId()),
+                accountService.findAccountById(request.getReceivingAccountId()),
+                request.getTransAmount(),
+                request.getLogs(),
+                request.getTransactionDescription()
+        );
+        return ResponseEntity.ok("Transaction successful!");
     }
 }

@@ -20,3 +20,6 @@ CREATE TABLE IF NOT EXISTS `pending_user` (
   `request_account_type` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`pending_user_id`),
   UNIQUE INDEX `user_email_UNIQUE` (`user_email` ASC) VISIBLE) ENGINE = InnoDB;
+
+ALTER TABLE `pending_user`
+CHANGE COLUMN `pending_user_id` `pending_user_id` INT NOT NULL AUTO_INCREMENT ;
