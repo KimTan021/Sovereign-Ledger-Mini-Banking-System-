@@ -53,6 +53,7 @@ public class BankSeeder {
         customerAccount.setAccountNumber("1000000001");
         customerAccount.setAccountType("SAVINGS");
         customerAccount.setAccountBalance(new BigDecimal("10000.00"));
+        customerAccount.setAccountStatus("Verified");
         accountRepository.save(customerAccount);
 
         // Admin
@@ -70,6 +71,7 @@ public class BankSeeder {
         adminAccount.setAccountNumber("1000000002");
         adminAccount.setAccountType("SAVINGS");
         adminAccount.setAccountBalance(new BigDecimal("50000.00"));
+        adminAccount.setAccountStatus("Verified");
         accountRepository.save(adminAccount);
 
         Map<String, Object> response = new LinkedHashMap<>();

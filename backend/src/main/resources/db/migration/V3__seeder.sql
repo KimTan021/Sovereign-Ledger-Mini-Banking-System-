@@ -11,16 +11,16 @@ USE `bankdb`;
 -- USERS (10 users, plaintext passwords for testing)
 -- =============================================================
 INSERT INTO `user` (`first_name`, `middle_name`, `last_name`, `user_email`, `password`, `role`) VALUES
-('Alice',   'Marie',     'Santos',     'alice.santos@email.com',     'password123', 'admin'),
-('Bob',     'Cruz',      'Reyes',      'bob.reyes@email.com',        'password123', 'user'),
-('Carol',   'Ann',       'Dela Cruz',  'carol.delacruz@email.com',   'password123', 'user'),
-('David',   'Jose',      'Mendoza',    'david.mendoza@email.com',    'password123', 'user'),
-('Eva',     'Grace',     'Villanueva', 'eva.villanueva@email.com',   'password123', 'user'),
-('Frank',   'Luis',      'Garcia',     'frank.garcia@email.com',     'password123', 'user'),
-('Grace',   'Hope',      'Torres',     'grace.torres@email.com',     'password123', 'user'),
-('Henry',   'Ramon',     'Lim',        'henry.lim@email.com',        'password123', 'user'),
-('Isabel',  'Faith',     'Navarro',    'isabel.navarro@email.com',   'password123', 'user'),
-('James',   'Patrick',   'Aquino',     'james.aquino@email.com',     'password123', 'user');
+('Alice',   'Marie',     'Santos',     'alice.santos@email.com',     '$2a$12$73dmYQ69Gc3FxRhl.FBFAetaZF8sI77mCsyMbhfvn00OKqYtxdOTG', 'admin'),
+('Bob',     'Cruz',      'Reyes',      'bob.reyes@email.com',        '$2a$12$73dmYQ69Gc3FxRhl.FBFAetaZF8sI77mCsyMbhfvn00OKqYtxdOTG', 'user'),
+('Carol',   'Ann',       'Dela Cruz',  'carol.delacruz@email.com',   '$2a$12$73dmYQ69Gc3FxRhl.FBFAetaZF8sI77mCsyMbhfvn00OKqYtxdOTG', 'user'),
+('David',   'Jose',      'Mendoza',    'david.mendoza@email.com',    '$2a$12$73dmYQ69Gc3FxRhl.FBFAetaZF8sI77mCsyMbhfvn00OKqYtxdOTG', 'user'),
+('Eva',     'Grace',     'Villanueva', 'eva.villanueva@email.com',   '$2a$12$73dmYQ69Gc3FxRhl.FBFAetaZF8sI77mCsyMbhfvn00OKqYtxdOTG', 'user'),
+('Frank',   'Luis',      'Garcia',     'frank.garcia@email.com',     '$2a$12$73dmYQ69Gc3FxRhl.FBFAetaZF8sI77mCsyMbhfvn00OKqYtxdOTG', 'user'),
+('Grace',   'Hope',      'Torres',     'grace.torres@email.com',     '$2a$12$73dmYQ69Gc3FxRhl.FBFAetaZF8sI77mCsyMbhfvn00OKqYtxdOTG', 'user'),
+('Henry',   'Ramon',     'Lim',        'henry.lim@email.com',        '$2a$12$73dmYQ69Gc3FxRhl.FBFAetaZF8sI77mCsyMbhfvn00OKqYtxdOTG', 'user'),
+('Isabel',  'Faith',     'Navarro',    'isabel.navarro@email.com',   '$2a$12$73dmYQ69Gc3FxRhl.FBFAetaZF8sI77mCsyMbhfvn00OKqYtxdOTG', 'user'),
+('James',   'Patrick',   'Aquino',     'james.aquino@email.com',     '$2a$12$73dmYQ69Gc3FxRhl.FBFAetaZF8sI77mCsyMbhfvn00OKqYtxdOTG', 'user');
 
 -- =============================================================
 -- ACCOUNTS

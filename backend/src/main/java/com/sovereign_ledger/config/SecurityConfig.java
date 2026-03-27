@@ -32,7 +32,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 
                 // Public
-                .requestMatchers("/auth/login", "/seed").permitAll()
+                .requestMatchers("/auth/login", "/pending-user/register", "/seed").permitAll()
+                    .requestMatchers("/admin/**").hasRole("ADMIN")
 
                 // Customer
                 .requestMatchers("/accounts/me").hasRole("USER")

@@ -9,8 +9,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 public interface AccountRepository extends JpaRepository<Account, Integer> {
+
+    Optional<Account> findByAccountNumber(String accountNumber);
+
     @Query(value =
             "SELECT a.* " +
             "FROM account AS a " +

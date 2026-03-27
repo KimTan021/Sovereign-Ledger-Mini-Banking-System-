@@ -2,10 +2,12 @@ package com.sovereign_ledger.service;
 
 import com.sovereign_ledger.dto.response.TopAccountDTO;
 import com.sovereign_ledger.entity.Account;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+@Service
 public interface AccountService {
     List<Account> findAllAccounts();
     Account findAccountById(Integer id);
