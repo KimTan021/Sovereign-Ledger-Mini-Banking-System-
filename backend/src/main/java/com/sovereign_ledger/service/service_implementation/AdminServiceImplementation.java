@@ -78,17 +78,24 @@ public class AdminServiceImplementation implements AdminService {
         PendingUser pendingUser = pendingUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pending user not found with id: " + id));
 
-        // 1. Create and save User
-        User user = new User();
-        user.setFirstName(pendingUser.getFirstName());
-        user.setMiddleName(pendingUser.getMiddleName());
-        user.setLastName(pendingUser.getLastName());
-        user.setUserEmail(pendingUser.getUserEmail());
-        user.setPassword(pendingUser.getPassword()); // already encoded
-        user.setRole("USER");
-        userRepository.save(user);
+        User user;
 
-        // 2. Generate and encrypt account number
+        if (pendingUser.getExistingUser() != null) {
+            // Existing user requesting additional account — just fetch
+            user = pendingUser.getExistingUser();
+        } else {
+            // New user registration — create a new User
+            user = new User();
+            user.setFirstName(pendingUser.getFirstName());
+            user.setMiddleName(pendingUser.getMiddleName());
+            user.setLastName(pendingUser.getLastName());
+            user.setUserEmail(pendingUser.getUserEmail());
+            user.setPassword(pendingUser.getPassword());
+            user.setRole("user");
+            userRepository.save(user);
+        }
+
+        // Generate and encrypt account number
         String rawAccountNumber = generateAccountNumber();
         String encryptedAccountNumber;
         try {
@@ -97,7 +104,7 @@ public class AdminServiceImplementation implements AdminService {
             throw new RuntimeException("Failed to encrypt account number", e);
         }
 
-        // 3. Create and save Account
+        // Create and save Account linked to the user
         Account account = new Account();
         account.setUser(user);
         account.setAccountNumber(encryptedAccountNumber);
@@ -106,10 +113,8 @@ public class AdminServiceImplementation implements AdminService {
         account.setAccountStatus("Verified");
         accountRepository.save(account);
 
-        // 4. Delete pending user
         pendingUserRepository.deleteById(id);
 
-        // 5. Map to response
         UserApprovalResponseDTO response = new UserApprovalResponseDTO();
         response.setUserId(user.getUserId());
         response.setFirstName(user.getFirstName());
@@ -120,7 +125,6 @@ public class AdminServiceImplementation implements AdminService {
         response.setAccountType(account.getAccountType());
         response.setAccountStatus(account.getAccountStatus());
         response.setAccountBalance(account.getAccountBalance().toPlainString());
-
         return response;
     }
 
