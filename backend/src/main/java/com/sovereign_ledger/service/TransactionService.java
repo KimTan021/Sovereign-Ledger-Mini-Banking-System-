@@ -15,7 +15,7 @@ public interface TransactionService {
     List<Transaction> findAllUserTransactions(Integer id);
     Integer findTransactionVolumeToday();
     List<Transaction> findAllTransactionsLastMonthById(Integer id);
-    Integer findSumAllTransactionsLastMonthById(Integer id);
+    BigDecimal findSumAllTransactionsLastMonthById(Integer id);
 
     Transaction saveTransaction(Transaction transaction);
 

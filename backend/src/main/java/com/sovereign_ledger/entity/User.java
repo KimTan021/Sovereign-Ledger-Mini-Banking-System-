@@ -37,7 +37,7 @@ public class User {
     private String password;
 
     @Column(name = "role", nullable = false)
-    private String Role;
+    private String role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Account> accounts;

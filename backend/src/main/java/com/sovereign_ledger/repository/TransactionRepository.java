@@ -45,7 +45,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
             "WHERE YEAR(transaction_time) = YEAR(CURRENT_DATE - INTERVAL 1 MONTH) " +
             "AND MONTH(transaction_time) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH) " +
             "AND u.user_id = :id;", nativeQuery = true) //Q4
-    Integer findSumAllTransactionsLastMonthById(@Param("id") Integer userId);
+    BigDecimal findSumAllTransactionsLastMonthById(@Param("id") Integer userId);
     //Fetch sum of all transaction of user from last month
 
     @Modifying(clearAutomatically = true)

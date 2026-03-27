@@ -2,6 +2,7 @@ package com.sovereign_ledger.service.service_implementation;
 
 import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.entity.Transaction;
+import com.sovereign_ledger.exception.exception_classes.AccountNotFoundException;
 import com.sovereign_ledger.exception.exception_classes.AccountNotVerifiedException;
 import com.sovereign_ledger.exception.exception_classes.InsufficientBalanceException;
 import com.sovereign_ledger.repository.AccountRepository;
@@ -19,14 +20,17 @@ public class TransactionServiceImplementation implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final AccountServiceImplementation accountServiceImplementation;
 
     public TransactionServiceImplementation(
             TransactionRepository transactionRepository,
             AccountRepository accountRepository,
-            UserRepository userRepository){
+            UserRepository userRepository,
+            AccountServiceImplementation accountServiceImplementation){
         this.transactionRepository=transactionRepository;
         this.accountRepository=accountRepository;
         this.userRepository=userRepository;
+        this.accountServiceImplementation=accountServiceImplementation;
     }
 
     public List<Transaction> findAllTransactions(){
@@ -49,7 +53,7 @@ public class TransactionServiceImplementation implements TransactionService {
         return transactionRepository.findAllTransactionsLastMonthById(id);
     } //Q3
 
-    public Integer findSumAllTransactionsLastMonthById(Integer id){
+    public BigDecimal findSumAllTransactionsLastMonthById(Integer id){
         return transactionRepository.findSumAllTransactionsLastMonthById(id);
     } //Q4
 
@@ -79,6 +83,7 @@ public class TransactionServiceImplementation implements TransactionService {
         transactionRepository.deleteById(id);
     }
 
+    //Note: For this, the source Account will always be an account that the user has access to. There should be no reason to throw an error for not having an existing source account
     @Transactional
     public void initiateTransaction(
             Account sourceAccount,
@@ -87,7 +92,11 @@ public class TransactionServiceImplementation implements TransactionService {
             String logs,
             String transactionDescription
             ) {
-        if ((!sourceAccount.getAccountStatus().equals("VERIFIED")) || (!receivingAccount.getAccountStatus().equals("VERIFIED"))){
+        if (accountServiceImplementation.findAccountById(receivingAccount.getAccountId())==null) {
+            throw new AccountNotFoundException("The account you are trying to send money to does not exist.");
+        }
+
+        if ((!sourceAccount.getAccountStatus().equals("Verified")) || (!receivingAccount.getAccountStatus().equals("Verified"))){
             throw new AccountNotVerifiedException("An account involved in the transaction is currently unverified. Transaction cannot proceed unless all accounts involved are verified.");
         }
 

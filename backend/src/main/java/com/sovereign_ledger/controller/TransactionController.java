@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/transaction")
+@RequestMapping("/transactions")
 public class TransactionController {
     private final TransactionService transactionService;
     private final AccountService accountService;
@@ -43,12 +43,12 @@ public class TransactionController {
     }
 
     @GetMapping("/{userId}/all-transactions-last-month")
-    public List<Transaction> findAllTransactionsLastMonthById(Integer userId){
+    public List<Transaction> findAllTransactionsLastMonthById(@PathVariable Integer userId){
         return transactionService.findAllTransactionsLastMonthById(userId);
     }
 
     @GetMapping("/{userId}/all-transactions-last-month-sum")
-    public Integer findSumAllTransactionsLastMonthById(Integer userId){
+    public BigDecimal findSumAllTransactionsLastMonthById(Integer userId){
         return transactionService.findSumAllTransactionsLastMonthById(userId);
     }
 

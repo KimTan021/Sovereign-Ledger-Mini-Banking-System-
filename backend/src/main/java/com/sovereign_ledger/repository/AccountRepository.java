@@ -31,7 +31,7 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     BigDecimal findAccountBalanceByUserIdAndAccountId(@Param("uid") Integer userId, @Param("aid") Integer accountId);
     // Query for fetching balance of a user's specific account (Q3)
 
-    @Query(value = "SELECT COUNT(user_id) FROM user WHERE role='user'", nativeQuery = true)
+    @Query(value = "SELECT COUNT(user_id) FROM user WHERE role='USER'", nativeQuery = true)
     Integer findTotalUserAccounts();
     // Query for fetching total number of users, excluding admins (Q4)
 

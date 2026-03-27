@@ -2,6 +2,7 @@ package com.sovereign_ledger.service.service_implementation;
 
 import com.sovereign_ledger.dto.response.TopAccountDTO;
 import com.sovereign_ledger.entity.Account;
+import com.sovereign_ledger.exception.exception_classes.AccountNotFoundException;
 import com.sovereign_ledger.repository.AccountRepository;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.AccountService;
@@ -29,7 +30,7 @@ public class AccountServiceImplementation implements AccountService {
     }
 
     public Account findAccountById(Integer id){
-        return accountRepository.findById(id).orElse(null);
+        return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException("No account found at id: " + id));
     }
 
     public List<Account> findAllAccountsByUserId(Integer id){
