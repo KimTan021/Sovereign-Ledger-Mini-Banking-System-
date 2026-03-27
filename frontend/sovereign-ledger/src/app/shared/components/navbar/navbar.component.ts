@@ -12,7 +12,10 @@ import { AuthService } from '../../../core/services/auth.service';
         <div class="flex justify-between items-center h-16">
           <!-- Logo & Desktop Navigation -->
           <div class="flex items-center gap-8">
-            <a routerLink="/customer/dashboard" class="text-xl font-black text-primary font-headline tracking-tight">Sovereign Ledger</a>
+            <a routerLink="/customer/dashboard" class="flex items-center gap-2 group cursor-pointer">
+              <img src="/logo.png" alt="Sovereign Ledger" class="h-8 w-auto transition-transform group-hover:scale-105" />
+              <span class="text-xl font-black text-primary font-headline tracking-tighter hidden sm:inline">Sovereign</span>
+            </a>
             <div class="hidden md:flex items-center gap-6">
               <a routerLink="/customer/dashboard"
                  routerLinkActive="text-primary after:content-[''] after:absolute after:bottom-[-20px] after:left-0 after:w-full after:h-0.5 after:bg-primary"
@@ -51,7 +54,10 @@ import { AuthService } from '../../../core/services/auth.service';
     @if (isMenuOpen()) {
       <div class="md:hidden fixed inset-0 z-[9999] bg-white flex flex-col p-6 animate-in slide-in-from-top duration-300" style="background-color: white !important;">
         <div class="flex justify-between items-center mb-10">
-          <span class="text-xl font-black text-primary font-headline">Sovereign Ledger</span>
+          <div class="flex items-center gap-2">
+            <img src="/logo.png" alt="Sovereign Ledger" class="h-8 w-auto" />
+            <span class="text-xl font-black text-primary font-headline">Sovereign</span>
+          </div>
           <button (click)="toggleMenu()" class="p-2 text-on-surface-variant cursor-pointer">
             <span class="material-symbols-outlined">close</span>
           </button>

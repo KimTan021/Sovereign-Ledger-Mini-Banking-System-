@@ -1,12 +1,19 @@
 <div class="bg-surface min-h-screen flex flex-col md:flex-row overflow-hidden">
   <!-- Left Column: Branding & Visual Anchor -->
   <section class="hidden md:flex md:w-1/2 primary-gradient relative p-16 flex-col justify-between overflow-hidden">
+    <!-- Asset: Hero Image -->
+    <img src="/login-hero.png" alt="Sovereign Financial Background" class="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay">
+    
     <!-- Abstract Decorative Elements -->
     <div class="absolute top-[-10%] right-[-10%] w-96 h-96 bg-primary-container opacity-20 rounded-full blur-3xl"></div>
     <div class="absolute bottom-[-5%] left-[-5%] w-64 h-64 bg-tertiary opacity-10 rounded-full blur-3xl"></div>
+    
     <div class="relative z-10">
-      <h1 class="font-headline text-4xl font-extrabold tracking-tighter text-white mb-2">Sovereign Ledger</h1>
-      <p class="text-on-primary-container font-medium max-w-sm">Elevated financial oversight for the modern institution.</p>
+      <div class="flex items-center gap-3 mb-4">
+        <img src="/logo.png" alt="Sovereign Ledger Logo" class="h-10 w-auto" />
+        <h1 class="font-headline text-4xl font-extrabold tracking-tighter text-white">Sovereign Ledger</h1>
+      </div>
+      <p class="text-on-primary-container font-medium max-w-sm opacity-90">Elevated financial oversight for the modern institution.</p>
     </div>
     <div class="relative z-10 space-y-8">
       <div class="glass-panel p-8 rounded-xl max-w-md shadow-2xl shadow-primary/20 border border-white/10">
@@ -33,6 +40,10 @@
   <main class="w-full md:w-1/2 flex items-center justify-center p-6 sm:p-12 md:p-24 bg-surface-bright relative">
     <div class="w-full max-w-md">
       <header class="mb-10 text-center md:text-left">
+        <div class="md:hidden flex flex-col items-center mb-6">
+          <img src="/logo.png" alt="Sovereign Ledger Logo" class="h-12 w-auto mb-2" />
+          <h1 class="font-headline text-2xl font-black text-primary tracking-tighter">Sovereign Ledger</h1>
+        </div>
         <h2 class="font-headline text-3xl font-bold text-on-surface tracking-tight mb-2">Welcome Back</h2>
         <p class="text-on-surface-variant text-sm">Access your secure financial dashboard</p>
       </header>
@@ -147,7 +158,7 @@
       <footer class="mt-8 flex flex-col items-center gap-6">
         <div class="flex items-center gap-2 text-on-surface-variant text-sm">
           <span>New to Sovereign?</span>
-          <a class="font-bold text-primary hover:underline underline-offset-4 decoration-2 cursor-pointer">Request an Account</a>
+          <a routerLink="/request-account" class="font-bold text-primary hover:underline underline-offset-4 decoration-2 cursor-pointer">Request an Account</a>
         </div>
         <div class="w-full h-px bg-outline-variant/20"></div>
         <div class="flex items-center gap-4">

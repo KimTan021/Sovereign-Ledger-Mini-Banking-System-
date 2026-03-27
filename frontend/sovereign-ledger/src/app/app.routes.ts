@@ -8,6 +8,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent),
   },
   {
+    path: 'request-account',
+    loadComponent: () => import('./features/auth/request-account/request-account.component').then(m => m.RequestAccountComponent),
+  },
+  {
     path: 'customer',
     canActivate: [authGuard, roleGuard],
     data: { expectedRole: 'customer' },
