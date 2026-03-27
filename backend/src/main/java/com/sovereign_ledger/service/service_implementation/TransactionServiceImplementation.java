@@ -1,5 +1,7 @@
 package com.sovereign_ledger.service.service_implementation;
 
+import com.sovereign_ledger.dto.response.AccountResponseDTO;
+import com.sovereign_ledger.dto.response.TransactionResponseDTO;
 import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.entity.Transaction;
 import com.sovereign_ledger.exception.exception_classes.AccountNotFoundException;
@@ -22,6 +24,20 @@ public class TransactionServiceImplementation implements TransactionService {
     private final UserRepository userRepository;
     private final AccountServiceImplementation accountServiceImplementation;
 
+    private TransactionResponseDTO toTransactionResponseDTO(Transaction transaction){
+        return new TransactionResponseDTO(
+                transaction.getTransactionId(),
+                transaction.getAccount().getAccountId(),
+                transaction.getTransactionType(),
+                transaction.getTransactionAmount(),
+                transaction.getAccountIdDestination(),
+                transaction.getLogs(),
+                transaction.getTransactionTime(),
+                transaction.getTransactionDescription(),
+                transaction.getTransactionStatus()
+        );
+    }
+
     public TransactionServiceImplementation(
             TransactionRepository transactionRepository,
             AccountRepository accountRepository,
@@ -33,32 +49,42 @@ public class TransactionServiceImplementation implements TransactionService {
         this.accountServiceImplementation=accountServiceImplementation;
     }
 
-    public List<Transaction> findAllTransactions(){
-        return transactionRepository.findAll();
+    public List<TransactionResponseDTO> findAllTransactions(){
+        return transactionRepository.findAll()
+                .stream()
+                .map(t -> toTransactionResponseDTO(t))
+                .toList();
     }
 
-    public Transaction findTransactionById(Integer id){
-        return transactionRepository.findById(id).orElse(null);
+    public TransactionResponseDTO findTransactionById(Integer id){
+        Transaction transaction = transactionRepository.findById(id).orElse(null);
+        return toTransactionResponseDTO(transaction);
     }
 
-    public List<Transaction> findAllUserTransactions(Integer id){
-        return transactionRepository.findAllUserTransactions(id);
+    public List<TransactionResponseDTO> findAllUserTransactions(Integer id){
+        return transactionRepository.findAllUserTransactions(id)
+                .stream()
+                .map(t -> toTransactionResponseDTO(t))
+                .toList();
     } //Q1
 
     public Integer findTransactionVolumeToday(){
         return transactionRepository.findTransactionVolumeToday();
     } //Q2
 
-    public List<Transaction> findAllTransactionsLastMonthById(Integer id){
-        return transactionRepository.findAllTransactionsLastMonthById(id);
+    public List<TransactionResponseDTO> findAllTransactionsLastMonthById(Integer id){
+        return transactionRepository.findAllTransactionsLastMonthById(id)
+                .stream()
+                .map(t -> toTransactionResponseDTO(t))
+                .toList();
     } //Q3
 
     public BigDecimal findSumAllTransactionsLastMonthById(Integer id){
         return transactionRepository.findSumAllTransactionsLastMonthById(id);
     } //Q4
 
-    public Transaction saveTransaction(Transaction transaction){
-        return transactionRepository.save(transaction);
+    public TransactionResponseDTO saveTransaction(Transaction transaction){
+        return toTransactionResponseDTO(transactionRepository.save(transaction));
     }
 
     public void insertNewTransactionLog(Integer sourceAccountId,
@@ -92,7 +118,7 @@ public class TransactionServiceImplementation implements TransactionService {
             String logs,
             String transactionDescription
             ) {
-        if (accountServiceImplementation.findAccountById(receivingAccount.getAccountId())==null) {
+        if (accountServiceImplementation.findAccountEntityById(receivingAccount.getAccountId())==null) {
             throw new AccountNotFoundException("The account you are trying to send money to does not exist.");
         }
 

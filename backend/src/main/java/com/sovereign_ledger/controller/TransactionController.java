@@ -1,7 +1,9 @@
 package com.sovereign_ledger.controller;
 
+import com.sovereign_ledger.dto.request.TransactionLogRequestDTO;
 import com.sovereign_ledger.dto.request.TransferRequestDTO;
 import com.sovereign_ledger.dto.response.TopAccountDTO;
+import com.sovereign_ledger.dto.response.TransactionResponseDTO;
 import com.sovereign_ledger.entity.Transaction;
 import com.sovereign_ledger.service.AccountService;
 import com.sovereign_ledger.service.TransactionService;
@@ -23,17 +25,17 @@ public class TransactionController {
     }
 
     @GetMapping
-    public List<Transaction> findAllTransactions(){
+    public List<TransactionResponseDTO> findAllTransactions(){
         return transactionService.findAllTransactions();
     }
 
     @GetMapping("/{id}")
-    public Transaction findTransactionById(@PathVariable Integer id){
+    public TransactionResponseDTO findTransactionById(@PathVariable Integer id){
         return transactionService.findTransactionById(id);
     }
 
     @GetMapping("/{userId}/transactions")
-    public List<Transaction> findAllUserTransactions(@PathVariable Integer userId){
+    public List<TransactionResponseDTO> findAllUserTransactions(@PathVariable Integer userId){
         return transactionService.findAllUserTransactions(userId);
     }
 
@@ -43,7 +45,7 @@ public class TransactionController {
     }
 
     @GetMapping("/{userId}/all-transactions-last-month")
-    public List<Transaction> findAllTransactionsLastMonthById(@PathVariable Integer userId){
+    public List<TransactionResponseDTO> findAllTransactionsLastMonthById(@PathVariable Integer userId){
         return transactionService.findAllTransactionsLastMonthById(userId);
     }
 
@@ -53,7 +55,7 @@ public class TransactionController {
     }
 
     @PutMapping
-    public Transaction saveTransaction(@RequestBody Transaction transaction){
+    public TransactionResponseDTO saveTransaction(@RequestBody Transaction transaction){
         return transactionService.saveTransaction(transaction);
     }
 
@@ -62,30 +64,24 @@ public class TransactionController {
         transactionService.deleteTransaction(id);
     }
 
-    @PostMapping("/{id}/new-transaction-log")
-    public void insertNewTransactionLog(@PathVariable Integer sourceAccountId,
-                                        String transactionType,
-                                        BigDecimal transactionAmount,
-                                        Integer targetAccountId,
-                                        String logs,
-                                        String transactionDescription,
-                                        String transactionStatus){
+    @PostMapping("/new-transaction-log")
+    public void insertNewTransactionLog(@RequestBody TransactionLogRequestDTO dto){
         transactionService.insertNewTransactionLog(
-                sourceAccountId,
-                transactionType,
-                transactionAmount,
-                targetAccountId,
-                logs,
-                transactionDescription,
-                transactionStatus
+                dto.getSourceAccountId(),
+                dto.getTransactionType(),
+                dto.getTransactionAmount(),
+                dto.getTargetAccountId(),
+                dto.getLogs(),
+                dto.getTransactionDescription(),
+                dto.getTransactionStatus()
         );
     }
 
     @PutMapping("/transfer-transaction")
     public ResponseEntity<String> initiateTransaction(@RequestBody TransferRequestDTO request){
         transactionService.initiateTransaction(
-                accountService.findAccountById(request.getSourceAccountId()),
-                accountService.findAccountById(request.getReceivingAccountId()),
+                accountService.findAccountEntityById(request.getSourceAccountId()),
+                accountService.findAccountEntityById(request.getReceivingAccountId()),
                 request.getTransAmount(),
                 request.getLogs(),
                 request.getTransactionDescription()

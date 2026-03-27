@@ -1,5 +1,6 @@
 package com.sovereign_ledger.controller;
 
+import com.sovereign_ledger.dto.response.AccountResponseDTO;
 import com.sovereign_ledger.dto.response.TopAccountDTO;
 import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.service.AccountService;
@@ -19,17 +20,17 @@ public class AccountController {
     }
 
     @GetMapping
-    public List<Account> findAllAccounts(){
+    public List<AccountResponseDTO> findAllAccounts(){
         return accountService.findAllAccounts();
     }
 
     @GetMapping("/{id}")
-    public Account findAccountById(@PathVariable Integer id){
+    public AccountResponseDTO findAccountById(@PathVariable Integer id){
         return accountService.findAccountById(id);
     }
 
     @GetMapping("/{id}/accounts")
-    public List<Account> findAllAccountsById(@PathVariable Integer id){
+    public List<AccountResponseDTO> findAllAccountsById(@PathVariable Integer id){
         return accountService.findAllAccountsByUserId(id);
     }
 
@@ -59,7 +60,7 @@ public class AccountController {
     }
 
     @PutMapping
-    public Account saveAccount(@RequestBody Account account){
+    public AccountResponseDTO saveAccount(@RequestBody Account account){
         return accountService.saveAccount(account);
     }
 
