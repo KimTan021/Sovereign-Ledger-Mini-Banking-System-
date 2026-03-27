@@ -32,17 +32,18 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 
                 // Public
-                .requestMatchers("/auth/login", "/pending-user/register", "/seed").permitAll()
-                    .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/auth/login", "/pending-user/register").permitAll()
+                    .requestMatchers("/admin/**").hasRole("admin")
+                    .requestMatchers("/seed").hasRole("admin")
 
                 // Customer
-                .requestMatchers("/accounts/me").hasRole("USER")
-                .requestMatchers("/transfers/**").hasRole("USER")
-                .requestMatchers("/transactions/me").hasRole("USER")
+                .requestMatchers("/accounts/me").hasRole("user")
+                .requestMatchers("/transfers/**").hasRole("user")
+                .requestMatchers("/transactions/me").hasRole("user")
 
                 // Admin
-                .requestMatchers("/accounts/**").hasRole("ADMIN")
-                .requestMatchers("/transactions/**").hasRole("ADMIN")
+                .requestMatchers("/accounts/**").hasRole("admin")
+                .requestMatchers("/transactions/**").hasRole("admin")
 
                 .anyRequest().authenticated()
             )

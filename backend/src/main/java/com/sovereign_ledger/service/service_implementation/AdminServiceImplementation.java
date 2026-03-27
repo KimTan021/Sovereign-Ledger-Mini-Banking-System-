@@ -85,7 +85,7 @@ public class AdminServiceImplementation implements AdminService {
         user.setLastName(pendingUser.getLastName());
         user.setUserEmail(pendingUser.getUserEmail());
         user.setPassword(pendingUser.getPassword()); // already encoded
-        user.setRole("USER");
+        user.setRole("user");
         userRepository.save(user);
 
         // 2. Generate and encrypt account number
