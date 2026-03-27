@@ -1,8 +1,10 @@
 package com.sovereign_ledger.service.service_implementation;
 
+import com.sovereign_ledger.dto.request.AdditionalAccountRequestDTO;
 import com.sovereign_ledger.dto.request.PendingUserRequestDTO;
 import com.sovereign_ledger.dto.response.PendingUserResponseDTO;
 import com.sovereign_ledger.entity.PendingUser;
+import com.sovereign_ledger.entity.User;
 import com.sovereign_ledger.repository.PendingUserRepository;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.PendingUserService;
@@ -47,5 +49,36 @@ public class PendingUserServiceImplementation implements PendingUserService {
         pendingUser.setRequestTime(LocalDateTime.now());
 
         return PendingUserResponseDTO.fromEntity(pendingUserRepository.save(pendingUser));
+    }
+
+    @Override
+    public PendingUserResponseDTO requestAdditionalAccount (AdditionalAccountRequestDTO dto, String userEmail) {
+
+        // Fetch the currently logged in user
+        User existingUser = userRepository.findByUserEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Populate pending_user with existing user's data
+        PendingUser pendingUser = new PendingUser();
+        pendingUser.setFirstName(existingUser.getFirstName());
+        pendingUser.setMiddleName(existingUser.getMiddleName());
+        pendingUser.setLastName(existingUser.getLastName());
+        pendingUser.setUserEmail(existingUser.getUserEmail());
+        pendingUser.setPassword(existingUser.getPassword());
+        pendingUser.setRequestAccountType(dto.getRequestAccountType());
+        pendingUser.setRequestTime(LocalDateTime.now());
+        pendingUser.setExistingUser(existingUser); // sets the user_id foreign key
+
+        PendingUser saved = pendingUserRepository.save(pendingUser);
+
+        PendingUserResponseDTO response = new PendingUserResponseDTO();
+        response.setUserId(saved.getUserId());
+        response.setFirstName(saved.getFirstName());
+        response.setMiddleName(saved.getMiddleName());
+        response.setLastName(saved.getLastName());
+        response.setUserEmail(saved.getUserEmail());
+        response.setRequestAccountType(saved.getRequestAccountType());
+        response.setRequestTime(saved.getRequestTime());
+        return response;
     }
 }

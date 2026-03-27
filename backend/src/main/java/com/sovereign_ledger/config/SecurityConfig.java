@@ -33,15 +33,17 @@ public class SecurityConfig {
 
                 // Public
                 .requestMatchers("/auth/login", "/pending-user/register").permitAll()
-                    .requestMatchers("/admin/**").hasRole("admin")
-                    .requestMatchers("/seed").hasRole("admin")
 
-                // Customer
+
+                // User
+                .requestMatchers("/pending-user/request-account").hasRole("user")
+
                 .requestMatchers("/accounts/me").hasRole("user")
                 .requestMatchers("/transfers/**").hasRole("user")
                 .requestMatchers("/transactions/me").hasRole("user")
 
                 // Admin
+                .requestMatchers("/admin/**").hasRole("admin").requestMatchers("/seed").hasRole("admin")
                 .requestMatchers("/accounts/**").hasRole("admin")
                 .requestMatchers("/transactions/**").hasRole("admin")
 

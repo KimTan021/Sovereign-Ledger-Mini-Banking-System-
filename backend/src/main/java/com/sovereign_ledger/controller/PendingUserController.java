@@ -1,9 +1,15 @@
 package com.sovereign_ledger.controller;
 
+import com.sovereign_ledger.dto.request.AdditionalAccountRequestDTO;
 import com.sovereign_ledger.dto.request.PendingUserRequestDTO;
 import com.sovereign_ledger.dto.response.PendingUserResponseDTO;
 import com.sovereign_ledger.entity.PendingUser;
 import com.sovereign_ledger.service.PendingUserService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,8 +24,16 @@ public class PendingUserController {
     }
 
     @PostMapping("/register")
-    public PendingUserResponseDTO savePendingUser(@RequestBody PendingUserRequestDTO dto){
-        return pendingUserService.savePendingUser(dto);
+    public ResponseEntity<PendingUserResponseDTO> savePendingUser(@Valid @RequestBody PendingUserRequestDTO dto){
+        return ResponseEntity.status(HttpStatus.CREATED).body(pendingUserService.savePendingUser(dto));
+    }
+
+    @PostMapping("/request-account")
+    public ResponseEntity<PendingUserResponseDTO> requestAdditionalAccount(
+            @Valid @RequestBody AdditionalAccountRequestDTO dto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(pendingUserService.requestAdditionalAccount(dto, userDetails.getUsername()));
     }
 
 }
