@@ -20,3 +20,17 @@ CREATE TABLE IF NOT EXISTS `pending_user` (
   `request_account_type` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`pending_user_id`),
   UNIQUE INDEX `user_email_UNIQUE` (`user_email` ASC) VISIBLE) ENGINE = InnoDB;
+
+ALTER TABLE `pending_user`
+CHANGE COLUMN `pending_user_id` `pending_user_id` INT NOT NULL AUTO_INCREMENT ;
+
+ALTER TABLE `pending_user`
+ADD COLUMN `user_id` INT NULL AFTER `request_account_type`,
+ADD INDEX `pufk_idx` (`user_id` ASC) VISIBLE;
+
+ALTER TABLE `pending_user`
+ADD CONSTRAINT `pufk`
+  FOREIGN KEY (`user_id`)
+  REFERENCES `user` (`user_id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;

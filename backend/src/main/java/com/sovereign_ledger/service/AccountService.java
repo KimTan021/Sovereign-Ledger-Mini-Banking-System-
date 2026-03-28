@@ -1,22 +1,26 @@
 package com.sovereign_ledger.service;
 
+import com.sovereign_ledger.dto.response.AccountResponseDTO;
 import com.sovereign_ledger.dto.response.TopAccountDTO;
 import com.sovereign_ledger.entity.Account;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+@Service
 public interface AccountService {
-    List<Account> findAllAccounts();
-    Account findAccountById(Integer id);
-    List<Account> findAllAccountsByUserId(Integer id);
+    List<AccountResponseDTO> findAllAccounts();
+    AccountResponseDTO findAccountById(Integer id);
+    Account findAccountEntityById(Integer id);
+    List<AccountResponseDTO> findAllAccountsByUserId(Integer id);
     BigDecimal findTotalAccountBalanceByUserId(Integer id);
     BigDecimal findAccountBalanceByUserIdAndAccountId(Integer uid, Integer aid);
     Integer findTotalUserAccounts();
     BigDecimal findTotalLiquidity();
     List<TopAccountDTO> findTop3MostValuableAccounts();
 
-    Account saveAccount(Account account);
+    AccountResponseDTO saveAccount(Account account);
 
     void deleteAccount(Integer id);
 }

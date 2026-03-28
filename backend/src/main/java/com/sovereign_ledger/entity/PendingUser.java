@@ -41,4 +41,8 @@ public class PendingUser {
 
     @Column(name = "request_account_type", nullable = false)
     private String requestAccountType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = true)
+    private User existingUser;
 }

@@ -1,7 +1,15 @@
 package com.sovereign_ledger.controller;
 
+import com.sovereign_ledger.dto.request.AdditionalAccountRequestDTO;
+import com.sovereign_ledger.dto.request.PendingUserRequestDTO;
+import com.sovereign_ledger.dto.response.PendingUserResponseDTO;
 import com.sovereign_ledger.entity.PendingUser;
 import com.sovereign_ledger.service.PendingUserService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,27 +19,21 @@ import java.util.List;
 public class PendingUserController {
     private final PendingUserService pendingUserService;
 
-    public PendingUserController(PendingUserService pendingUserService){
+    public PendingUserController(PendingUserService pendingUserService) {
         this.pendingUserService = pendingUserService;
     }
 
-    @GetMapping
-    public List<PendingUser> findAllPendingUsers(){
-        return pendingUserService.findAllPendingUsers();
+    @PostMapping("/register")
+    public ResponseEntity<PendingUserResponseDTO> savePendingUser(@Valid @RequestBody PendingUserRequestDTO dto){
+        return ResponseEntity.status(HttpStatus.CREATED).body(pendingUserService.savePendingUser(dto));
     }
 
-    @GetMapping("/{id}")
-    public PendingUser findPendingUserById(@PathVariable Integer id){
-        return pendingUserService.findPendingUserById(id);
+    @PostMapping("/request-account")
+    public ResponseEntity<PendingUserResponseDTO> requestAdditionalAccount(
+            @Valid @RequestBody AdditionalAccountRequestDTO dto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(pendingUserService.requestAdditionalAccount(dto, userDetails.getUsername()));
     }
 
-    @PostMapping
-    public PendingUser savePendingUser(@RequestBody PendingUser pendingUser){
-        return pendingUserService.savePendingUser(pendingUser);
-    }
-
-    @DeleteMapping("/{id}")
-    public void deletePendingUser(@PathVariable Integer id){
-        pendingUserService.deletePendingUser(id);
-    }
 }
