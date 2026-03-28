@@ -1,5 +1,6 @@
 package com.sovereign_ledger.controller;
 
+import com.sovereign_ledger.dto.response.UserResponseDTO;
 import com.sovereign_ledger.entity.User;
 import com.sovereign_ledger.service.UserService;
 import org.springframework.web.bind.annotation.*;
@@ -16,17 +17,17 @@ public class UserController {
     }
 
     @GetMapping
-    public List<User> findAllUsers(){
+    public List<UserResponseDTO> findAllUsers(){
         return userService.findAllUsers();
     }
 
     @GetMapping("/{id}")
-    public User findUserById(@PathVariable Integer id){
+    public UserResponseDTO findUserById(@PathVariable Integer id){
         return userService.findUserById(id);
     }
 
     @PutMapping
-    public User saveUser(@RequestBody User user){
+    public UserResponseDTO saveUser(@RequestBody User user){
         return userService.saveUser(user);
     }
 
