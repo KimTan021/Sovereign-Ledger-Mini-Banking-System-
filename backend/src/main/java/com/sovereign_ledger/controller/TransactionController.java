@@ -25,43 +25,44 @@ public class TransactionController {
     }
 
     @GetMapping
-    public List<TransactionResponseDTO> findAllTransactions(){
-        return transactionService.findAllTransactions();
+    public ResponseEntity<List<TransactionResponseDTO>> findAllTransactions(){
+        return ResponseEntity.ok(transactionService.findAllTransactions());
     }
 
     @GetMapping("/{id}")
-    public TransactionResponseDTO findTransactionById(@PathVariable Integer id){
-        return transactionService.findTransactionById(id);
+    public ResponseEntity<TransactionResponseDTO> findTransactionById(@PathVariable Integer id){
+        return ResponseEntity.ok(transactionService.findTransactionById(id));
     }
 
     @GetMapping("/{userId}/transactions")
-    public List<TransactionResponseDTO> findAllUserTransactions(@PathVariable Integer userId){
-        return transactionService.findAllUserTransactions(userId);
+    public ResponseEntity<List<TransactionResponseDTO>> findAllUserTransactions(@PathVariable Integer userId){
+        return ResponseEntity.ok(transactionService.findAllUserTransactions(userId));
     }
 
     @GetMapping("/total-volume-today")
-    public Integer findTransactionVolumeToday(){
-        return transactionService.findTransactionVolumeToday();
+    public ResponseEntity<Integer> findTransactionVolumeToday(){
+        return ResponseEntity.ok(transactionService.findTransactionVolumeToday());
     }
 
     @GetMapping("/{userId}/all-transactions-last-month")
-    public List<TransactionResponseDTO> findAllTransactionsLastMonthById(@PathVariable Integer userId){
-        return transactionService.findAllTransactionsLastMonthById(userId);
+    public ResponseEntity<List<TransactionResponseDTO>> findAllTransactionsLastMonthById(@PathVariable Integer userId){
+        return ResponseEntity.ok(transactionService.findAllTransactionsLastMonthById(userId));
     }
 
     @GetMapping("/{userId}/all-transactions-last-month-sum")
-    public BigDecimal findSumAllTransactionsLastMonthById(@PathVariable Integer userId){
-        return transactionService.findSumAllTransactionsLastMonthById(userId);
+    public ResponseEntity<BigDecimal> findSumAllTransactionsLastMonthById(@PathVariable Integer userId){
+        return ResponseEntity.ok(transactionService.findSumAllTransactionsLastMonthById(userId));
     }
 
     @PutMapping
-    public TransactionResponseDTO saveTransaction(@RequestBody Transaction transaction){
-        return transactionService.saveTransaction(transaction);
+    public ResponseEntity<TransactionResponseDTO> saveTransaction(@RequestBody Transaction transaction){
+        return ResponseEntity.ok(transactionService.saveTransaction(transaction));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteTransaction(@PathVariable Integer id){
+    public ResponseEntity<Void> deleteTransaction(@PathVariable Integer id){
         transactionService.deleteTransaction(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/new-transaction-log")
