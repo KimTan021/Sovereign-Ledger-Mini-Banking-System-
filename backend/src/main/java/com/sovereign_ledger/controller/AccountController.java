@@ -34,27 +34,27 @@ public class AccountController {
         return accountService.findAllAccountsByUserId(id);
     }
 
-    @GetMapping("/{id}/accounts/total-balance")
-    public BigDecimal findTotalAccountBalanceByUserId(@PathVariable Integer id){
-        return accountService.findTotalAccountBalanceByUserId(id);
+    @GetMapping("/{userId}/accounts/total-balance")
+    public BigDecimal findTotalAccountBalanceByUserId(@PathVariable Integer userId){
+        return accountService.findTotalAccountBalanceByUserId(userId);
     }
 
-    @GetMapping("/{userId}/accounts/{accountId}/balance")
+    @GetMapping("/{userId}/accounts/{accountId}/balance") //tested-works
     public BigDecimal findAccountBalanceByUserIdAndAccountId(@PathVariable Integer userId,@PathVariable Integer accountId){
         return accountService.findAccountBalanceByUserIdAndAccountId(userId, accountId);
     }
 
-    @GetMapping("/total-user-accounts")
+    @GetMapping("/total-user-accounts") //tested-works
     public Integer findTotalUserAccounts(){
         return accountService.findTotalUserAccounts();
     }
 
-    @GetMapping("/total-liquidity")
+    @GetMapping("/total-liquidity") //tested - works
     public BigDecimal findTotalLiquidity(){
         return accountService.findTotalLiquidity();
     }
 
-    @GetMapping("/most-valuable-accounts")
+    @GetMapping("/most-valuable-accounts")  // tested - works
     public List<TopAccountDTO> findTop3MostValuableAccounts(){
         return accountService.findTop3MostValuableAccounts();
     }

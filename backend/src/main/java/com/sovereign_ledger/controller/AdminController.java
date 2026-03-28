@@ -6,6 +6,7 @@ import com.sovereign_ledger.dto.response.UserResponseDTO;
 import com.sovereign_ledger.entity.PendingUser;
 import com.sovereign_ledger.repository.PendingUserRepository;
 import com.sovereign_ledger.service.AdminService;
+import com.sovereign_ledger.service.SeedTransactionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,10 +21,14 @@ public class AdminController {
 
     private final AdminService adminService;
     private final PendingUserRepository pendingUserRepository;
+    private final SeedTransactionService seedTransactionService;
 
-    public AdminController(AdminService adminService, PendingUserRepository pendingUserRepository) {
+    public AdminController(AdminService adminService,
+                           PendingUserRepository pendingUserRepository,
+                           SeedTransactionService seedTransactionService) {
         this.adminService = adminService;
         this.pendingUserRepository = pendingUserRepository;
+        this.seedTransactionService = seedTransactionService;
     }
 
     @GetMapping("/users")
@@ -62,6 +67,12 @@ public class AdminController {
         List<UserApprovalResponseDTO> approved = pending.stream()
                 .map(p -> adminService.approvePendingUser(p.getUserId())) // through service
                 .collect(Collectors.toList());
+
+        // Seed backdated transactions for the first 3 newly approved users
+        List<Integer> approvedUserIds = approved.stream()
+                .map(UserApprovalResponseDTO::getUserId)
+                .collect(Collectors.toList());
+        seedTransactionService.seedForApprovedUsers(approvedUserIds);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("status", "success");

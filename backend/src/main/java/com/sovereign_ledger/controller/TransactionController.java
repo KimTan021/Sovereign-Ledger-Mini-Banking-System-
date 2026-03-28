@@ -50,7 +50,7 @@ public class TransactionController {
     }
 
     @GetMapping("/{userId}/all-transactions-last-month-sum")
-    public BigDecimal findSumAllTransactionsLastMonthById(Integer userId){
+    public BigDecimal findSumAllTransactionsLastMonthById(@PathVariable Integer userId){
         return transactionService.findSumAllTransactionsLastMonthById(userId);
     }
 
