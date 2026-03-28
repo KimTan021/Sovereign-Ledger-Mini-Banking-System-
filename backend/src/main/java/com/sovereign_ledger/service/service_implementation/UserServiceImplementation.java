@@ -1,5 +1,8 @@
 package com.sovereign_ledger.service.service_implementation;
 
+import com.sovereign_ledger.dto.response.AccountResponseDTO;
+import com.sovereign_ledger.dto.response.UserResponseDTO;
+import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.entity.User;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.UserService;
@@ -15,16 +18,32 @@ public class UserServiceImplementation implements UserService {
         this.userRepository = userRepository;
     }
 
-    public List<User> findAllUsers(){
-        return userRepository.findAll();
+    private UserResponseDTO toUserResponseDTO(User user){
+        return new UserResponseDTO(
+                user.getUserId(),
+                user.getFirstName(),
+                user.getMiddleName(),
+                user.getLastName(),
+                user.getUserEmail(),
+                user.getRole()
+        );
     }
 
-    public User findUserById(Integer id){
-        return userRepository.findById(id).orElse(null);
+    public List<UserResponseDTO> findAllUsers(){
+        return userRepository.findAll()
+                .stream()
+                .map(u -> toUserResponseDTO(u))
+                .toList();
     }
 
-    public User saveUser(User user){
-        return userRepository.save(user);
+    public UserResponseDTO findUserById(Integer id){
+        User user =  userRepository.findById(id).orElse(null);
+        return toUserResponseDTO(user);
+    }
+
+    public UserResponseDTO saveUser(User user){
+
+        return toUserResponseDTO(userRepository.save(user));
     }
 
     public void deleteUser(Integer id){
