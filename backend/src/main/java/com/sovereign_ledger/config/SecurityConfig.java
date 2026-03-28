@@ -10,7 +10,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -28,24 +27,31 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
 
-                // Public
-                .requestMatchers("/auth/login", "/pending-user/register").permitAll()
+                // Public endpoints (no auth required)
+                .requestMatchers("/auth/login", "/pending-user/apply").permitAll()
+                .requestMatchers("/error/**").permitAll()
 
+                // Specific Customer Transaction endpoints
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/transactions/transfer").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/transactions/transfer-transaction").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/transactions/deposit").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/transactions/withdraw").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/transactions/*/transactions").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/accounts/*/accounts/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/accounts/*/accounts").hasAnyRole("USER", "ADMIN")
 
-                // User
-                .requestMatchers("/pending-user/request-account").hasRole("user")
+                // Customer Profile endpoints
+                .requestMatchers("/pending-user/request-account").hasRole("USER")
 
-                .requestMatchers("/accounts/me").hasRole("user")
-                .requestMatchers("/transfers/**").hasRole("user")
-                .requestMatchers("/transactions/me").hasRole("user")
-
-                // Admin
-                .requestMatchers("/admin/**").hasRole("admin").requestMatchers("/seed").hasRole("admin")
-                .requestMatchers("/accounts/**").hasRole("admin")
-                .requestMatchers("/transactions/**").hasRole("admin")
+                // Broad restrictions (Admin-only)
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/seed").hasRole("ADMIN")
+                .requestMatchers("/accounts/**").hasRole("ADMIN")
+                .requestMatchers("/transactions/**").hasRole("ADMIN")
 
                 .anyRequest().authenticated()
             )
@@ -55,7 +61,8 @@ public class SecurityConfig {
                 )
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         return http.build();
     }
@@ -78,5 +85,18 @@ public class SecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder());
 
         return authProvider;
+    }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+        configuration.setAllowedOrigins(java.util.List.of("http://localhost:4200"));
+        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setAllowCredentials(true);
+        
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

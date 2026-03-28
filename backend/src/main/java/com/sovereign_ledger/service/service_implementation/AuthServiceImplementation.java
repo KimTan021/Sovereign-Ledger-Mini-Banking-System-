@@ -3,7 +3,6 @@ package com.sovereign_ledger.service.service_implementation;
 import com.sovereign_ledger.dto.request.LoginRequestDTO;
 import com.sovereign_ledger.dto.response.LoginResponseDTO;
 import com.sovereign_ledger.entity.User;
-import com.sovereign_ledger.repository.AccountRepository;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.security.JwtUtil;
 import com.sovereign_ledger.service.AuthService;
@@ -23,6 +22,7 @@ public class AuthServiceImplementation implements AuthService {
         this.jwtUtil = jwtUtil;
     }
 
+    @Override
     public LoginResponseDTO login (LoginRequestDTO request) {
 
         if(request.getUserEmail() == null || request.getUserEmail().trim().isEmpty()) {
@@ -36,12 +36,22 @@ public class AuthServiceImplementation implements AuthService {
       User existingUser = userRepository.findByUserEmail(request.getUserEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-//      if(!passwordEncoder.matches(request.getPassword(), existingUser.getPassword())) {
-//            throw new IllegalArgumentException("Password Incorrect");
-//        }
+      if (!"ACTIVE".equalsIgnoreCase(existingUser.getUserStatus())) {
+            throw new IllegalArgumentException("User access is currently suspended");
+        }
+
+      if(!passwordEncoder.matches(request.getPassword(), existingUser.getPassword())) {
+            throw new IllegalArgumentException("Password Incorrect");
+        }
 
         String token = jwtUtil.generateToken(existingUser.getUserEmail(), existingUser.getRole().toUpperCase());
 
-        return new LoginResponseDTO(token, existingUser.getUserEmail(), existingUser.getRole().toUpperCase());
+        return new LoginResponseDTO(
+                token, 
+                existingUser.getUserId(), 
+                existingUser.getFirstName() + " " + existingUser.getLastName(),
+                existingUser.getUserEmail(), 
+                existingUser.getRole().toLowerCase()
+        );
     }
 }

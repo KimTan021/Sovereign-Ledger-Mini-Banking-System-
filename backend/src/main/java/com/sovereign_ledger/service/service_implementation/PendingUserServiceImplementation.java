@@ -46,6 +46,8 @@ public class PendingUserServiceImplementation implements PendingUserService {
         pendingUser.setUserEmail(dto.getUserEmail());
         pendingUser.setPassword(passwordEncoder.encode(dto.getPassword()));
         pendingUser.setRequestAccountType(dto.getRequestAccountType());
+        pendingUser.setPhone(dto.getPhone());
+        pendingUser.setInitialDeposit(dto.getInitialDeposit());
         pendingUser.setRequestTime(LocalDateTime.now());
 
         return PendingUserResponseDTO.fromEntity(pendingUserRepository.save(pendingUser));
@@ -66,6 +68,7 @@ public class PendingUserServiceImplementation implements PendingUserService {
         pendingUser.setUserEmail(existingUser.getUserEmail());
         pendingUser.setPassword(existingUser.getPassword());
         pendingUser.setRequestAccountType(dto.getRequestAccountType());
+        pendingUser.setInitialDeposit(dto.getInitialDeposit());
         pendingUser.setRequestTime(LocalDateTime.now());
         pendingUser.setExistingUser(existingUser); // sets the user_id foreign key
 
@@ -78,6 +81,7 @@ public class PendingUserServiceImplementation implements PendingUserService {
         response.setLastName(saved.getLastName());
         response.setUserEmail(saved.getUserEmail());
         response.setRequestAccountType(saved.getRequestAccountType());
+        response.setInitialDeposit(saved.getInitialDeposit());
         response.setRequestTime(saved.getRequestTime());
         return response;
     }

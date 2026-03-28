@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -20,6 +21,8 @@ public class PendingUserResponseDTO {
     private String lastName;
     private String userEmail;
     private String requestAccountType;
+    private String phone;
+    private BigDecimal initialDeposit;
     private LocalDateTime requestTime;
 
     public static PendingUserResponseDTO fromEntity(PendingUser pendingUser) {
@@ -30,6 +33,8 @@ public class PendingUserResponseDTO {
         dto.setLastName(pendingUser.getLastName());
         dto.setUserEmail(pendingUser.getUserEmail());
         dto.setRequestAccountType(pendingUser.getRequestAccountType());
+        dto.setPhone(pendingUser.getPhone());
+        dto.setInitialDeposit(pendingUser.getInitialDeposit());
         dto.setRequestTime(pendingUser.getRequestTime());
         return dto;
     }

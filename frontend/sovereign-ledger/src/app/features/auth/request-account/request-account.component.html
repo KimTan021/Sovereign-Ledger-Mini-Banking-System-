@@ -54,125 +54,150 @@
     <div class="w-full max-w-2xl">
       @if (!showSuccess()) {
         <header class="mb-10">
-          <a routerLink="/login" class="inline-flex items-center gap-2 text-primary font-bold text-sm mb-6 hover:translate-x-[-4px] transition-transform">
+          <a [routerLink]="isLoggedIn() ? '/customer/dashboard' : '/login'" 
+             class="inline-flex items-center gap-2 text-primary font-bold text-sm mb-6 hover:translate-x-[-4px] transition-transform">
             <span class="material-symbols-outlined text-base">arrow_back</span>
-            Back to Login
+            Back to {{ isLoggedIn() ? 'Dashboard' : 'Login' }}
           </a>
-          <h1 class="text-4xl font-headline font-extrabold text-primary tracking-tight">Request an Account</h1>
-          <p class="text-on-surface-variant mt-2 text-lg">Complete the formal application for the Sovereign Ledger.</p>
+          <h1 class="text-4xl font-headline font-extrabold text-primary tracking-tight">
+            {{ isLoggedIn() ? 'Request Additional Account' : 'Request an Account' }}
+          </h1>
+          <p class="text-on-surface-variant mt-2 text-lg">
+            {{ isLoggedIn() ? 'Expand your financial portfolio with a new sovereign ledger.' : 'Complete the formal application for the Sovereign Ledger.' }}
+          </p>
         </header>
 
+        <!-- Error Feedback -->
+        @if (errorMessage()) {
+          <div class="mb-8 p-4 bg-error-container text-on-error-container rounded-2xl border-2 border-error/20 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+            <span class="material-symbols-outlined text-error">error</span>
+            <p class="text-sm font-bold uppercase tracking-wide">{{ errorMessage() }}</p>
+          </div>
+        }
+
         <form [formGroup]="requestForm" (ngSubmit)="onSubmit()" class="space-y-8">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Full Name -->
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-1" for="fullName">Full Legal Name</label>
-              <input 
-                id="fullName"
-                formControlName="fullName"
-                type="text" 
-                placeholder="e.g. Alexander Hamilton"
-                class="block w-full px-5 py-4 bg-surface-container-low border-b-2 border-transparent focus:border-primary focus:bg-white focus:ring-0 transition-all rounded-t-xl text-on-surface font-semibold" />
+          
+          @if (isLoggedIn()) {
+            <div class="p-6 bg-primary/5 rounded-2xl border-2 border-primary/10 flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-2xl">person_check</span>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-primary">Existing Profile Verified</p>
+                <p class="text-xs text-on-surface-variant">We'll use your current credentials to link this new account.</p>
+              </div>
             </div>
+          } @else {
+            <!-- Personal Information Section -->
+            <div class="space-y-6">
+              <h3 class="text-sm font-bold text-primary uppercase tracking-widest border-b border-outline-variant/10 pb-2">Personal Identity</h3>
+              
+              <!-- Name Row -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="firstName">First Name</label>
+                  <input id="firstName" formControlName="firstName" type="text" placeholder="Alexander"
+                    class="block w-full px-4 py-3 bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-xl text-on-surface placeholder:text-outline-variant font-medium shadow-sm" />
+                </div>
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="middleName">Middle Name</label>
+                  <input id="middleName" formControlName="middleName" type="text" placeholder="M."
+                    class="block w-full px-4 py-3 bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-xl text-on-surface placeholder:text-outline-variant font-medium shadow-sm" />
+                </div>
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="lastName">Last Name</label>
+                  <input id="lastName" formControlName="lastName" type="text" placeholder="Hamilton"
+                    class="block w-full px-4 py-3 bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-xl text-on-surface placeholder:text-outline-variant font-medium shadow-sm" />
+                </div>
+              </div>
 
-            <!-- Email -->
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-1" for="email">Institutional Email</label>
-              <input 
-                id="email"
-                formControlName="email"
-                type="email" 
-                placeholder="a.hamilton@treasury.gov"
-                class="block w-full px-5 py-4 bg-surface-container-low border-b-2 border-transparent focus:border-primary focus:bg-white focus:ring-0 transition-all rounded-t-xl text-on-surface font-semibold" />
+              <!-- Contact/Auth Row -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="userEmail">Email Address</label>
+                  <input id="userEmail" formControlName="userEmail" type="email" placeholder="a.hamilton@treasury.gov"
+                    class="block w-full px-4 py-3 bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-xl text-on-surface placeholder:text-outline-variant font-medium shadow-sm" />
+                </div>
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="password">Security Password</label>
+                  <input id="password" formControlName="password" type="password" placeholder="Minimum 8 characters"
+                    class="block w-full px-4 py-3 bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-xl text-on-surface placeholder:text-outline-variant font-medium shadow-sm" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="phone">Phone Number</label>
+                  <input id="phone" formControlName="phone" type="tel" placeholder="+63 917 123 4567"
+                    class="block w-full px-4 py-3 bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-xl text-on-surface placeholder:text-outline-variant font-medium shadow-sm" />
+                </div>
+              </div>
             </div>
+          }
 
-            <!-- Phone -->
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-1" for="phone">Verified Phone</label>
-              <input 
-                id="phone"
-                formControlName="phone"
-                type="tel" 
-                placeholder="+63 917 123 4567"
-                class="block w-full px-5 py-4 bg-surface-container-low border-b-2 border-transparent focus:border-primary focus:bg-white focus:ring-0 transition-all rounded-t-xl text-on-surface font-semibold" />
-            </div>
-
-            <!-- Initial Deposit -->
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-1" for="initialDeposit">Initial Capitalization (PHP)</label>
+          <!-- Account Configuration Section -->
+          <div class="space-y-6">
+            <h3 class="text-sm font-bold text-primary uppercase tracking-widest border-b border-outline-variant/10 pb-2">Account Configuration</h3>
+            
+            <div class="space-y-1.5 max-w-sm">
+              <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="initialDeposit">Initial Capitalization (PHP)</label>
               <div class="relative">
-                <span class="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-primary">₱</span>
-                <input 
-                  id="initialDeposit"
-                  formControlName="initialDeposit"
-                  type="number" 
-                  step="1000"
-                  class="block w-full pl-9 pr-5 py-4 bg-surface-container-low border-b-2 border-transparent focus:border-primary focus:bg-white focus:ring-0 transition-all rounded-t-xl text-on-surface font-semibold" />
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-primary">₱</span>
+                <input id="initialDeposit" formControlName="initialDeposit" type="number"
+                  class="block w-full pl-9 pr-4 py-3 bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-xl text-on-surface font-medium shadow-sm" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Savings -->
+              <div class="relative">
+                <input type="radio" id="savings" formControlName="requestAccountType" value="savings" class="peer sr-only">
+                <label for="savings" 
+                  class="block p-5 rounded-2xl border-2 cursor-pointer transition-all bg-surface-container-lowest border-outline-variant/20 hover:border-primary/50 peer-checked:border-primary peer-checked:bg-primary/5">
+                  <div class="flex items-center gap-4">
+                    <span class="material-symbols-outlined text-3xl text-on-surface-variant peer-checked:text-primary">savings</span>
+                    <div>
+                      <p class="font-bold text-on-surface">Savings Account</p>
+                      <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">High Tier Storage</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Checking -->
+              <div class="relative">
+                <input type="radio" id="checking" formControlName="requestAccountType" value="checking" class="peer sr-only">
+                <label for="checking" 
+                  class="block p-5 rounded-2xl border-2 cursor-pointer transition-all bg-surface-container-lowest border-outline-variant/20 hover:border-primary/50 peer-checked:border-primary peer-checked:bg-primary/5">
+                  <div class="flex items-center gap-4">
+                    <span class="material-symbols-outlined text-3xl text-on-surface-variant peer-checked:text-primary">account_balance_wallet</span>
+                    <div>
+                      <p class="font-bold text-on-surface">Checking Account</p>
+                      <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Active Tier Ledger</p>
+                    </div>
+                  </div>
+                </label>
               </div>
             </div>
           </div>
 
-          <!-- Account Type -->
-          <div class="space-y-4">
-            <label class="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-1">Desired Account Sovereign</label>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <label 
-                class="relative p-6 rounded-2xl border-2 transition-all cursor-pointer group"
-                [class.border-primary]="requestForm.get('accountType')?.value === 'personal'"
-                [class.bg-primary/5]="requestForm.get('accountType')?.value === 'personal'"
-                [class.border-outline-variant/10]="requestForm.get('accountType')?.value !== 'personal'">
-                <input type="radio" formControlName="accountType" value="personal" class="hidden">
-                <span class="material-symbols-outlined text-3xl mb-3 block" [class.text-primary]="requestForm.get('accountType')?.value === 'personal'">person</span>
-                <p class="font-bold text-on-surface group-hover:text-primary">Personal</p>
-                <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Private Tier</p>
-              </label>
-
-              <label 
-                class="relative p-6 rounded-2xl border-2 transition-all cursor-pointer group"
-                [class.border-primary]="requestForm.get('accountType')?.value === 'business'"
-                [class.bg-primary/5]="requestForm.get('accountType')?.value === 'business'"
-                [class.border-outline-variant/10]="requestForm.get('accountType')?.value !== 'business'">
-                <input type="radio" formControlName="accountType" value="business" class="hidden">
-                <span class="material-symbols-outlined text-3xl mb-3 block" [class.text-primary]="requestForm.get('accountType')?.value === 'business'">business</span>
-                <p class="font-bold text-on-surface group-hover:text-primary">Business</p>
-                <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Commercial Tier</p>
-              </label>
-
-              <label 
-                class="relative p-6 rounded-2xl border-2 transition-all cursor-pointer group"
-                [class.border-primary]="requestForm.get('accountType')?.value === 'institutional'"
-                [class.bg-primary/5]="requestForm.get('accountType')?.value === 'institutional'"
-                [class.border-outline-variant/10]="requestForm.get('accountType')?.value !== 'institutional'">
-                <input type="radio" formControlName="accountType" value="institutional" class="hidden">
-                <span class="material-symbols-outlined text-3xl mb-3 block" [class.text-primary]="requestForm.get('accountType')?.value === 'institutional'">account_balance</span>
-                <p class="font-bold text-on-surface group-hover:text-primary">Institutional</p>
-                <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Authority Tier</p>
-              </label>
-            </div>
-          </div>
-
           <!-- Terms -->
-          <div class="p-6 bg-surface-container-low rounded-2xl flex items-start gap-4 ring-1 ring-outline-variant/5">
-            <input 
-              id="terms"
-              formControlName="terms"
-              type="checkbox" 
+          <div class="p-5 bg-surface-container-low rounded-2xl flex items-start gap-4">
+            <input id="terms" formControlName="terms" type="checkbox" 
               class="w-5 h-5 mt-0.5 rounded border-outline-variant text-primary focus:ring-primary/20 bg-white" />
             <label for="terms" class="text-xs text-on-surface-variant font-medium leading-relaxed">
               I formally request the opening of a Sovereign Ledger account and agree to the 
-              <span class="text-primary font-bold hover:underline cursor-pointer">Institutional Terms of Sovereignty</span> 
-              and data encryption protocols. I acknowledge that all deposits stay within the sovereign network.
+              <span class="text-primary font-bold hover:underline cursor-pointer">Institutional Terms</span>. 
+              I acknowledge that all deposits stay within the sovereign network.
             </label>
           </div>
 
           <!-- Submit Button -->
-          <button 
-            type="submit" 
-            [disabled]="requestForm.invalid || isSubmitting()"
-            class="w-full primary-gradient text-on-primary py-5 rounded-2xl font-bold text-xl tracking-tight shadow-2xl shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex justify-center items-center gap-3 disabled:opacity-50 disabled:scale-100 disabled:shadow-none">
+          <button type="submit" [disabled]="requestForm.invalid || isSubmitting()"
+            class="w-full primary-gradient text-on-primary py-5 rounded-2xl font-bold text-xl tracking-tight shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex justify-center items-center gap-3 disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer">
             @if (isSubmitting()) {
               <span class="material-symbols-outlined animate-spin">sync</span>
-              Authorizing Application...
+              Processing Application...
             } @else {
               Formalize Request
               <span class="material-symbols-outlined">assignment_turned_in</span>
@@ -211,7 +236,10 @@
               class="inline-flex items-center justify-center gap-2 text-on-surface-variant font-bold text-sm bg-surface-container-low px-8 py-4 rounded-xl hover:bg-surface-container transition-all">
               Submit Another Request
             </button>
-            <a routerLink="/login" class="text-primary font-bold hover:underline">Return to Secure Login</a>
+            <a [routerLink]="isLoggedIn() ? '/customer/dashboard' : '/login'" 
+               class="text-primary font-bold hover:underline">
+              Return to {{ isLoggedIn() ? 'Secure Dashboard' : 'Secure Login' }}
+            </a>
           </div>
         </div>
       }

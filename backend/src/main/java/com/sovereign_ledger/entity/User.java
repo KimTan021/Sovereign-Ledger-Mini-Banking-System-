@@ -39,6 +39,12 @@ public class User {
     @Column(name = "role", nullable = false)
     private String role;
 
+    @Column(name = "phone", length = 20)
+    private String phone;
+
+    @Column(name = "user_status", nullable = false)
+    private String userStatus;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Account> accounts;
 

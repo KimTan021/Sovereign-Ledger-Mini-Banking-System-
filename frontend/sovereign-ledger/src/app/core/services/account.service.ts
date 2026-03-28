@@ -1,4 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map, of, catchError } from 'rxjs';
+import { AuthService } from './auth.service';
 
 export interface Account {
   id: string;
@@ -12,25 +15,27 @@ export interface Account {
   lastFour: string;
 }
 
+export interface BackendAccountResponse {
+  accountId: number;
+  userId: number;
+  accountNumber: string;
+  accountType: string;
+  accountBalance: number;
+  accountStatus: string;
+}
+
 export interface Recipient {
   initials: string;
   name: string;
   colorClass: string;
+  accountNumber?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AccountService {
-  private readonly customerAccount: Account = {
-    id: 'SL-8829410',
-    holderName: 'Adrian Sovereign',
-    initials: 'AS',
-    type: 'Corporate Prime',
-    balance: 142850.42,
-    availableBalance: 138200.00,
-    unclearedFunds: 4650.42,
-    status: 'verified',
-    lastFour: '9012',
-  };
+  private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
+  private readonly apiUrl = 'http://localhost:8080/accounts';
 
   private readonly adminAccounts: Account[] = [
     {
@@ -50,21 +55,51 @@ export class AccountService {
     },
   ];
 
-  private readonly recipients: Recipient[] = [
-    { initials: 'MK', name: 'Marcus K.', colorClass: 'bg-secondary-container' },
-    { initials: 'AL', name: 'Alpha Labs', colorClass: 'bg-tertiary-container/10' },
-    { initials: 'SR', name: 'Sarah Reed', colorClass: 'bg-primary-fixed' },
-  ];
 
-  getCustomerAccount(): Account {
-    return this.customerAccount;
+
+  private mapBackendToFrontend(beAcc: BackendAccountResponse, userName: string): Account {
+    const acctStr = beAcc.accountNumber || '';
+    const lastFour = acctStr.length >= 4 ? acctStr.slice(-4) : acctStr;
+
+    return {
+      id: beAcc.accountId.toString(),
+      holderName: userName,
+      initials: 'User',
+      type: beAcc.accountType || 'Standard',
+      balance: beAcc.accountBalance,
+      availableBalance: beAcc.accountBalance,
+      unclearedFunds: 0,
+      status: 'verified',
+      lastFour: lastFour
+    };
+  }
+
+  getCustomerAccounts(): Observable<Account[]> {
+    const user = this.authService.user();
+    if (!user || !user.userId) return of([]);
+
+    return this.http.get<BackendAccountResponse[]>(`${this.apiUrl}/${user.userId}/accounts`).pipe(
+      map(accounts => {
+        if (!accounts || accounts.length === 0) return [];
+        return accounts.map(acc => this.mapBackendToFrontend(acc, user.name));
+      }),
+      catchError(err => {
+        console.error('Failed to fetch customer accounts:', err);
+        return of([]);
+      })
+    );
+  }
+
+  // Backward compatibility helper
+  getCustomerAccount(): Observable<Account | null> {
+    return this.getCustomerAccounts().pipe(
+      map(accounts => accounts.length > 0 ? accounts[0] : null)
+    );
   }
 
   getAllAccounts(): Account[] {
     return this.adminAccounts;
   }
 
-  getRecipients(): Recipient[] {
-    return this.recipients;
-  }
+
 }

@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -12,4 +13,5 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class AdditionalAccountRequestDTO {
     private String requestAccountType;
+    private BigDecimal initialDeposit;
 }

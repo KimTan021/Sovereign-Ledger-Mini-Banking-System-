@@ -13,6 +13,7 @@ public interface AccountService {
     List<AccountResponseDTO> findAllAccounts();
     AccountResponseDTO findAccountById(Integer id);
     Account findAccountEntityById(Integer id);
+    Account findAccountEntityByAccountNumberRaw(String rawAccountNumber);
     List<AccountResponseDTO> findAllAccountsByUserId(Integer id);
     BigDecimal findTotalAccountBalanceByUserId(Integer id);
     BigDecimal findAccountBalanceByUserIdAndAccountId(Integer uid, Integer aid);

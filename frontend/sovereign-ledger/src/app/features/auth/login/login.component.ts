@@ -1,5 +1,6 @@
 import { Component, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { NgOptimizedImage } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService, UserRole } from '../../../core/services/auth.service';
 import { AnimationOptions } from 'ngx-lottie';
@@ -7,7 +8,7 @@ import { AnimationOptions } from 'ngx-lottie';
 @Component({
   selector: 'app-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, ReactiveFormsModule, RouterLink],
+  imports: [FormsModule, ReactiveFormsModule, RouterLink, NgOptimizedImage],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
@@ -43,17 +44,25 @@ export class LoginComponent {
     if (this.loginForm.invalid) return;
 
     const { identifier, password } = this.loginForm.getRawValue();
-    const success = this.authService.login(identifier, password, this.selectedRole());
-
-    if (success) {
-      this.loginError.set(null);
-      if (this.selectedRole() === 'admin') {
-        this.router.navigate(['/admin']);
-      } else {
-        this.router.navigate(['/customer/dashboard']);
+    this.isLoading.set(true);
+    this.authService.login(identifier, password).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.loginError.set(null);
+        if (this.selectedRole() === 'admin') {
+          this.router.navigate(['/admin']);
+        } else {
+          this.router.navigate(['/customer/dashboard']);
+        }
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.loginError.set(
+          typeof err.error === 'string'
+            ? err.error
+            : (err.error?.message || 'Invalid credentials. Please try again.')
+        );
       }
-    } else {
-      this.loginError.set('Invalid credentials. Please try again.');
-    }
+    });
   }
 }

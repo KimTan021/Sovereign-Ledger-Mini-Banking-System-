@@ -1,12 +1,15 @@
 package com.sovereign_ledger.controller;
 
 import com.sovereign_ledger.dto.request.TransactionLogRequestDTO;
+import com.sovereign_ledger.dto.request.CashTransactionRequestDTO;
 import com.sovereign_ledger.dto.request.TransferRequestDTO;
-import com.sovereign_ledger.dto.response.TopAccountDTO;
+import com.sovereign_ledger.dto.request.TransferByAccountNumberRequestDTO;
 import com.sovereign_ledger.dto.response.TransactionResponseDTO;
 import com.sovereign_ledger.entity.Transaction;
 import com.sovereign_ledger.service.AccountService;
 import com.sovereign_ledger.service.TransactionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/transactions")
 public class TransactionController {
+    private static final Logger logger = LoggerFactory.getLogger(TransactionController.class);
     private final TransactionService transactionService;
     private final AccountService accountService;
 
@@ -76,7 +80,9 @@ public class TransactionController {
                     dto.getLogs(),
                     dto.getTransactionTime(),
                     dto.getTransactionDescription(),
-                    dto.getTransactionStatus()
+                    dto.getTransactionStatus(),
+                    dto.getTargetAccountNumber(),
+                    dto.getTargetAccountName()
             );
         } else {
             transactionService.insertNewTransactionLog(
@@ -86,7 +92,9 @@ public class TransactionController {
                     dto.getTargetAccountId(),
                     dto.getLogs(),
                     dto.getTransactionDescription(),
-                    dto.getTransactionStatus()
+                    dto.getTransactionStatus(),
+                    dto.getTargetAccountNumber(),
+                    dto.getTargetAccountName()
             );
         }
     }
@@ -101,5 +109,42 @@ public class TransactionController {
                 request.getTransactionDescription()
         );
         return ResponseEntity.ok("Transaction successful!");
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<String> initiateTransactionByAccountNumber(@RequestBody TransferByAccountNumberRequestDTO request){
+        logger.info("====== TRANSFER INITIATED ======");
+        logger.info("Source Account ID in request: {}", request.getSourceAccountId());
+        logger.info("Target Account Number: {}", request.getTargetAccountNumber());
+        logger.info("Amount: {}", request.getTransAmount());
+        
+        transactionService.initiateTransaction(
+                accountService.findAccountEntityById(request.getSourceAccountId()),
+                accountService.findAccountEntityByAccountNumberRaw(request.getTargetAccountNumber()),
+                request.getTransAmount(),
+                "Transfer to Account # " + request.getTargetAccountNumber(),
+                request.getDescription()
+        );
+        return ResponseEntity.ok("Transfer strictly executed.");
+    }
+
+    @PostMapping("/deposit")
+    public ResponseEntity<String> depositToAccount(@RequestBody CashTransactionRequestDTO request) {
+        transactionService.depositToAccount(
+                request.getAccountId(),
+                request.getTransAmount(),
+                request.getDescription()
+        );
+        return ResponseEntity.ok("Deposit posted successfully.");
+    }
+
+    @PostMapping("/withdraw")
+    public ResponseEntity<String> withdrawFromAccount(@RequestBody CashTransactionRequestDTO request) {
+        transactionService.withdrawFromAccount(
+                request.getAccountId(),
+                request.getTransAmount(),
+                request.getDescription()
+        );
+        return ResponseEntity.ok("Withdrawal posted successfully.");
     }
 }

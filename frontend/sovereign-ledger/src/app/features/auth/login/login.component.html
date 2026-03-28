@@ -2,7 +2,7 @@
   <!-- Left Column: Branding & Visual Anchor -->
   <section class="hidden md:flex md:w-1/2 primary-gradient relative p-16 flex-col justify-between overflow-hidden">
     <!-- Asset: Hero Image -->
-    <img src="/login-hero.png" alt="Sovereign Financial Background" class="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay">
+    <img ngSrc="/login-hero.png" fill priority alt="Sovereign Financial Background" class="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay">
     
     <!-- Abstract Decorative Elements -->
     <div class="absolute top-[-10%] right-[-10%] w-96 h-96 bg-primary-container opacity-20 rounded-full blur-3xl"></div>
@@ -10,7 +10,7 @@
     
     <div class="relative z-10">
       <div class="flex items-center gap-3 mb-4">
-        <img src="/logo.png" alt="Sovereign Ledger Logo" class="h-10 w-auto" />
+        <img ngSrc="/logo.png" width="40" height="40" alt="Sovereign Ledger Logo" class="h-10 w-auto" />
         <h1 class="font-headline text-4xl font-extrabold tracking-tighter text-white">Sovereign Ledger</h1>
       </div>
       <p class="text-on-primary-container font-medium max-w-sm opacity-90">Elevated financial oversight for the modern institution.</p>
@@ -41,7 +41,7 @@
     <div class="w-full max-w-md">
       <header class="mb-10 text-center md:text-left">
         <div class="md:hidden flex flex-col items-center mb-6">
-          <img src="/logo.png" alt="Sovereign Ledger Logo" class="h-12 w-auto mb-2" />
+          <img ngSrc="/logo.png" width="48" height="48" alt="Sovereign Ledger Logo" class="h-12 w-auto mb-2" />
           <h1 class="font-headline text-2xl font-black text-primary tracking-tighter">Sovereign Ledger</h1>
         </div>
         <h2 class="font-headline text-3xl font-bold text-on-surface tracking-tight mb-2">Welcome Back</h2>
@@ -83,7 +83,7 @@
         <!-- Email/Account Field -->
         <div class="space-y-1.5">
           <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="identifier">
-            Email or Account Number
+            Email Address
           </label>
           <div class="relative group">
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-on-surface-variant group-focus-within:text-primary transition-colors">
@@ -93,7 +93,7 @@
               id="identifier"
               formControlName="identifier"
               type="text"
-              [placeholder]="selectedRole() === 'customer' ? 'e.g. SL-8829410' : 'e.g. admin@sovereign.com'"
+              placeholder="e.g. alice.santos@email.com"
               class="block w-full pl-11 pr-4 py-4 bg-surface-container-highest border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-t-lg text-on-surface placeholder:text-outline-variant font-medium" />
           </div>
         </div>
@@ -139,9 +139,15 @@
         <!-- Submit Button -->
         <button
           type="submit"
-          class="w-full primary-gradient text-on-primary py-4 rounded-xl font-bold tracking-tight shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.01] active:scale-[0.98] transition-all flex justify-center items-center gap-2">
-          Sign In to Ledger
-          <span class="material-symbols-outlined text-lg">arrow_forward</span>
+          [disabled]="isLoading()"
+          class="w-full primary-gradient text-on-primary py-4 rounded-xl font-bold tracking-tight shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.01] active:scale-[0.98] transition-all flex justify-center items-center gap-2 disabled:opacity-75 disabled:scale-100 cursor-pointer">
+          @if (isLoading()) {
+            <span class="material-symbols-outlined animate-spin font-bold text-lg">sync</span>
+            Authenticating...
+          } @else {
+            Sign In to Ledger
+            <span class="material-symbols-outlined text-lg">arrow_forward</span>
+          }
         </button>
       </form>
 
@@ -149,8 +155,8 @@
       <div class="mt-6 p-4 bg-surface-container-low rounded-xl">
         <p class="text-xs text-on-surface-variant font-medium">
           <span class="font-bold">Demo Credentials:</span><br>
-          Customer: <span class="font-mono text-primary">SL-8829410</span> / <span class="font-mono text-primary">customer123</span><br>
-          Admin: <span class="font-mono text-primary">admin&#64;sovereign.com</span> / <span class="font-mono text-primary">admin123</span>
+          Admin: <span class="font-mono text-primary">alice.santos@email.com</span> / <span class="font-mono text-primary">admin123</span><br>
+          Customer: <span class="font-mono text-primary">juan.delacruz@email.com</span> / <span class="font-mono text-primary">customer123</span>
         </p>
       </div>
 

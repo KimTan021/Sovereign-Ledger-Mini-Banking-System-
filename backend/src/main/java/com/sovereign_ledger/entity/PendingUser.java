@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -41,6 +42,12 @@ public class PendingUser {
 
     @Column(name = "request_account_type", nullable = false)
     private String requestAccountType;
+
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "initial_deposit")
+    private BigDecimal initialDeposit;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = true)

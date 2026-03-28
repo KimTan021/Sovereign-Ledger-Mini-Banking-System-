@@ -1,15 +1,11 @@
 package com.sovereign_ledger.service.service_implementation;
 
-import com.sovereign_ledger.dto.response.AccountResponseDTO;
 import com.sovereign_ledger.dto.response.TransactionResponseDTO;
 import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.entity.Transaction;
-import com.sovereign_ledger.exception.exception_classes.AccountNotFoundException;
 import com.sovereign_ledger.exception.exception_classes.AccountNotVerifiedException;
 import com.sovereign_ledger.exception.exception_classes.InsufficientBalanceException;
-import com.sovereign_ledger.repository.AccountRepository;
 import com.sovereign_ledger.repository.TransactionRepository;
-import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.TransactionService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -21,11 +17,29 @@ import java.util.List;
 @Service
 public class TransactionServiceImplementation implements TransactionService {
     private final TransactionRepository transactionRepository;
-    private final AccountRepository accountRepository;
-    private final UserRepository userRepository;
     private final AccountServiceImplementation accountServiceImplementation;
+    @org.springframework.beans.factory.annotation.Value("${aes.secret-key}")
+    private String aesSecretKey;
+
+    public TransactionServiceImplementation(
+            TransactionRepository transactionRepository,
+            AccountServiceImplementation accountServiceImplementation){
+        this.transactionRepository = transactionRepository;
+        this.accountServiceImplementation = accountServiceImplementation;
+    }
 
     private TransactionResponseDTO toTransactionResponseDTO(Transaction transaction){
+        if (transaction == null) return null;
+        
+        String targetAcc = transaction.getTargetAccountNumber();
+        if (targetAcc != null && !targetAcc.isBlank()) {
+            try {
+                targetAcc = com.sovereign_ledger.util.AesEncryptionUtil.decrypt(targetAcc, aesSecretKey);
+            } catch (Exception e) {
+                // Return as is if decryption fails (e.g. legacy data)
+            }
+        }
+
         return new TransactionResponseDTO(
                 transaction.getTransactionId(),
                 transaction.getAccount().getAccountId(),
@@ -35,66 +49,67 @@ public class TransactionServiceImplementation implements TransactionService {
                 transaction.getLogs(),
                 transaction.getTransactionTime(),
                 transaction.getTransactionDescription(),
-                transaction.getTransactionStatus()
+                transaction.getTransactionStatus(),
+                targetAcc,
+                transaction.getTargetAccountName()
         );
     }
 
-    public TransactionServiceImplementation(
-            TransactionRepository transactionRepository,
-            AccountRepository accountRepository,
-            UserRepository userRepository,
-            AccountServiceImplementation accountServiceImplementation){
-        this.transactionRepository=transactionRepository;
-        this.accountRepository=accountRepository;
-        this.userRepository=userRepository;
-        this.accountServiceImplementation=accountServiceImplementation;
-    }
-
+    @Override
     public List<TransactionResponseDTO> findAllTransactions(){
         return transactionRepository.findAll()
                 .stream()
-                .map(t -> toTransactionResponseDTO(t))
+                .map(this::toTransactionResponseDTO)
                 .toList();
     }
 
+    @Override
     public TransactionResponseDTO findTransactionById(Integer id){
         Transaction transaction = transactionRepository.findById(id).orElse(null);
         return toTransactionResponseDTO(transaction);
     }
 
+    @Override
     public List<TransactionResponseDTO> findAllUserTransactions(Integer id){
         return transactionRepository.findAllUserTransactions(id)
                 .stream()
-                .map(t -> toTransactionResponseDTO(t))
+                .map(this::toTransactionResponseDTO)
                 .toList();
-    } //Q1
+    }
 
+    @Override
     public Integer findTransactionVolumeToday(){
         return transactionRepository.findTransactionVolumeToday();
-    } //Q2
+    }
 
+    @Override
     public List<TransactionResponseDTO> findAllTransactionsLastMonthById(Integer id){
         return transactionRepository.findAllTransactionsLastMonthById(id)
                 .stream()
-                .map(t -> toTransactionResponseDTO(t))
+                .map(this::toTransactionResponseDTO)
                 .toList();
-    } //Q3
+    }
 
+    @Override
     public BigDecimal findSumAllTransactionsLastMonthById(Integer id){
         return transactionRepository.findSumAllTransactionsLastMonthById(id);
-    } //Q4
+    }
 
+    @Override
     public TransactionResponseDTO saveTransaction(Transaction transaction){
         return toTransactionResponseDTO(transactionRepository.save(transaction));
     }
 
+    @Override
     public void insertNewTransactionLog(Integer sourceAccountId,
                                      String transactionType,
                                      BigDecimal transactionAmount,
                                      Integer targetAccountId,
                                      String logs,
                                      String transactionDescription,
-                                     String transactionStatus) {
+                                     String transactionStatus,
+                                     String targetAccountNumber,
+                                     String targetAccountName) {
         transactionRepository.insertNewTransactionLog(
                 sourceAccountId,
                 transactionType,
@@ -102,10 +117,13 @@ public class TransactionServiceImplementation implements TransactionService {
                 targetAccountId,
                 logs,
                 transactionDescription,
-                transactionStatus
+                transactionStatus,
+                targetAccountNumber,
+                targetAccountName
         );
-    } //Q7
+    }
 
+    @Override
     public void insertNewTransactionLogWithDate(Integer sourceAccountId,
                                                 String transactionType,
                                                 BigDecimal transactionAmount,
@@ -113,7 +131,9 @@ public class TransactionServiceImplementation implements TransactionService {
                                                 String logs,
                                                 LocalDateTime transactionTime,
                                                 String transactionDescription,
-                                                String transactionStatus) {
+                                                String transactionStatus,
+                                                String targetAccountNumber,
+                                                String targetAccountName) {
         transactionRepository.insertNewTransactionLogWithDate(
                 sourceAccountId,
                 transactionType,
@@ -122,15 +142,18 @@ public class TransactionServiceImplementation implements TransactionService {
                 logs,
                 transactionTime,
                 transactionDescription,
-                transactionStatus
+                transactionStatus,
+                targetAccountNumber,
+                targetAccountName
         );
-    } //Q8
+    }
 
+    @Override
     public void deleteTransaction(Integer id){
         transactionRepository.deleteById(id);
     }
 
-    //Note: For this, the source Account will always be an account that the user has access to. There should be no reason to throw an error for not having an existing source account
+    @Override
     @Transactional
     public void initiateTransaction(
             Account sourceAccount,
@@ -139,40 +162,117 @@ public class TransactionServiceImplementation implements TransactionService {
             String logs,
             String transactionDescription
             ) {
-        if (accountServiceImplementation.findAccountEntityById(receivingAccount.getAccountId())==null) {
-            throw new AccountNotFoundException("The account you are trying to send money to does not exist.");
-        }
+        Account managedSourceAccount = accountServiceImplementation.findAccountEntityById(sourceAccount.getAccountId());
+        Account managedReceivingAccount = accountServiceImplementation.findAccountEntityById(receivingAccount.getAccountId());
+        String sourceAccountType = managedSourceAccount.getAccountType();
+        String sourceAccountNumber = managedSourceAccount.getAccountNumber();
+        String receivingAccountType = managedReceivingAccount.getAccountType();
+        String receivingAccountNumber = managedReceivingAccount.getAccountNumber();
+        String receivingAccountName = managedReceivingAccount.getUser().getFirstName() + " " + managedReceivingAccount.getUser().getLastName();
 
-        if ((!sourceAccount.getAccountStatus().equals("Verified")) || (!receivingAccount.getAccountStatus().equals("Verified"))){
+        if ((!managedSourceAccount.getAccountStatus().equals("Verified")) || (!managedReceivingAccount.getAccountStatus().equals("Verified"))){
             throw new AccountNotVerifiedException("An account involved in the transaction is currently unverified. Transaction cannot proceed unless all accounts involved are verified.");
         }
 
-        int affectedAccounts = transactionRepository.debitAccount(sourceAccount.getAccountId(), transAmount);
+        int affectedAccounts = transactionRepository.debitAccount(managedSourceAccount.getAccountId(), transAmount);
 
         if(affectedAccounts == 0){
             throw new InsufficientBalanceException("Your account's balance is insufficient for this transaction.");
         }
 
-        transactionRepository.creditAccount(receivingAccount.getAccountId(), transAmount);
+        transactionRepository.creditAccount(managedReceivingAccount.getAccountId(), transAmount);
+
+        String sourceAccRaw = sourceAccountNumber;
+        String receivingAccRaw = receivingAccountNumber;
+        try {
+            sourceAccRaw = com.sovereign_ledger.util.AesEncryptionUtil.decrypt(sourceAccountNumber, aesSecretKey);
+            receivingAccRaw = com.sovereign_ledger.util.AesEncryptionUtil.decrypt(receivingAccountNumber, aesSecretKey);
+        } catch (Exception e) {
+            // Fallback to encrypted if decryption fails
+        }
 
         transactionRepository.insertNewTransactionLog(
-                sourceAccount.getAccountId(),
+                managedSourceAccount.getAccountId(),
                 "debit",
                 transAmount,
-                receivingAccount.getAccountId(),
-                "Transfer from " + sourceAccount.getAccountType() + " account " + sourceAccount.getAccountNumber() + " to " + receivingAccount.getAccountType() + " account " + receivingAccount.getAccountNumber(),
+                managedReceivingAccount.getAccountId(),
+                "Transfer from " + sourceAccountType + " account " + sourceAccRaw + " to " + receivingAccountType + " account " + receivingAccRaw,
                 transactionDescription,
-                "Completed"
+                "Completed",
+                receivingAccountNumber,
+                receivingAccountName
                 );
 
         transactionRepository.insertNewTransactionLog(
-                receivingAccount.getAccountId(),
+                managedReceivingAccount.getAccountId(),
                 "credit",
                 transAmount,
                 null,
-                "Transfer received from " + sourceAccount.getAccountType() + " account " + sourceAccount.getAccountNumber(),
+                "Transfer received from " + sourceAccountType + " account " + sourceAccRaw,
                 transactionDescription,
-                "Completed"
+                "Completed",
+                null,
+                null
+        );
+    }
+
+    @Override
+    @Transactional
+    public void depositToAccount(Integer accountId, BigDecimal transAmount, String transactionDescription) {
+        Account managedAccount = accountServiceImplementation.findAccountEntityById(accountId);
+
+        if (!"Verified".equals(managedAccount.getAccountStatus())) {
+            throw new AccountNotVerifiedException("This account is currently unverified. Deposit cannot proceed.");
+        }
+
+        String accNumRaw = managedAccount.getAccountNumber();
+        try {
+            accNumRaw = com.sovereign_ledger.util.AesEncryptionUtil.decrypt(accNumRaw, aesSecretKey);
+        } catch (Exception e) {}
+
+        transactionRepository.creditAccount(managedAccount.getAccountId(), transAmount);
+        transactionRepository.insertNewTransactionLog(
+                managedAccount.getAccountId(),
+                "credit",
+                transAmount,
+                null,
+                "Deposit posted to " + managedAccount.getAccountType() + " account " + accNumRaw,
+                transactionDescription,
+                "Completed",
+                null,
+                null
+        );
+    }
+
+    @Override
+    @Transactional
+    public void withdrawFromAccount(Integer accountId, BigDecimal transAmount, String transactionDescription) {
+        Account managedAccount = accountServiceImplementation.findAccountEntityById(accountId);
+
+        if (!"Verified".equals(managedAccount.getAccountStatus())) {
+            throw new AccountNotVerifiedException("This account is currently unverified. Withdrawal cannot proceed.");
+        }
+
+        int affectedAccounts = transactionRepository.debitAccount(managedAccount.getAccountId(), transAmount);
+        if (affectedAccounts == 0) {
+            throw new InsufficientBalanceException("Your account's balance is insufficient for this withdrawal.");
+        }
+
+        String accNumRaw = managedAccount.getAccountNumber();
+        try {
+            accNumRaw = com.sovereign_ledger.util.AesEncryptionUtil.decrypt(accNumRaw, aesSecretKey);
+        } catch (Exception e) {}
+
+        transactionRepository.insertNewTransactionLog(
+                managedAccount.getAccountId(),
+                "debit",
+                transAmount,
+                null,
+                "Withdrawal from " + managedAccount.getAccountType() + " account " + accNumRaw,
+                transactionDescription,
+                "Completed",
+                null,
+                null
         );
     }
 }

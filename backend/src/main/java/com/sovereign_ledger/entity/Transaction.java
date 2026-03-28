@@ -1,8 +1,6 @@
 package com.sovereign_ledger.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
@@ -10,8 +8,6 @@ import java.time.LocalDateTime;
 
 import java.math.BigDecimal;
 
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -47,4 +43,49 @@ public class Transaction {
 
     @Column(name = "transaction_status")
     private String transactionStatus;
+
+    @Column(name = "target_account_number")
+    private String targetAccountNumber;
+
+    @Column(name = "target_account_name")
+    private String targetAccountName;
+
+    @Column(name = "review_note")
+    private String reviewNote;
+
+    public Integer getTransactionId() { return transactionId; }
+    public void setTransactionId(Integer transactionId) { this.transactionId = transactionId; }
+
+    public Account getAccount() { return account; }
+    public void setAccount(Account account) { this.account = account; }
+
+    public String getTransactionType() { return transactionType; }
+    public void setTransactionType(String transactionType) { this.transactionType = transactionType; }
+
+    public BigDecimal getTransactionAmount() { return transactionAmount; }
+    public void setTransactionAmount(BigDecimal transactionAmount) { this.transactionAmount = transactionAmount; }
+
+    public Integer getAccountIdDestination() { return accountIdDestination; }
+    public void setAccountIdDestination(Integer accountIdDestination) { this.accountIdDestination = accountIdDestination; }
+
+    public String getLogs() { return logs; }
+    public void setLogs(String logs) { this.logs = logs; }
+
+    public LocalDateTime getTransactionTime() { return transactionTime; }
+    public void setTransactionTime(LocalDateTime transactionTime) { this.transactionTime = transactionTime; }
+
+    public String getTransactionDescription() { return transactionDescription; }
+    public void setTransactionDescription(String transactionDescription) { this.transactionDescription = transactionDescription; }
+
+    public String getTransactionStatus() { return transactionStatus; }
+    public void setTransactionStatus(String transactionStatus) { this.transactionStatus = transactionStatus; }
+
+    public String getTargetAccountNumber() { return targetAccountNumber; }
+    public void setTargetAccountNumber(String targetAccountNumber) { this.targetAccountNumber = targetAccountNumber; }
+
+    public String getTargetAccountName() { return targetAccountName; }
+    public void setTargetAccountName(String targetAccountName) { this.targetAccountName = targetAccountName; }
+
+    public String getReviewNote() { return reviewNote; }
+    public void setReviewNote(String reviewNote) { this.reviewNote = reviewNote; }
 }

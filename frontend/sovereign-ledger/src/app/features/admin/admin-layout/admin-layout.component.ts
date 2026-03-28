@@ -45,21 +45,40 @@ import { AuthService } from '../../../core/services/auth.service';
           <span class="material-symbols-outlined">dashboard</span>
           <span>Overview</span>
         </a>
-        <a class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
+        <a routerLink="/admin/pending"
+           routerLinkActive="bg-surface-container-lowest text-primary shadow-sm"
+           (click)="closeSidebarOnMobile()"
+           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
+          <span class="material-symbols-outlined">person_add</span>
+          <span>Pending</span>
+        </a>
+        <a routerLink="/admin/analytics"
+           routerLinkActive="bg-surface-container-lowest text-primary shadow-sm"
+           (click)="closeSidebarOnMobile()"
+           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
           <span class="material-symbols-outlined">insights</span>
           <span>Analytics</span>
         </a>
-        <a class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
+        <a routerLink="/admin/users"
+           routerLinkActive="bg-surface-container-lowest text-primary shadow-sm"
+           (click)="closeSidebarOnMobile()"
+           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
           <span class="material-symbols-outlined">group</span>
           <span>Users</span>
         </a>
-        <a class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
+        <a routerLink="/admin/compliance"
+           routerLinkActive="bg-surface-container-lowest text-primary shadow-sm"
+           (click)="closeSidebarOnMobile()"
+           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
           <span class="material-symbols-outlined">gavel</span>
           <span>Compliance</span>
         </a>
-        <a class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
+        <a routerLink="/admin/audit"
+           routerLinkActive="bg-surface-container-lowest text-primary shadow-sm"
+           (click)="closeSidebarOnMobile()"
+           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
           <span class="material-symbols-outlined">history_edu</span>
-          <span>Audit</span>
+          <span>Transactions</span>
         </a>
       </nav>
       <!-- Footer Links -->

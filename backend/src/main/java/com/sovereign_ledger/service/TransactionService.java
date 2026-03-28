@@ -1,6 +1,5 @@
 package com.sovereign_ledger.service;
 
-import com.sovereign_ledger.dto.response.TopAccountDTO;
 import com.sovereign_ledger.dto.response.TransactionResponseDTO;
 import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.entity.Transaction;
@@ -28,7 +27,9 @@ public interface TransactionService {
             Integer targetAccountId,
             String logs,
             String transactionDescription,
-            String transactionStatus);
+            String transactionStatus,
+            String targetAccountNumber,
+            String targetAccountName);
 
     void insertNewTransactionLogWithDate(
             Integer sourceAccountId,
@@ -38,7 +39,9 @@ public interface TransactionService {
             String logs,
             LocalDateTime transactionTime,
             String transactionDescription,
-            String transactionStatus);
+            String transactionStatus,
+            String targetAccountNumber,
+            String targetAccountName);
 
     void deleteTransaction(Integer id);
 
@@ -47,6 +50,18 @@ public interface TransactionService {
             Account receivingAccount,
             BigDecimal transAmount,
             String logs,
+            String transactionDescription
+    );
+
+    void depositToAccount(
+            Integer accountId,
+            BigDecimal transAmount,
+            String transactionDescription
+    );
+
+    void withdrawFromAccount(
+            Integer accountId,
+            BigDecimal transAmount,
             String transactionDescription
     );
 }

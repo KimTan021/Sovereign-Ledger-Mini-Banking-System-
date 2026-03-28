@@ -15,13 +15,18 @@ import java.util.Set;
 @Configuration
 public class FlywayConfig {
 
-    @Bean(initMethod = "migrate")
+    @Bean
     public Flyway flyway(DataSource dataSource) {
-        return Flyway.configure()
+        Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
                 .baselineOnMigrate(true)
                 .locations("classpath:db/migration")
                 .load();
+        
+        flyway.repair();
+        flyway.migrate();
+        
+        return flyway;
     }
 
     @Bean

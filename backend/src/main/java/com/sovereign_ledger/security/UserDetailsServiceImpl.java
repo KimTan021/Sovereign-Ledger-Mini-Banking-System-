@@ -7,6 +7,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -29,10 +30,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                         "User not found with email: " + userEmail
                 ));
 
+        if (!"ACTIVE".equalsIgnoreCase(user.getUserStatus())) {
+            throw new DisabledException("User access is currently suspended");
+        }
+
         // ROLE_ prefix required by Spring Security
         // "CUSTOMER" becomes "ROLE_CUSTOMER" to match hasRole("CUSTOMER") in SecurityConfig
         SimpleGrantedAuthority authority =
-                new SimpleGrantedAuthority("ROLE_" + user.getRole());
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase());
 
         // Return Spring's UserDetails object — NOT your User entity
         // getUsername() on this object will return the email we pass here

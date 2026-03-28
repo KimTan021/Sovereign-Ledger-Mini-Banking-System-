@@ -23,7 +23,7 @@ public class PendingUserController {
         this.pendingUserService = pendingUserService;
     }
 
-    @PostMapping("/register")
+    @PostMapping("/apply")
     public ResponseEntity<PendingUserResponseDTO> savePendingUser(@Valid @RequestBody PendingUserRequestDTO dto){
         return ResponseEntity.status(HttpStatus.CREATED).body(pendingUserService.savePendingUser(dto));
     }

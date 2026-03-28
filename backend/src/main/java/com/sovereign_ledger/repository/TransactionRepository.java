@@ -1,6 +1,5 @@
 package com.sovereign_ledger.repository;
 
-import com.sovereign_ledger.dto.response.TopAccountDTO;
 import com.sovereign_ledger.entity.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -75,7 +74,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
                     "logs, " +
                     "transaction_time, " +
                     "transaction_description, " +
-                    "transaction_status) " +
+                    "transaction_status, " +
+                    "target_account_number, " +
+                    "target_account_name) " +
             "VALUES " +
                 "(:src_acctId, " +
                 ":trans_type, " +
@@ -84,14 +85,18 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
                 ":logs, " +
                 "NOW(), " +
                 ":trans_desc, " +
-                ":trans_status);", nativeQuery = true)
+                ":trans_status, " +
+                ":targ_acctNum, " +
+                ":targ_acctName);", nativeQuery = true)
     void insertNewTransactionLog(@Param("src_acctId") Integer sourceAccountId,
                                  @Param("trans_type") String transactionType,
                                  @Param("trans_amount") BigDecimal transactionAmount,
                                  @Param("targ_acctId") Integer targetAccountId,
                                  @Param("logs") String logs,
                                  @Param("trans_desc") String transactionDescription,
-                                 @Param("trans_status") String transactionStatus
+                                 @Param("trans_status") String transactionStatus,
+                                 @Param("targ_acctNum") String targetAccountNumber,
+                                 @Param("targ_acctName") String targetAccountName
                                  );
     //Query for creating transactions
     //Q7
@@ -106,7 +111,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
                     "logs, " +
                     "transaction_time, " +
                     "transaction_description, " +
-                    "transaction_status) " +
+                    "transaction_status, " +
+                    "target_account_number, " +
+                    "target_account_name) " +
                     "VALUES " +
                     "(:src_acctId, " +
                     ":trans_type, " +
@@ -115,7 +122,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
                     ":logs, " +
                     ":trans_time, " +
                     ":trans_desc, " +
-                    ":trans_status);", nativeQuery = true)
+                    ":trans_status, " +
+                    ":targ_acctNum, " +
+                    ":targ_acctName);", nativeQuery = true)
     void insertNewTransactionLogWithDate(@Param("src_acctId") Integer sourceAccountId,
                                  @Param("trans_type") String transactionType,
                                  @Param("trans_amount") BigDecimal transactionAmount,
@@ -123,8 +132,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
                                  @Param("logs") String logs,
                                  @Param("trans_time") LocalDateTime transactionTime,
                                  @Param("trans_desc") String transactionDescription,
-                                 @Param("trans_status") String transactionStatus
+                                 @Param("trans_status") String transactionStatus,
+                                 @Param("targ_acctNum") String targetAccountNumber,
+                                 @Param("targ_acctName") String targetAccountName
     );
     //Query for creating transactions
     //Q7
+
+    @Query(value = "SELECT DATE(transaction_time) as category, COUNT(transaction_id) as value FROM transaction WHERE transaction_time >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY DATE(transaction_time) ORDER BY DATE(transaction_time) ASC", nativeQuery = true)
+    List<Object[]> getDailyTransactionVolumePulsar();
+
+    @Query(value = "SELECT transaction_type as category, COUNT(transaction_id) as value FROM transaction GROUP BY transaction_type ORDER BY value DESC", nativeQuery = true)
+    List<Object[]> getTransactionTypeDistribution();
+
+    List<Transaction> findTop5ByOrderByTransactionTimeDesc();
+
+    List<Transaction> findAllByOrderByTransactionTimeDesc();
 }

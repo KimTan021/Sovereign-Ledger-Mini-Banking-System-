@@ -60,9 +60,9 @@ public class SeedTransactionService {
             if (accounts.isEmpty()) continue;
 
             // Guard: skip if this user's first account already has transactions
-            boolean alreadySeeded = transactionRepository
+            boolean alreadySeeded = !transactionRepository
                     .findAllUserTransactions(userId)
-                    .size() > 0;
+                    .isEmpty();
             if (alreadySeeded) continue;
 
             for (YearMonth month : months) {
@@ -92,7 +92,9 @@ public class SeedTransactionService {
                             logs,
                             txTime,
                             desc,
-                            status
+                            status,
+                            null,
+                            null
                     );
                 }
             }

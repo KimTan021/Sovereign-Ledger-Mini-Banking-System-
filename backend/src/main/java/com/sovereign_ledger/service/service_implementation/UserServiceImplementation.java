@@ -1,8 +1,6 @@
 package com.sovereign_ledger.service.service_implementation;
 
-import com.sovereign_ledger.dto.response.AccountResponseDTO;
 import com.sovereign_ledger.dto.response.UserResponseDTO;
-import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.entity.User;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.UserService;
@@ -25,10 +23,15 @@ public class UserServiceImplementation implements UserService {
                 user.getMiddleName(),
                 user.getLastName(),
                 user.getUserEmail(),
-                user.getRole()
+                user.getPhone(),
+                user.getRole(),
+                user.getUserStatus(),
+                null,
+                0
         );
     }
 
+    @Override
     public List<UserResponseDTO> findAllUsers(){
         return userRepository.findAll()
                 .stream()
@@ -36,16 +39,19 @@ public class UserServiceImplementation implements UserService {
                 .toList();
     }
 
+    @Override
     public UserResponseDTO findUserById(Integer id){
         User user =  userRepository.findById(id).orElse(null);
         return toUserResponseDTO(user);
     }
 
+    @Override
     public UserResponseDTO saveUser(User user){
 
         return toUserResponseDTO(userRepository.save(user));
     }
 
+    @Override
     public void deleteUser(Integer id){
         userRepository.deleteById(id);
     }

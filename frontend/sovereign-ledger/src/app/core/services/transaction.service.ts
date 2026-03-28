@@ -1,10 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map, of, catchError } from 'rxjs';
+import { AuthService } from './auth.service';
 
 export type TransactionStatus = 'completed' | 'pending' | 'declined';
 export type TransactionType = 'debit' | 'credit';
 
 export interface Transaction {
   id: string;
+  accountId: string;
   date: string;
   time: string;
   description: string;
@@ -13,43 +17,49 @@ export interface Transaction {
   type: TransactionType;
   status: TransactionStatus;
   amount: number;
+  targetAccountNumber?: string;
+  targetAccountName?: string;
+}
+
+export interface BackendTransactionResponse {
+  transactionId: number;
+  accountId: number;
+  userId?: number;
+  transactionTime: string;
+  transactionType: string;
+  transactionAmount: number;
+  transactionStatus: string;
+  transactionDescription: string;
+  targetAccountNumber?: string;
+  targetAccountName?: string;
+}
+
+export interface TransferPayload {
+  sourceAccountId: number;
+  targetAccountNumber: string;
+  transAmount: number;
+  description: string;
+}
+
+export interface InternalTransferPayload {
+  sourceAccountId: number;
+  receivingAccountId: number;
+  transAmount: number;
+  logs: string;
+  transactionDescription: string;
+}
+
+export interface CashTransactionPayload {
+  accountId: number;
+  transAmount: number;
+  description: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class TransactionService {
-
-  private readonly transactions: Transaction[] = [
-    {
-      id: 'SL-99283-01', date: 'Oct 24, 2023', time: '09:41 AM',
-      description: 'Apple Store – Fifth Ave', category: 'Electronics',
-      icon: 'shopping_bag', type: 'debit', status: 'completed', amount: -2499.00,
-    },
-    {
-      id: 'SL-88120-44', date: 'Oct 22, 2023', time: '02:15 PM',
-      description: 'Corporate Salary Deposit', category: 'Income',
-      icon: 'payments', type: 'credit', status: 'completed', amount: 8500.00,
-    },
-    {
-      id: 'SL-77001-92', date: 'Oct 21, 2023', time: '11:00 AM',
-      description: 'Le Bernardin NYC', category: 'Dining',
-      icon: 'restaurant', type: 'debit', status: 'completed', amount: -482.15,
-    },
-    {
-      id: 'SL-66290-18', date: 'Oct 18, 2023', time: '03:22 PM',
-      description: 'Delta Airlines', category: 'Travel',
-      icon: 'flight_takeoff', type: 'debit', status: 'completed', amount: -1120.00,
-    },
-    {
-      id: 'SL-11234-90', date: 'Oct 20, 2023', time: '06:45 PM',
-      description: 'Ritz-Carlton Tokyo', category: 'Travel',
-      icon: 'hotel', type: 'debit', status: 'declined', amount: -850.00,
-    },
-    {
-      id: 'SL-55443-12', date: 'Oct 19, 2023', time: '10:12 AM',
-      description: 'Consolidated Edison Inc', category: 'Utilities',
-      icon: 'bolt', type: 'debit', status: 'completed', amount: -114.20,
-    },
-  ];
+  private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
+  private readonly apiUrl = 'http://localhost:8080/transactions';
 
   private readonly adminAuditLog = [
     {
@@ -74,15 +84,191 @@ export class TransactionService {
     },
   ];
 
-  getRecentTransactions(count = 4): Transaction[] {
-    return this.transactions.slice(0, count);
+  /* Helper to format backend ISO dates neatly with categorization logic */
+  private mapBackendToFrontend(beTx: BackendTransactionResponse): Transaction {
+    let amt = beTx.transactionAmount;
+    // Map backend type withdrawal to negative amount for frontend logic
+    if (beTx.transactionType && beTx.transactionType.toLowerCase() === 'withdrawal' || beTx.transactionType.toLowerCase() === 'debit') {
+      amt = -Math.abs(amt);
+    }
+    
+    // Categorization logic based on description
+    const desc = (beTx.transactionDescription || '').toLowerCase();
+    let category = 'General';
+    let icon = 'sync_alt';
+
+    if (desc.includes('meralco') || desc.includes('water') || desc.includes('bill') || desc.includes('rent') || desc.includes('utilities')) {
+       category = 'Bills & Utilities';
+       icon = 'account_balance';
+    } else if (desc.includes('deposit')) {
+       category = 'Deposits';
+       icon = 'south_west';
+    } else if (desc.includes('withdraw')) {
+       category = 'Withdrawals';
+       icon = 'north_east';
+    } else if (desc.includes('internal')) {
+       category = 'Internal Transfer';
+       icon = 'swap_horiz';
+    } else if (desc.includes('grab') || desc.includes('travel') || desc.includes('flight') || desc.includes('cebu') || desc.includes('leisure')) {
+       category = 'Travel & Leisure';
+       icon = 'flight_takeoff';
+    } else if (desc.includes('apple') || desc.includes('microsoft') || desc.includes('gadget') || desc.includes('technology')) {
+       category = 'Technology';
+       icon = 'devices';
+    } else if (desc.includes('food') || desc.includes('dining') || desc.includes('restaurant') || desc.includes('starbucks')) {
+       category = 'Food & Dining';
+       icon = 'restaurant';
+    } else if (desc.includes('transfer') || desc.includes('payment')) {
+       category = 'Payments';
+       icon = 'payments';
+    }
+
+    // Attempt format date if ISO, else just use directly
+    let parsedDate = 'Unknown Date';
+    let parsedTime = 'Unknown Time';
+    try {
+       const dt = new Date(beTx.transactionTime);
+       parsedDate = dt.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
+       parsedTime = dt.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'});
+    } catch(e) {}
+
+    return {
+      id: `TX-${beTx.transactionId}`,
+      accountId: beTx.accountId.toString(),
+      date: parsedDate,
+      time: parsedTime,
+      description: beTx.transactionDescription || 'Transaction',
+      category: category,
+      icon: icon,
+      type: (amt < 0) ? 'debit' : 'credit',
+      status: (beTx.transactionStatus?.toLowerCase() as any) || 'completed',
+      amount: Math.abs(amt),
+      targetAccountNumber: beTx.targetAccountNumber,
+      targetAccountName: beTx.targetAccountName
+    };
   }
 
-  getAllTransactions(): Transaction[] {
-    return this.transactions;
+  getAggregates(transactions: Transaction[]) {
+    const totalInflow = transactions
+      .filter(t => t.type === 'credit' && t.status !== 'declined')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const totalOutflow = transactions
+      .filter(t => t.type === 'debit' && t.status !== 'declined')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const categoryMap: Record<string, number> = {};
+    transactions.forEach(t => {
+      if (t.type === 'debit' && t.status !== 'declined') {
+        categoryMap[t.category] = (categoryMap[t.category] || 0) + t.amount;
+      }
+    });
+
+    const categories = Object.keys(categoryMap).map(name => ({
+      name,
+      amount: categoryMap[name],
+      percentage: totalOutflow > 0 ? (categoryMap[name] / totalOutflow) * 100 : 0
+    })).sort((a,b) => b.amount - a.amount);
+
+    return { totalInflow, totalOutflow, categories };
+  }
+
+  exportToCSV(transactions: Transaction[]): void {
+    const headers = ['ID', 'Date', 'Time', 'Description', 'Category', 'Type', 'Status', 'Amount'];
+    const rows = transactions.map(t => [
+      t.id, t.date, t.time, t.description, t.category, t.type, t.status, t.amount
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(e => e.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `transactions_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  getRecentTransactions(count = 4): Observable<Transaction[]> {
+    const user = this.authService.user();
+    if (!user || !user.userId) return of([]);
+    
+    return this.http.get<BackendTransactionResponse[]>(`${this.apiUrl}/${user.userId}/transactions`).pipe(
+      map(txs => {
+         // Sort newest first
+         const sorted = txs.sort((a, b) => new Date(b.transactionTime).getTime() - new Date(a.transactionTime).getTime());
+         return sorted.slice(0, count).map(this.mapBackendToFrontend);
+      }),
+      catchError(err => {
+        console.error('Failed to fetch recent transactions:', err);
+        return of([]);
+      })
+    );
+  }
+
+  getAllTransactions(): Observable<Transaction[]> {
+    const user = this.authService.user();
+    if (!user || !user.userId) return of([]);
+    
+    return this.http.get<BackendTransactionResponse[]>(`${this.apiUrl}/${user.userId}/transactions`).pipe(
+      map(txs => {
+         // Sort newest first
+         const sorted = txs.sort((a, b) => new Date(b.transactionTime).getTime() - new Date(a.transactionTime).getTime());
+         return sorted.map(this.mapBackendToFrontend);
+      }),
+      catchError(err => {
+        console.error('Failed to fetch all transactions:', err);
+        return of([]);
+      })
+    );
+  }
+
+  transferFunds(payload: TransferPayload): Observable<any> {
+    return this.http.post(`${this.apiUrl}/transfer`, payload, { responseType: 'text' });
+  }
+
+  transferBetweenOwnAccounts(payload: InternalTransferPayload): Observable<any> {
+    return this.http.put(`${this.apiUrl}/transfer-transaction`, payload, { responseType: 'text' });
+  }
+
+  depositFunds(payload: CashTransactionPayload): Observable<any> {
+    return this.http.post(`${this.apiUrl}/deposit`, payload, { responseType: 'text' });
+  }
+
+  withdrawFunds(payload: CashTransactionPayload): Observable<any> {
+    return this.http.post(`${this.apiUrl}/withdraw`, payload, { responseType: 'text' });
   }
 
   getAdminAuditLog() {
     return this.adminAuditLog;
+  }
+
+  getUniqueRecipients(): Observable<Array<{ name: string; accountNumber: string; avatar: string }>> {
+    const user = this.authService.user();
+    if (!user || !user.userId) return of([]);
+
+    return this.getAllTransactions().pipe(
+      map(txs => {
+        const recipientsMap = new Map<string, { name: string; accountNumber: string; avatar: string }>();
+
+        // We only care about debit transactions where we have recipient details
+        txs.filter(tx => tx.type === 'debit' && tx.targetAccountNumber).forEach(tx => {
+          if (!recipientsMap.has(tx.targetAccountNumber!)) {
+            recipientsMap.set(tx.targetAccountNumber!, {
+              name: tx.targetAccountName || 'Unknown Recipient',
+              accountNumber: tx.targetAccountNumber!,
+              avatar: ''
+            });
+          }
+        });
+
+        return Array.from(recipientsMap.values());
+      })
+    );
   }
 }
