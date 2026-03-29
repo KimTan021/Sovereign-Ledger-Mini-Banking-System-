@@ -70,12 +70,12 @@
   --font-body: 'Inter', sans-serif;
   --font-label: 'Inter', sans-serif;
 
-  /* Border Radius */
+  /* Border Radius - Standardized to Sovereign 1.0rem scale */
   --radius-DEFAULT: 0.5rem;
   --radius-sm: 0.25rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1.5rem;
+  --radius-lg: 1.0rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2.0rem;
   --radius-full: 9999px;
 }
 
@@ -88,9 +88,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Material Symbols */
+/* Material Symbols - Thinner 'Architectural' weight */
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
   display: inline-block;
   line-height: 1;
   text-transform: none;
@@ -115,9 +115,9 @@ body {
   background: linear-gradient(135deg, #002045 0%, #1a365d 100%);
 }
 
-/* Ambient shadows per DESIGN.md - tinted with primary color */
+/* Ambient shadows per DESIGN.md - highly subtle with primary blue tint */
 .shadow-ambient {
-  box-shadow: 0 4px 40px 0 rgba(0, 32, 69, 0.06);
+  box-shadow: 0 4px 40px 0 rgba(0, 32, 69, 0.05); /* Reduced opacity from 0.06 to 0.05 for minimalism */
 }
 
 /* Scrollbar styling */

@@ -6,7 +6,7 @@ import { ModalComponent } from '../modal/modal.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ModalComponent],
   template: `
-    <footer class="mt-20 border-t border-outline-variant/10 py-12 px-6">
+    <footer class="mt-32 py-16 px-6 bg-surface-container-low/30">
       <div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex flex-col items-center md:items-start">
           <span class="text-lg font-black text-primary font-headline">Sovereign Ledger</span>

@@ -39,51 +39,51 @@ import { NotificationService } from '../../../core/services/notification.service
       <!-- Navigation Links -->
       <nav class="flex flex-col gap-2 p-4 flex-grow overflow-y-auto">
         <a routerLink="/admin"
-           routerLinkActive="bg-surface-container-lowest text-primary shadow-sm"
+           routerLinkActive="bg-surface-container-lowest text-primary shadow-ambient"
            [routerLinkActiveOptions]="{ exact: true }"
            (click)="closeSidebarOnMobile()"
-           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
+           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-2xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
           <span class="material-symbols-outlined">dashboard</span>
           <span>Overview</span>
         </a>
         <a routerLink="/admin/pending"
-           routerLinkActive="bg-surface-container-lowest text-primary shadow-sm"
+           routerLinkActive="bg-surface-container-lowest text-primary shadow-ambient"
            (click)="closeSidebarOnMobile()"
-           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
+           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-2xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
           <span class="material-symbols-outlined">person_add</span>
           <span>Pending</span>
         </a>
         <a routerLink="/admin/analytics"
-           routerLinkActive="bg-surface-container-lowest text-primary shadow-sm"
+           routerLinkActive="bg-surface-container-lowest text-primary shadow-ambient"
            (click)="closeSidebarOnMobile()"
-           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
+           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-2xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
           <span class="material-symbols-outlined">insights</span>
           <span>Analytics</span>
         </a>
         <a routerLink="/admin/users"
-           routerLinkActive="bg-surface-container-lowest text-primary shadow-sm"
+           routerLinkActive="bg-surface-container-lowest text-primary shadow-ambient"
            (click)="closeSidebarOnMobile()"
-           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
+           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-2xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
           <span class="material-symbols-outlined">group</span>
           <span>Users</span>
         </a>
         <a routerLink="/admin/compliance"
-           routerLinkActive="bg-surface-container-lowest text-primary shadow-sm"
+           routerLinkActive="bg-surface-container-lowest text-primary shadow-ambient"
            (click)="closeSidebarOnMobile()"
-           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
+           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-2xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
           <span class="material-symbols-outlined">gavel</span>
           <span>Compliance</span>
         </a>
         <a routerLink="/admin/audit"
-           routerLinkActive="bg-surface-container-lowest text-primary shadow-sm"
+           routerLinkActive="bg-surface-container-lowest text-primary shadow-ambient"
            (click)="closeSidebarOnMobile()"
-           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
+           class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container rounded-2xl hover:translate-x-1 transition-transform duration-200 cursor-pointer">
           <span class="material-symbols-outlined">history_edu</span>
           <span>Transactions</span>
         </a>
       </nav>
       <!-- Footer Links -->
-      <div class="p-4 border-t border-outline-variant/10 flex flex-col gap-2">
+      <div class="p-4 flex flex-col gap-2">
         <a (click)="onLogout()"
            class="flex items-center gap-3 p-3 text-on-surface-variant hover:text-error transition-colors cursor-pointer">
           <span class="material-symbols-outlined">logout</span>
@@ -95,7 +95,7 @@ import { NotificationService } from '../../../core/services/notification.service
     <!-- Main Content Canvas -->
     <main class="lg:ml-64 min-h-screen">
       <!-- Admin Header (Mobile/Tablet) -->
-      <header class="lg:hidden flex items-center justify-between p-4 bg-surface border-b border-outline-variant/10 sticky top-0 z-30">
+      <header class="lg:hidden flex items-center justify-between p-4 bg-surface sticky top-0 z-30">
         <div class="flex items-center gap-3">
           <button (click)="toggleSidebar()" class="p-2 text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
             <span class="material-symbols-outlined">menu</span>

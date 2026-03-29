@@ -10,7 +10,7 @@ import { NotificationService } from '../../../core/services/notification.service
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, BaseChartDirective, CurrencyPipe, DecimalPipe],
   template: `
-    <div class="p-8 lg:p-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div class="p-12 lg:p-16 space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-screen-2xl mx-auto">
       <header class="space-y-4">
         <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
           <div>
@@ -31,22 +31,22 @@ import { NotificationService } from '../../../core/services/notification.service
       </header>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20">
+        <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-ambient">
           <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">Flagged Queue</p>
           <h2 class="mt-3 text-3xl font-headline font-bold text-error">{{ sumMetric(dashboard()?.flaggedTrend) | number:'1.0-0' }}</h2>
           <p class="mt-2 text-sm text-on-surface-variant">Failed, escalated, and review-required transactions in range.</p>
         </div>
-        <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20">
+        <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-ambient">
           <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">Net Flow</p>
           <h2 class="mt-3 text-3xl font-headline font-bold text-primary">{{ netFlowTotal() | currency:'PHP':'symbol':'1.0-0' }}</h2>
           <p class="mt-2 text-sm text-on-surface-variant">Credits minus debits across the selected period.</p>
         </div>
-        <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20">
+        <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-ambient">
           <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">Adjustments Posted</p>
           <h2 class="mt-3 text-3xl font-headline font-bold text-primary">{{ sumMetric(dashboard()?.adjustmentAnalytics) | currency:'PHP':'symbol':'1.0-0' }}</h2>
           <p class="mt-2 text-sm text-on-surface-variant">Total value of admin credits and debits in range.</p>
         </div>
-        <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20">
+        <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-ambient">
           <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">Pending Aging</p>
           <h2 class="mt-3 text-3xl font-headline font-bold text-primary">{{ dominantAgingBucket() }}</h2>
           <p class="mt-2 text-sm text-on-surface-variant">Most common approval aging bucket right now.</p>
@@ -54,62 +54,62 @@ import { NotificationService } from '../../../core/services/notification.service
       </div>
 
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <section class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
           <h2 class="text-xl font-headline font-bold text-primary mb-4">Daily Transaction Pulse</h2>
           <div class="flex-1 relative">
             @if (isLoading()) {
-              <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant">Loading analytics…</div>
+              <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant italic">Loading analytics…</div>
             } @else {
               <canvas baseChart [data]="dailyVolumeChart()" [options]="lineChartOptions" [type]="'line'"></canvas>
             }
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
           <h2 class="text-xl font-headline font-bold text-primary mb-4">Net Flow Trend</h2>
           <div class="flex-1 relative">
             @if (isLoading()) {
-              <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant">Loading analytics…</div>
+              <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant italic">Loading analytics…</div>
             } @else {
               <canvas baseChart [data]="netFlowChart()" [options]="barChartOptions" [type]="'bar'"></canvas>
             }
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
           <h2 class="text-xl font-headline font-bold text-primary mb-4">Volume by Amount Bucket</h2>
           <div class="flex-1 relative">
             @if (isLoading()) {
-              <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant">Loading analytics…</div>
+              <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant italic">Loading analytics…</div>
             } @else {
               <canvas baseChart [data]="amountBucketChart()" [options]="barChartOptions" [type]="'bar'"></canvas>
             }
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
           <h2 class="text-xl font-headline font-bold text-primary mb-4">Flagged / Failed Trend</h2>
           <div class="flex-1 relative">
             @if (isLoading()) {
-              <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant">Loading analytics…</div>
+              <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant italic">Loading analytics…</div>
             } @else {
               <canvas baseChart [data]="flaggedTrendChart()" [options]="lineChartOptions" [type]="'line'"></canvas>
             }
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
           <h2 class="text-xl font-headline font-bold text-primary mb-4">Onboarding and Account Growth</h2>
           <div class="flex-1 relative">
             @if (isLoading()) {
-              <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant">Loading analytics…</div>
+              <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant italic">Loading analytics…</div>
             } @else {
               <canvas baseChart [data]="growthChart()" [options]="lineChartOptions" [type]="'line'"></canvas>
             }
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
           <h2 class="text-xl font-headline font-bold text-primary mb-4">Status and Review Mix</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
             <div class="relative">
@@ -123,11 +123,11 @@ import { NotificationService } from '../../../core/services/notification.service
       </div>
 
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <section class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-ambient">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient">
           <h2 class="text-xl font-headline font-bold text-primary mb-5">Top User Transactors</h2>
           <div class="space-y-4">
             @for (user of dashboard()?.topUserTransactors || []; track user.id) {
-              <div class="flex items-center justify-between gap-4 p-4 rounded-xl bg-white border border-outline-variant/10">
+              <div class="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white">
                 <div>
                   <p class="font-bold text-primary">{{ user.label }}</p>
                   <p class="text-xs text-on-surface-variant">{{ user.transactionCount }} transactions</p>
@@ -135,16 +135,16 @@ import { NotificationService } from '../../../core/services/notification.service
                 <p class="font-headline font-bold text-on-surface">{{ user.totalAmount | currency:'PHP':'symbol':'1.2-2' }}</p>
               </div>
             } @empty {
-              <p class="text-on-surface-variant">No transaction activity in range.</p>
+              <p class="text-on-surface-variant italic">No transaction activity in range.</p>
             }
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-ambient">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient">
           <h2 class="text-xl font-headline font-bold text-primary mb-5">Top Account Transactors</h2>
           <div class="space-y-4">
             @for (account of dashboard()?.topAccountTransactors || []; track account.id) {
-              <div class="flex items-center justify-between gap-4 p-4 rounded-xl bg-white border border-outline-variant/10">
+              <div class="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white">
                 <div>
                   <p class="font-bold text-primary font-mono">{{ account.label }}</p>
                   <p class="text-xs text-on-surface-variant">{{ account.transactionCount }} transactions</p>
@@ -152,18 +152,18 @@ import { NotificationService } from '../../../core/services/notification.service
                 <p class="font-headline font-bold text-on-surface">{{ account.totalAmount | currency:'PHP':'symbol':'1.2-2' }}</p>
               </div>
             } @empty {
-              <p class="text-on-surface-variant">No transaction activity in range.</p>
+              <p class="text-on-surface-variant italic">No transaction activity in range.</p>
             }
           </div>
         </section>
       </div>
 
       <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <section class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-ambient">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient">
           <h2 class="text-xl font-headline font-bold text-primary mb-5">Approval Aging</h2>
-          <div class="space-y-3">
+          <div class="space-y-3 px-2">
             @for (item of dashboard()?.approvalAging || []; track item.category) {
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between py-2 border-b border-outline-variant/5 last:border-0">
                 <p class="text-sm font-medium text-on-surface">{{ item.category }}</p>
                 <p class="font-bold text-primary">{{ item.value | number:'1.0-0' }}</p>
               </div>
@@ -171,11 +171,11 @@ import { NotificationService } from '../../../core/services/notification.service
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-ambient">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient">
           <h2 class="text-xl font-headline font-bold text-primary mb-5">Adjustment Mix</h2>
-          <div class="space-y-3">
+          <div class="space-y-3 px-2">
             @for (item of dashboard()?.adjustmentAnalytics || []; track item.category) {
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between py-2 border-b border-outline-variant/5 last:border-0">
                 <p class="text-sm font-medium text-on-surface">{{ item.category }}</p>
                 <p class="font-bold text-primary">{{ item.value | currency:'PHP':'symbol':'1.2-2' }}</p>
               </div>
@@ -183,11 +183,11 @@ import { NotificationService } from '../../../core/services/notification.service
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-ambient">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient">
           <h2 class="text-xl font-headline font-bold text-primary mb-5">Transaction Demographics</h2>
-          <div class="space-y-3">
+          <div class="space-y-3 px-2">
             @for (item of dashboard()?.transactionDistribution || []; track item.category) {
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between py-2 border-b border-outline-variant/5 last:border-0">
                 <p class="text-sm font-medium text-on-surface">{{ item.category }}</p>
                 <p class="font-bold text-primary">{{ item.value | number:'1.0-0' }}</p>
               </div>

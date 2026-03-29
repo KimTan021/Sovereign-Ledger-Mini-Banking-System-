@@ -10,7 +10,7 @@ import { ModalComponent } from '../modal/modal.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, RouterLinkActive, ModalComponent, CommonModule, NgOptimizedImage, DatePipe],
   template: `
-    <nav class="sticky top-0 z-50 bg-surface/80 backdrop-blur-md shadow-sm shadow-primary/5">
+    <nav class="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/5">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center gap-8">
@@ -20,20 +20,20 @@ import { ModalComponent } from '../modal/modal.component';
             </a>
             <div class="hidden md:flex items-center gap-6">
               <a routerLink="/customer/dashboard"
-                 routerLinkActive="text-primary after:content-[''] after:absolute after:bottom-[-20px] after:left-0 after:w-full after:h-0.5 after:bg-primary"
+                 routerLinkActive="text-primary after:content-[''] after:absolute after:bottom-[-22px] after:left-0 after:w-full after:h-[2px] after:bg-primary"
                  [routerLinkActiveOptions]="{ exact: true }"
                  class="relative text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Dashboard</a>
               <a routerLink="/customer/banking"
-                 routerLinkActive="text-primary after:content-[''] after:absolute after:bottom-[-20px] after:left-0 after:w-full after:h-0.5 after:bg-primary"
+                 routerLinkActive="text-primary after:content-[''] after:absolute after:bottom-[-22px] after:left-0 after:w-full after:h-[2px] after:bg-primary"
                  class="relative text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Banking</a>
               <a routerLink="/customer/transfer"
-                 routerLinkActive="text-primary after:content-[''] after:absolute after:bottom-[-20px] after:left-0 after:w-full after:h-0.5 after:bg-primary"
+                 routerLinkActive="text-primary after:content-[''] after:absolute after:bottom-[-22px] after:left-0 after:w-full after:h-[2px] after:bg-primary"
                  class="relative text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Transfer</a>
               <a routerLink="/customer/history"
-                 routerLinkActive="text-primary after:content-[''] after:absolute after:bottom-[-20px] after:left-0 after:w-full after:h-0.5 after:bg-primary"
+                 routerLinkActive="text-primary after:content-[''] after:absolute after:bottom-[-22px] after:left-0 after:w-full after:h-[2px] after:bg-primary"
                  class="relative text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer">History</a>
               <a routerLink="/customer/settings"
-                 routerLinkActive="text-primary after:content-[''] after:absolute after:bottom-[-20px] after:left-0 after:w-full after:h-0.5 after:bg-primary"
+                 routerLinkActive="text-primary after:content-[''] after:absolute after:bottom-[-22px] after:left-0 after:w-full after:h-[2px] after:bg-primary"
                  class="relative text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Settings</a>
             </div>
           </div>
@@ -68,8 +68,8 @@ import { ModalComponent } from '../modal/modal.component';
            @for (notification of notificationService.notifications(); track notification.notificationId) {
              <button type="button"
                      (click)="markAsRead(notification.notificationId)"
-                     class="w-full text-left rounded-xl border px-4 py-4 transition-colors"
-                     [class]="notification.isRead ? 'border-outline-variant/10 bg-surface-container-low' : 'border-primary/10 bg-primary/5'">
+                     class="w-full text-left rounded-2xl px-4 py-4 transition-colors"
+                     [class]="notification.isRead ? 'bg-surface-container-low hover:bg-surface-container-high' : 'bg-primary/5 hover:bg-primary/10'">
                <div class="flex items-start justify-between gap-3">
                  <div>
                    <p class="font-bold text-sm text-primary">{{ notification.title }}</p>

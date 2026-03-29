@@ -8,12 +8,12 @@ import { CommonModule } from '@angular/common';
     <div class="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       <!-- Backdrop -->
       <div 
-        class="absolute inset-0 bg-on-surface/40 backdrop-blur-sm animate-in fade-in duration-300"
+        class="absolute inset-0 bg-on-surface/40 backdrop-blur-[20px] animate-in fade-in duration-300"
         (click)="close.emit()">
       </div>
       
       <!-- Modal Content -->
-      <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+      <div class="relative bg-white w-full max-w-lg rounded-2xl shadow-ambient overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         <!-- Header -->
         <div class="p-6 flex items-center justify-between bg-surface-container-low">
           <h3 class="text-xl font-headline font-bold text-primary">{{ title() }}</h3>
@@ -35,7 +35,7 @@ import { CommonModule } from '@angular/common';
           <button 
             type="button"
             (click)="close.emit()"
-            class="px-6 py-2 bg-primary text-on-primary font-bold rounded-xl hover:bg-primary-container transition-all cursor-pointer">
+            class="px-6 py-2 bg-primary text-on-primary font-bold rounded-2xl hover:bg-primary-container transition-all cursor-pointer">
             Done
           </button>
         </div>

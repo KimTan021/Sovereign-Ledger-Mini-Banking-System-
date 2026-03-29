@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit, effect, ElementRef, viewChild } from '@angular/core';
-import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, AuditLogEntry, TransactionSearchFilters } from '../../../core/services/admin.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
@@ -8,9 +8,9 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-admin-audit',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, DatePipe, CurrencyPipe, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   template: `
-    <div #pageTop class="p-8 lg:p-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div #pageTop class="p-12 lg:p-16 space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-screen-2xl mx-auto">
       <header class="space-y-1 block">
         <h1 class="text-3xl font-headline font-extrabold tracking-tighter text-primary">Global Transaction Desk</h1>
         <p class="text-on-surface-variant">Search, filter, and export transaction activity across the entire ledger.</p>
@@ -18,21 +18,21 @@ import { NotificationService } from '../../../core/services/notification.service
 
       <div class="grid grid-cols-1 md:grid-cols-8 gap-3">
         <input #searchBox type="text" (input)="setSearch(searchBox.value)" placeholder="Search user, account, detail"
-                class="md:col-span-2 rounded-xl bg-surface-container-lowest px-4 py-3 border border-outline-variant/20" />
+                class="md:col-span-2 rounded-2xl bg-surface-container-low/50 px-4 py-4 focus:bg-white transition-colors border-none shadow-sm" />
         <input #userIdBox type="number" (input)="setUserId(userIdBox.value)" placeholder="User ID"
-               class="rounded-xl bg-surface-container-lowest px-4 py-3 border border-outline-variant/20" />
+               class="rounded-2xl bg-surface-container-low/50 px-4 py-4 focus:bg-white transition-colors border-none shadow-sm" />
         <input #accountIdBox type="number" (input)="setAccountId(accountIdBox.value)" placeholder="Account ID"
-               class="rounded-xl bg-surface-container-lowest px-4 py-3 border border-outline-variant/20" />
+               class="rounded-2xl bg-surface-container-low/50 px-4 py-4 focus:bg-white transition-colors border-none shadow-sm" />
         <input #minAmountBox type="number" (input)="setMinAmount(minAmountBox.value)" placeholder="Min Amount"
-               class="rounded-xl bg-surface-container-lowest px-4 py-3 border border-outline-variant/20" />
+               class="rounded-2xl bg-surface-container-low/50 px-4 py-4 focus:bg-white transition-colors border-none shadow-sm font-bold text-primary" />
         <input #maxAmountBox type="number" (input)="setMaxAmount(maxAmountBox.value)" placeholder="Max Amount"
-               class="rounded-xl bg-surface-container-lowest px-4 py-3 border border-outline-variant/20" />
-        <select #typeBox (change)="setType(typeBox.value)" class="rounded-xl bg-surface-container-lowest px-4 py-3 border border-outline-variant/20">
+               class="rounded-2xl bg-surface-container-low/50 px-4 py-4 focus:bg-white transition-colors border-none shadow-sm font-bold text-primary" />
+        <select #typeBox (change)="setType(typeBox.value)" class="rounded-2xl bg-surface-container-low/50 px-4 py-4 border-none shadow-sm font-bold">
           <option value="">All Types</option>
           <option value="credit">Credit</option>
           <option value="debit">Debit</option>
         </select>
-        <select #statusBox (change)="setStatus(statusBox.value)" class="rounded-xl bg-surface-container-lowest px-4 py-3 border border-outline-variant/20">
+        <select #statusBox (change)="setStatus(statusBox.value)" class="rounded-2xl bg-surface-container-low/50 px-4 py-4 border-none shadow-sm font-bold">
           <option value="">All Statuses</option>
           <option value="completed">Completed</option>
           <option value="failed">Failed</option>
@@ -41,11 +41,11 @@ import { NotificationService } from '../../../core/services/notification.service
           <option value="escalated">Escalated</option>
         </select>
         <input #dateFromBox type="date" (change)="setDateFrom(dateFromBox.value)"
-               class="rounded-xl bg-surface-container-lowest px-4 py-3 border border-outline-variant/20" />
+               class="rounded-2xl bg-surface-container-low/50 px-4 py-4 border-none shadow-sm" />
         <input #dateToBox type="date" (change)="setDateTo(dateToBox.value)"
-               class="rounded-xl bg-surface-container-lowest px-4 py-3 border border-outline-variant/20" />
+               class="rounded-2xl bg-surface-container-low/50 px-4 py-4 border-none shadow-sm" />
         <button type="button" (click)="exportAudit()"
-                class="rounded-xl bg-primary text-on-primary px-4 py-3 font-bold text-sm">
+                class="rounded-2xl bg-primary text-on-primary px-4 py-4 font-black text-xs uppercase tracking-widest shadow-ambient hover:scale-[1.02] transition-transform">
           Export CSV
         </button>
       </div>
@@ -56,72 +56,70 @@ import { NotificationService } from '../../../core/services/notification.service
         </div>
       }
       
-      <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm">
+      <div class="bg-surface-container-low/30 rounded-2xl overflow-hidden shadow-ambient border-none text-on-surface">
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-sm">
+          <table class="w-full text-left border-separate border-spacing-0">
             <thead>
-              <tr class="bg-surface-container text-on-surface-variant text-[10px] uppercase font-bold tracking-widest border-b border-outline-variant/20">
-                <th class="px-6 py-4">Timestamp</th>
-                <th class="px-6 py-4">User / Account</th>
-                <th class="px-6 py-4">Event Description</th>
-                <th class="px-6 py-4">Status</th>
-                <th class="px-6 py-4 text-right">Value Flux</th>
-                <th class="px-6 py-4">Review Action</th>
+              <tr class="bg-surface-container-high/60 text-on-surface-variant text-[10px] uppercase tracking-[0.2em] font-black">
+                <th class="px-6 py-5 first:rounded-l-2xl">Ledger Date</th>
+                <th class="px-6 py-5">Originating Profile</th>
+                <th class="px-6 py-5">Event Classification</th>
+                <th class="px-6 py-5">Verification</th>
+                <th class="px-6 py-5 text-right">Value Flux</th>
+                <th class="px-6 py-5 last:rounded-r-2xl">Administrative Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-outline-variant/10">
-              @for (log of auditLogs(); track log.transactionId) {
-                <tr class="hover:bg-surface-container-lowest transition-colors group">
-                  <td class="px-6 py-4 whitespace-nowrap text-on-surface-variant font-mono text-xs">
+            <tbody class="space-y-0">
+              @for (log of auditLogs(); track log.transactionId; let even = $even) {
+                <tr class="transition-colors group {{ even ? 'bg-white' : 'bg-surface-container-low/40' }}">
+                  <td class="px-6 py-5 whitespace-nowrap text-on-surface-variant font-mono text-xs first:rounded-l-2xl">
                     {{ log.timestamp | date:'medium' }}
                   </td>
-                  <td class="px-6 py-4">
-                    <p class="font-bold text-on-surface">{{ log.userName }}</p>
-                    <p class="text-xs text-on-surface-variant font-mono">{{ log.accountNumber }} • User #{{ log.userId }}</p>
+                  <td class="px-6 py-5 whitespace-nowrap">
+                    <p class="font-bold text-on-surface text-sm">{{ log.userName }}</p>
+                    <p class="text-[10px] text-on-surface-variant font-mono uppercase tracking-tighter opacity-60">{{ log.accountNumber }} • User #{{ log.userId }}</p>
                   </td>
-                  <td class="px-6 py-4">
-                    <p class="font-bold" [class.text-error]="log.error" [class.text-on-surface]="!log.error">{{ log.title }}</p>
-                    <p class="text-xs text-on-surface-variant mt-1 break-all">{{ log.detail }}</p>
-                    @if (log.reviewNote) {
-                      <p class="text-xs text-secondary mt-2">Review note: {{ log.reviewNote }}</p>
-                    }
+                  <td class="px-6 py-5">
+                    <p class="font-bold text-sm" [class.text-error]="log.error" [class.text-primary]="!log.error">{{ log.title }}</p>
+                    <p class="text-[11px] text-on-surface-variant mt-1 break-all opacity-80 italic">{{ log.detail }}</p>
                   </td>
-                  <td class="px-6 py-4">
-                    <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest"
-                          [class]="log.error ? 'bg-error-container text-on-error-container' : 'bg-surface-container text-primary'">
+                  <td class="px-6 py-5 whitespace-nowrap">
+                    <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest"
+                          [class]="log.error ? 'bg-error-container text-on-error-container' : 'bg-surface-container-high text-primary'">
                       {{ log.status }}
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-right font-headline font-bold">
-                    {{ (log.type === 'credit' ? '+' : '-') }}{{ log.amount | currency:'PHP':'symbol':'1.2-2' }}
+                  <td class="px-6 py-5 text-right font-headline font-bold text-lg tracking-tighter whitespace-nowrap" [class.text-error]="log.type === 'debit'" [class.text-on-tertiary-fixed-variant]="log.type === 'credit'">
+                    {{ (log.type === 'credit' ? '+' : '-') }}{{ log.amount | currency:'PHP':'symbol':'1.0-0' }}
                   </td>
-                  <td class="px-6 py-4 min-w-[320px]">
+                  <td class="px-6 py-5 min-w-[320px] last:rounded-r-2xl">
                     @if (canReview(log)) {
                       <div class="space-y-2">
                         <input
                           [ngModel]="reviewNotes()[log.transactionId] || ''"
                           (ngModelChange)="setReviewNote(log.transactionId, $event)"
                           type="text"
-                          class="w-full rounded-xl bg-white px-4 py-3 border border-outline-variant/20"
-                          placeholder="Reviewer note or escalation reason" />
+                          class="w-full rounded-2xl bg-white px-4 py-3 border border-outline-variant/10 focus:border-primary/40 transition-colors text-sm"
+                          placeholder="Review order" />
                         <div class="flex gap-2">
                           <button type="button"
                                   (click)="review(log, 'Reviewed')"
-                                  class="rounded-xl border border-outline-variant/20 px-3 py-2 font-bold text-xs">
-                            Mark Reviewed
+                                  class="rounded-2xl bg-surface-container-high/60 hover:bg-surface-container-highest px-3 py-2 font-black text-[10px] uppercase tracking-widest">
+                            Verify
                           </button>
                           <button type="button"
                                   (click)="review(log, 'Escalated')"
-                                  class="rounded-xl bg-error text-on-error px-3 py-2 font-bold text-xs">
-                            Escalate
+                                  class="rounded-2xl bg-error text-on-error px-3 py-2 font-black text-[10px] uppercase tracking-widest shadow-sm">
+                            Flag
                           </button>
                         </div>
                       </div>
                     } @else {
-                      <span class="text-xs text-on-surface-variant">No action needed</span>
+                      <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-40 italic">Resolved</span>
                     }
                   </td>
                 </tr>
+                <tr class="h-1"></tr>
               } @empty {
                 <tr>
                   <td colspan="6" class="px-6 py-10 text-center text-on-surface-variant">No transactions match the current filters.</td>

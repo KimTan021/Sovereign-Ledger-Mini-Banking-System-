@@ -41,11 +41,11 @@ export class CardComponent {
     const base = 'rounded-2xl transition-all duration-300 relative overflow-hidden ';
     // ...
     const variants = {
-      primary: 'primary-gradient text-on-primary shadow-xl shadow-primary/10 overflow-hidden',
-      surface: 'bg-surface-container text-on-surface shadow-sm',
-      low: 'bg-surface-container-low text-on-surface shadow-sm',
-      lowest: 'bg-surface-container-lowest text-on-surface shadow-sm',
-      outline: 'bg-transparent border border-outline-variant/20 text-on-surface'
+      primary: 'primary-gradient text-on-primary shadow-ambient overflow-hidden',
+      surface: 'bg-surface-container text-on-surface shadow-ambient',
+      low: 'bg-surface-container-low text-on-surface shadow-ambient',
+      lowest: 'bg-surface-container-lowest text-on-surface shadow-ambient',
+      outline: 'bg-transparent border border-outline-variant/15 text-on-surface'
     };
 
     return base + variants[this.variant()] + ' ' + this.customClass();

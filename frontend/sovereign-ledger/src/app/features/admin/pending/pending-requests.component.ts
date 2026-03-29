@@ -1,5 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy, OnInit, signal, effect, ElementRef, viewChild } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { AdminService, PendingUser } from '../../../core/services/admin.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -7,9 +7,9 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-pending-requests',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CurrencyPipe, DatePipe, PaginationComponent],
+  imports: [CommonModule, PaginationComponent],
   template: `
-    <div #pageTop class="p-8 lg:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div #pageTop class="p-12 lg:p-16 space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-screen-2xl mx-auto">
       <header class="space-y-1">
         <h1 class="text-3xl font-headline font-extrabold tracking-tighter text-primary">Pending User Requests</h1>
         <p class="text-on-surface-variant">Review and authorize new network participants</p>
@@ -18,34 +18,34 @@ import { NotificationService } from '../../../core/services/notification.service
       <div class="flex justify-end">
         <button type="button"
                 (click)="exportPendingUsers()"
-                class="px-4 py-3 rounded-xl bg-primary text-on-primary font-bold text-sm">
+                class="px-6 py-3 rounded-2xl bg-primary text-on-primary font-bold text-sm shadow-sm hover:translate-y-[-1px] transition-transform">
           Export Pending CSV
         </button>
       </div>
 
-      <div class="bg-surface-container-lowest rounded-2xl shadow-ambient overflow-hidden border-none">
+      <div class="bg-surface-container-low/30 rounded-2xl shadow-ambient overflow-hidden border-none text-on-surface">
         <div class="overflow-x-auto">
           <table class="w-full text-left border-separate border-spacing-0">
             <thead>
-              <tr class="bg-surface-container-high/40 text-on-surface-variant text-[10px] uppercase tracking-[0.2em] font-bold">
-                <th class="px-8 py-5">Applicant</th>
+              <tr class="bg-surface-container-high/60 text-on-surface-variant text-[10px] uppercase tracking-[0.2em] font-bold">
+                <th class="px-8 py-5 first:rounded-l-2xl">Applicant</th>
                 <th class="px-8 py-5">Contact Details</th>
                 <th class="px-8 py-5">Account Intent</th>
                 <th class="px-8 py-5 text-right">Initial Deposit</th>
-                <th class="px-8 py-5 text-right">Actions</th>
+                <th class="px-8 py-5 text-right last:rounded-r-2xl">Actions</th>
               </tr>
             </thead>
             <tbody>
-              @for (user of pendingUsers(); track user.userId) {
-                <tr class="bg-white hover:bg-surface-container-low transition-colors group">
-                  <td class="px-8 py-6">
+              @for (user of pendingUsers(); track user.userId; let even = $even) {
+                <tr class="transition-colors group {{ even ? 'bg-white' : 'bg-surface-container-low/40' }}">
+                  <td class="px-8 py-6 first:rounded-l-2xl">
                     <div class="flex items-center gap-4">
-                      <div class="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary font-bold text-xs ring-1 ring-primary/10">
+                      <div class="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary font-bold text-xs ring-1 ring-primary/5 group-hover:scale-110 transition-transform">
                         {{ user.firstName[0] }}{{ user.lastName[0] }}
                       </div>
                       <div>
                         <p class="font-bold text-on-surface text-sm">{{ user.firstName }} {{ user.lastName }}</p>
-                        <p class="text-[10px] text-outline font-medium">{{ user.requestTime | date:'MMM d, HH:mm' }}</p>
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold opacity-60">{{ user.requestTime | date:'MMM d, HH:mm' }}</p>
                       </div>
                     </div>
                   </td>
@@ -62,22 +62,22 @@ import { NotificationService } from '../../../core/services/notification.service
                     </div>
                   </td>
                   <td class="px-8 py-6">
-                    <span class="text-xs font-bold text-secondary bg-secondary/5 px-2.5 py-1 rounded-full border border-secondary/10">
-                      {{ user.requestAccountType | titlecase }} Account
+                    <span class="text-[10px] font-black text-secondary px-3 py-1.5 rounded-full bg-secondary/5 uppercase tracking-widest">
+                      {{ user.requestAccountType | titlecase }}
                     </span>
                   </td>
-                  <td class="px-8 py-6 text-right font-headline font-bold text-primary text-lg tracking-tight">
-                    {{ user.initialDeposit | currency:'PHP':'symbol':'1.2-2' }}
+                  <td class="px-8 py-6 text-right font-headline font-bold text-primary text-xl tracking-tighter">
+                    {{ user.initialDeposit | currency:'PHP':'symbol':'1.0-0' }}
                   </td>
-                  <td class="px-8 py-6 text-right">
-                    <div class="flex items-center justify-end gap-2">
+                  <td class="px-8 py-6 text-right last:rounded-r-2xl">
+                    <div class="flex items-center justify-end gap-3">
                       <button (click)="rejectRequest(user.userId)" [disabled]="isProcessing()[user.userId]"
-                        class="p-2 text-error hover:bg-error-container/40 rounded-lg transition-colors disabled:opacity-50"
+                        class="p-2 text-error hover:bg-error-container/40 rounded-xl transition-all disabled:opacity-50"
                         title="Reject Request">
-                        <span class="material-symbols-outlined">block</span>
+                        <span class="material-symbols-outlined text-base">block</span>
                       </button>
                       <button (click)="approveRequest(user.userId)" [disabled]="isProcessing()[user.userId]"
-                        class="px-4 py-2 primary-gradient text-on-primary font-bold text-xs rounded-lg shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center gap-2">
+                        class="px-5 py-2.5 bg-primary text-on-primary font-black text-[10px] uppercase tracking-[0.15em] rounded-2xl shadow-ambient hover:scale-[1.05] active:scale-[0.95] transition-all disabled:opacity-50 flex items-center gap-2">
                         @if (isProcessing()[user.userId]) {
                           <span class="material-symbols-outlined animate-spin text-xs">sync</span>
                         } @else {
@@ -87,6 +87,7 @@ import { NotificationService } from '../../../core/services/notification.service
                     </div>
                   </td>
                 </tr>
+                <tr class="h-1"></tr>
               } @empty {
                 <tr>
                   <td colspan="5" class="px-8 py-12 text-center text-on-surface-variant italic">

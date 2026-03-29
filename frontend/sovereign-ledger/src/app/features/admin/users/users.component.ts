@@ -13,7 +13,7 @@ import { ActivatedRoute, Router } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, BadgeComponent, PaginationComponent, ModalComponent],
   template: `
-    <div #pageTop class="p-8 lg:p-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div #pageTop class="p-12 lg:p-16 space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-screen-2xl mx-auto">
       <header class="space-y-1 block">
         <h1 class="text-3xl font-headline font-extrabold tracking-tighter text-primary">Global Directory</h1>
         <p class="text-on-surface-variant">Manage user access, profile data, account controls, and administrative adjustments.</p>
@@ -22,64 +22,62 @@ import { ActivatedRoute, Router } from '@angular/router';
       <div class="flex justify-end">
         <button type="button"
                 (click)="exportUsers()"
-                class="px-4 py-3 rounded-xl bg-primary text-on-primary font-bold text-sm">
+                class="px-6 py-3 rounded-2xl bg-primary text-on-primary font-bold text-sm shadow-sm hover:translate-y-[-1px] transition-transform">
           Export Users CSV
         </button>
       </div>
       
-      <div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-ambient">
+      <div class="bg-surface-container-low/30 rounded-2xl overflow-hidden shadow-ambient">
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-separate" style="border-spacing: 0 4px;">
+          <table class="w-full text-left border-separate border-spacing-0">
             <thead>
-              <tr class="bg-surface-container flex-row text-on-surface-variant text-[10px] uppercase tracking-[0.15em] font-bold">
-                <th class="px-6 py-4">Entity Identity</th>
-                <th class="px-6 py-4">Primary Account</th>
-                <th class="px-6 py-4">Email</th>
-                <th class="px-6 py-4">Access</th>
-                <th class="px-6 py-4 text-right">Actions</th>
+              <tr class="bg-surface-container-high/60 text-on-surface-variant text-[10px] uppercase tracking-[0.2em] font-bold">
+                <th class="px-6 py-5 first:rounded-l-2xl">Entity Identity</th>
+                <th class="px-6 py-5">Primary Account</th>
+                <th class="px-6 py-5">Email</th>
+                <th class="px-6 py-5">Access</th>
+                <th class="px-6 py-5 text-right last:rounded-r-2xl">Actions</th>
               </tr>
             </thead>
-            <tbody class="space-y-1">
-              @for (user of users(); track user.userId) {
-                <tr class="bg-surface hover:bg-surface-container transition-colors">
-                  <td class="px-6 py-4">
+            <tbody class="space-y-0">
+              @for (user of users(); track user.userId; let even = $even) {
+                <tr class="transition-colors group {{ even ? 'bg-white' : 'bg-surface-container-low/40' }}">
+                  <td class="px-6 py-5 first:rounded-l-2xl">
                     <div class="flex items-center gap-3">
-                      <div class="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center text-primary font-bold text-xs">
+                      <div class="w-9 h-9 rounded-xl bg-primary/5 flex items-center justify-center text-primary font-bold text-xs ring-1 ring-primary/5 group-hover:scale-110 transition-transform">
                         {{ user.firstName[0] }}{{ user.lastName[0] }}
                       </div>
                       <div>
-                        <p class="font-bold text-on-surface">{{ user.firstName }} {{ user.middleName ? user.middleName[0] + '.' : '' }} {{ user.lastName }}</p>
-                        <p class="text-xs text-on-surface-variant">{{ user.accountCount }} linked account{{ user.accountCount === 1 ? '' : 's' }}</p>
+                        <p class="font-bold text-on-surface text-sm">{{ user.firstName }} {{ user.middleName ? user.middleName[0] + '.' : '' }} {{ user.lastName }}</p>
+                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold opacity-60">{{ user.accountCount }} linked account{{ user.accountCount === 1 ? '' : 's' }}</p>
                       </div>
                     </div>
                   </td>
-                  <td class="px-6 py-4 font-mono text-primary font-bold tracking-wider text-sm">{{ user.accountNumber || 'N/A' }}</td>
-                  <td class="px-6 py-4 text-on-surface-variant text-sm">{{ user.userEmail }}</td>
-                  <td class="px-6 py-4">
+                  <td class="px-6 py-5 font-mono text-primary font-bold tracking-wider text-sm">{{ user.accountNumber || 'N/A' }}</td>
+                  <td class="px-6 py-5 text-on-surface-variant text-sm">{{ user.userEmail }}</td>
+                  <td class="px-6 py-5">
                     <div class="flex items-center gap-2">
                       <app-badge [status]="user.userStatus === 'ACTIVE' ? 'completed' : 'declined'">
                         {{ user.userStatus | titlecase }}
                       </app-badge>
-                      <app-badge [status]="user.role === 'admin' ? 'verified' : 'completed'">
-                        {{ user.role | titlecase }}
-                      </app-badge>
                     </div>
                   </td>
-                  <td class="px-6 py-4 text-right">
+                  <td class="px-6 py-5 text-right last:rounded-r-2xl">
                     <div class="flex items-center justify-end gap-2">
                       <button type="button"
                               (click)="toggleUserStatus(user)"
-                              class="px-3 py-2 rounded-lg text-xs font-bold border border-outline-variant/20 hover:border-primary/40">
+                              class="px-3 py-2 rounded-2xl text-[10px] uppercase tracking-widest font-bold bg-surface-container-high/50 hover:bg-surface-container-highest transition-colors">
                         {{ user.userStatus === 'ACTIVE' ? 'Suspend' : 'Reactivate' }}
                       </button>
                       <button type="button"
                               (click)="openUser(user.userId)"
-                              class="px-4 py-2 rounded-lg bg-primary text-on-primary text-xs font-bold shadow-sm">
+                              class="px-4 py-2 rounded-2xl bg-primary text-on-primary text-[10px] uppercase tracking-widest font-bold shadow-sm hover:translate-y-[-1px] transition-transform">
                         Manage
                       </button>
                     </div>
                   </td>
                 </tr>
+                <tr class="h-1"></tr>
               }
             </tbody>
           </table>
@@ -127,26 +125,26 @@ import { ActivatedRoute, Router } from '@angular/router';
             </div>
 
             <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input formControlName="firstName" type="text" class="rounded-xl bg-surface-container-highest px-4 py-3" placeholder="First name" />
+              <input formControlName="firstName" type="text" class="rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="First name" />
               @if (getProfileError('firstName')) { <p class="md:col-span-1 text-xs font-semibold text-error">{{ getProfileError('firstName') }}</p> }
-              <input formControlName="middleName" type="text" class="rounded-xl bg-surface-container-highest px-4 py-3" placeholder="Middle name" />
+              <input formControlName="middleName" type="text" class="rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Middle name" />
               @if (getProfileError('middleName')) { <p class="md:col-span-1 text-xs font-semibold text-error">{{ getProfileError('middleName') }}</p> }
-              <input formControlName="lastName" type="text" class="rounded-xl bg-surface-container-highest px-4 py-3" placeholder="Last name" />
+              <input formControlName="lastName" type="text" class="rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Last name" />
               @if (getProfileError('lastName')) { <p class="md:col-span-1 text-xs font-semibold text-error">{{ getProfileError('lastName') }}</p> }
-              <input formControlName="phone" type="text" class="rounded-xl bg-surface-container-highest px-4 py-3" placeholder="Phone" />
+              <input formControlName="phone" type="text" class="rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Phone" />
               @if (getProfileError('phone')) { <p class="md:col-span-1 text-xs font-semibold text-error">{{ getProfileError('phone') }}</p> }
-              <input formControlName="userEmail" type="email" class="md:col-span-2 rounded-xl bg-surface-container-highest px-4 py-3" placeholder="Email" />
+              <input formControlName="userEmail" type="email" class="md:col-span-2 rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Email" />
               @if (getProfileError('userEmail')) { <p class="md:col-span-2 text-xs font-semibold text-error">{{ getProfileError('userEmail') }}</p> }
               <div class="md:col-span-2 flex flex-wrap gap-3">
-                <button type="submit" class="px-5 py-3 rounded-xl bg-primary text-on-primary font-bold text-sm">Save Profile</button>
-                <button type="button" (click)="toggleDetailUserStatus(detail)" class="px-5 py-3 rounded-xl border border-outline-variant/20 font-bold text-sm">
+                <button type="submit" class="px-6 py-4 rounded-2xl bg-primary text-on-primary font-bold text-sm shadow-sm">Save Profile</button>
+                <button type="button" (click)="toggleDetailUserStatus(detail)" class="px-6 py-4 rounded-2xl bg-surface-container-high/50 font-bold text-sm">
                   {{ detail.userStatus === 'ACTIVE' ? 'Suspend User' : 'Reactivate User' }}
                 </button>
-                <select [value]="detail.role" (change)="changeRole($any($event.target).value)" class="px-4 py-3 rounded-xl bg-surface-container-highest text-sm font-bold">
+                <select [value]="detail.role" (change)="changeRole($any($event.target).value)" class="px-5 py-4 rounded-2xl bg-surface-container-highest/50 text-sm font-bold">
                   <option value="user">Customer Role</option>
                   <option value="admin">Admin Role</option>
                 </select>
-                <button type="button" (click)="resetPassword()" class="px-5 py-3 rounded-xl border border-outline-variant/20 font-bold text-sm">
+                <button type="button" (click)="resetPassword()" class="px-6 py-4 rounded-2xl bg-surface-container-low font-bold text-sm">
                   Reset Password
                 </button>
               </div>
@@ -188,17 +186,23 @@ import { ActivatedRoute, Router } from '@angular/router';
                     </select>
                   </div>
 
-                  <form [formGroup]="adjustmentForm" class="grid grid-cols-1 md:grid-cols-4 gap-3" (ngSubmit)="submitAdjustment(account)">
-                    <input formControlName="amount" type="number" class="rounded-xl bg-white px-4 py-3 border border-outline-variant/20" placeholder="Amount" />
-                    @if (getAdjustmentError('amount')) { <p class="text-xs font-semibold text-error md:col-span-1">{{ getAdjustmentError('amount') }}</p> }
-                    <select formControlName="adjustmentType" class="rounded-xl bg-white px-4 py-3 border border-outline-variant/20">
+                  <form [formGroup]="adjustmentForm" class="grid grid-cols-1 md:grid-cols-4 gap-4" (ngSubmit)="submitAdjustment(account)">
+                    <div class="space-y-1">
+                      <input formControlName="amount" type="number" class="w-full rounded-2xl bg-white px-4 py-4 border-none shadow-sm focus:ring-2 focus:ring-primary/20 transition-all font-bold text-primary" placeholder="Amount" />
+                      @if (getAdjustmentError('amount')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest px-2">{{ getAdjustmentError('amount') }}</p> }
+                    </div>
+                    <select formControlName="adjustmentType" class="rounded-2xl bg-white px-4 py-4 border-none shadow-sm focus:ring-2 focus:ring-primary/20 transition-all font-bold">
                       <option value="credit">Credit</option>
                       <option value="debit">Debit</option>
                     </select>
-                    <input formControlName="description" type="text" class="rounded-xl bg-white px-4 py-3 border border-outline-variant/20 md:col-span-2" placeholder="Mandatory reason for adjustment" />
-                    @if (getAdjustmentError('description')) { <p class="text-xs font-semibold text-error md:col-span-2">{{ getAdjustmentError('description') }}</p> }
-                    <div class="md:col-span-4">
-                      <button type="submit" class="px-5 py-3 rounded-xl bg-primary text-on-primary font-bold text-sm">Post Adjustment to This Account</button>
+                    <div class="md:col-span-2 space-y-1">
+                      <input formControlName="description" type="text" class="w-full rounded-2xl bg-white px-4 py-4 border-none shadow-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Adjustment reason" />
+                      @if (getAdjustmentError('description')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest px-2">{{ getAdjustmentError('description') }}</p> }
+                    </div>
+                    <div class="md:col-span-4 mt-2">
+                      <button type="submit" class="w-full px-6 py-4 rounded-2xl bg-primary text-on-primary font-black text-sm uppercase tracking-widest shadow-ambient hover:scale-[1.01] active:scale-[0.99] transition-all">
+                        Post Adjustment
+                      </button>
                     </div>
                   </form>
                 </div>
