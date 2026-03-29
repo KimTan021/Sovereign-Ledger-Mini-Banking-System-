@@ -20,6 +20,8 @@ export interface PendingUser {
   phone: string;
   initialDeposit: number;
   requestTime: string;
+  requestStatus: string;
+  reviewedAt?: string | null;
 }
 
 export interface UserApprovalResponse {
@@ -41,6 +43,7 @@ export interface AdminStats {
 }
 
 export interface TopAccount {
+  userId: number;
   firstName: string;
   lastName: string;
   accountBalance: number;
@@ -49,6 +52,29 @@ export interface TopAccount {
 export interface CategoryMetric {
   category: string;
   value: number;
+}
+
+export interface TopTransactor {
+  id: number;
+  label: string;
+  totalAmount: number;
+  transactionCount: number;
+}
+
+export interface AnalyticsDashboard {
+  dailyVolume: CategoryMetric[];
+  transactionDistribution: CategoryMetric[];
+  volumeByAmount: CategoryMetric[];
+  accountGrowth: CategoryMetric[];
+  flaggedTrend: CategoryMetric[];
+  netFlow: CategoryMetric[];
+  approvalAging: CategoryMetric[];
+  accountStatusBreakdown: CategoryMetric[];
+  userStatusBreakdown: CategoryMetric[];
+  adjustmentAnalytics: CategoryMetric[];
+  complianceReviewAnalytics: CategoryMetric[];
+  topUserTransactors: TopTransactor[];
+  topAccountTransactors: TopTransactor[];
 }
 
 export interface AuditLogEntry {
@@ -224,6 +250,11 @@ export class AdminService {
     return this.http.get<CategoryMetric[]>(`${this.apiUrl}/analytics/distribution`);
   }
 
+  getAnalyticsDashboard(days: number): Observable<AnalyticsDashboard> {
+    const params = new HttpParams().set('days', days);
+    return this.http.get<AnalyticsDashboard>(`${this.apiUrl}/analytics/dashboard`, { params });
+  }
+
   exportAuditCSV(entries: AuditLogEntry[], filename: string): void {
     const headers = ['Transaction ID', 'User', 'User ID', 'Account', 'Account ID', 'Title', 'Detail', 'Type', 'Status', 'Amount', 'Review Note', 'Timestamp'];
     const rows = entries.map(entry => [
@@ -241,6 +272,45 @@ export class AdminService {
       entry.timestamp
     ]);
 
+    this.exportRowsAsCsv(headers, rows, filename);
+  }
+
+  exportUsersCSV(users: SystemUser[], filename: string): void {
+    const headers = ['User ID', 'First Name', 'Middle Name', 'Last Name', 'Email', 'Phone', 'Role', 'Status', 'Primary Account', 'Account Count'];
+    const rows = users.map(user => [
+      user.userId,
+      user.firstName,
+      user.middleName || '',
+      user.lastName,
+      user.userEmail,
+      user.phone || '',
+      user.role,
+      user.userStatus,
+      user.accountNumber || '',
+      user.accountCount
+    ]);
+
+    this.exportRowsAsCsv(headers, rows, filename);
+  }
+
+  exportPendingUsersCSV(users: PendingUser[], filename: string): void {
+    const headers = ['Request ID', 'First Name', 'Middle Name', 'Last Name', 'Email', 'Phone', 'Requested Account', 'Initial Deposit', 'Request Time'];
+    const rows = users.map(user => [
+      user.userId,
+      user.firstName,
+      user.middleName || '',
+      user.lastName,
+      user.userEmail,
+      user.phone || '',
+      user.requestAccountType,
+      user.initialDeposit,
+      user.requestTime
+    ]);
+
+    this.exportRowsAsCsv(headers, rows, filename);
+  }
+
+  private exportRowsAsCsv(headers: string[], rows: Array<Array<string | number>>, filename: string): void {
     const csvContent = [headers, ...rows]
       .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(','))
       .join('\n');

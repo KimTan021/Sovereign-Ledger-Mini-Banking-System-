@@ -1,7 +1,8 @@
-import { Component, ChangeDetectionStrategy, computed, inject, signal, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, signal, OnInit, effect } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, AdminStats, AuditLogEntry, PendingUser } from '../../../core/services/admin.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-admin-compliance',
@@ -107,6 +108,7 @@ import { AdminService, AdminStats, AuditLogEntry, PendingUser } from '../../../c
 })
 export class ComplianceComponent implements OnInit {
   private readonly adminService = inject(AdminService);
+  private readonly notificationService = inject(NotificationService);
 
   stats = signal<AdminStats | null>(null);
   pendingUsers = signal<PendingUser[]>([]);
@@ -122,6 +124,13 @@ export class ComplianceComponent implements OnInit {
     if (flagged >= 5) return 'Elevated';
     if (flagged > 0 || this.pendingCount() > 5) return 'Guarded';
     return 'Low';
+  });
+
+  private readonly refreshOnDataChange = effect(() => {
+    if (this.notificationService.dataVersion() === 0) {
+      return;
+    }
+    this.reload();
   });
 
   ngOnInit(): void {

@@ -20,6 +20,7 @@ public interface AdminService {
     
     List<CategoryMetricDTO> getDailyVolume();
     List<CategoryMetricDTO> getTransactionDistribution();
+    AnalyticsDashboardDTO getAnalyticsDashboard(Integer days);
     PaginatedResponseDTO<AuditLogDTO> getFullAuditLogs(Pageable pageable);
     AdminUserDetailDTO findUserDetail(Integer id);
     UserResponseDTO updateUserProfile(Integer id, AdminUserProfileUpdateRequestDTO request);

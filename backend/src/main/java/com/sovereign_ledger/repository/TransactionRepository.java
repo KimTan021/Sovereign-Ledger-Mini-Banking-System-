@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
     @Query(value = "SELECT u.user_id, t.* " +
@@ -148,4 +149,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
     List<Transaction> findTop5ByOrderByTransactionTimeDesc();
 
     List<Transaction> findAllByOrderByTransactionTimeDesc();
+
+    Optional<Transaction> findTopByAccount_AccountIdOrderByTransactionTimeDesc(Integer accountId);
 }

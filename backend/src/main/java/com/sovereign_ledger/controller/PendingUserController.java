@@ -36,4 +36,9 @@ public class PendingUserController {
                 .body(pendingUserService.requestAdditionalAccount(dto, userDetails.getUsername()));
     }
 
+    @GetMapping("/my-requests")
+    public ResponseEntity<List<PendingUserResponseDTO>> findMyRequests(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(pendingUserService.findRequestsForUser(userDetails.getUsername()));
+    }
+
 }

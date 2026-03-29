@@ -1,21 +1,31 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit, effect, ElementRef, viewChild } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminAccount, AdminService, AdminUserDetail, PasswordResetResponse, SystemUser } from '../../../core/services/admin.service';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
+import { NotificationService } from '../../../core/services/notification.service';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-admin-users',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, BadgeComponent, PaginationComponent, ModalComponent],
   template: `
-    <div class="p-8 lg:p-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div #pageTop class="p-8 lg:p-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header class="space-y-1 block">
         <h1 class="text-3xl font-headline font-extrabold tracking-tighter text-primary">Global Directory</h1>
         <p class="text-on-surface-variant">Manage user access, profile data, account controls, and administrative adjustments.</p>
       </header>
+
+      <div class="flex justify-end">
+        <button type="button"
+                (click)="exportUsers()"
+                class="px-4 py-3 rounded-xl bg-primary text-on-primary font-bold text-sm">
+          Export Users CSV
+        </button>
+      </div>
       
       <div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-ambient">
         <div class="overflow-x-auto">
@@ -80,7 +90,7 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
           [totalPages]="totalPages()" 
           [currentPage]="currentPage()" 
           [pageSize]="pageSize()"
-          (pageChange)="loadUsers($event)">
+          (pageChange)="changePage($event)">
         </app-pagination>
       </div>
 
@@ -118,10 +128,15 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
 
             <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input formControlName="firstName" type="text" class="rounded-xl bg-surface-container-highest px-4 py-3" placeholder="First name" />
+              @if (getProfileError('firstName')) { <p class="md:col-span-1 text-xs font-semibold text-error">{{ getProfileError('firstName') }}</p> }
               <input formControlName="middleName" type="text" class="rounded-xl bg-surface-container-highest px-4 py-3" placeholder="Middle name" />
+              @if (getProfileError('middleName')) { <p class="md:col-span-1 text-xs font-semibold text-error">{{ getProfileError('middleName') }}</p> }
               <input formControlName="lastName" type="text" class="rounded-xl bg-surface-container-highest px-4 py-3" placeholder="Last name" />
+              @if (getProfileError('lastName')) { <p class="md:col-span-1 text-xs font-semibold text-error">{{ getProfileError('lastName') }}</p> }
               <input formControlName="phone" type="text" class="rounded-xl bg-surface-container-highest px-4 py-3" placeholder="Phone" />
+              @if (getProfileError('phone')) { <p class="md:col-span-1 text-xs font-semibold text-error">{{ getProfileError('phone') }}</p> }
               <input formControlName="userEmail" type="email" class="md:col-span-2 rounded-xl bg-surface-container-highest px-4 py-3" placeholder="Email" />
+              @if (getProfileError('userEmail')) { <p class="md:col-span-2 text-xs font-semibold text-error">{{ getProfileError('userEmail') }}</p> }
               <div class="md:col-span-2 flex flex-wrap gap-3">
                 <button type="submit" class="px-5 py-3 rounded-xl bg-primary text-on-primary font-bold text-sm">Save Profile</button>
                 <button type="button" (click)="toggleDetailUserStatus(detail)" class="px-5 py-3 rounded-xl border border-outline-variant/20 font-bold text-sm">
@@ -175,11 +190,13 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
 
                   <form [formGroup]="adjustmentForm" class="grid grid-cols-1 md:grid-cols-4 gap-3" (ngSubmit)="submitAdjustment(account)">
                     <input formControlName="amount" type="number" class="rounded-xl bg-white px-4 py-3 border border-outline-variant/20" placeholder="Amount" />
+                    @if (getAdjustmentError('amount')) { <p class="text-xs font-semibold text-error md:col-span-1">{{ getAdjustmentError('amount') }}</p> }
                     <select formControlName="adjustmentType" class="rounded-xl bg-white px-4 py-3 border border-outline-variant/20">
                       <option value="credit">Credit</option>
                       <option value="debit">Debit</option>
                     </select>
                     <input formControlName="description" type="text" class="rounded-xl bg-white px-4 py-3 border border-outline-variant/20 md:col-span-2" placeholder="Mandatory reason for adjustment" />
+                    @if (getAdjustmentError('description')) { <p class="text-xs font-semibold text-error md:col-span-2">{{ getAdjustmentError('description') }}</p> }
                     <div class="md:col-span-4">
                       <button type="submit" class="px-5 py-3 rounded-xl bg-primary text-on-primary font-bold text-sm">Post Adjustment to This Account</button>
                     </div>
@@ -196,33 +213,59 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
 export class UsersComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly fb = inject(FormBuilder);
+  private readonly notificationService = inject(NotificationService);
+  private readonly pageTop = viewChild<ElementRef<HTMLElement>>('pageTop');
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   users = signal<SystemUser[]>([]);
   selectedUser = signal<AdminUserDetail | null>(null);
   actionMessage = signal<string | null>(null);
   errorMessage = signal<string | null>(null);
   passwordReset = signal<PasswordResetResponse | null>(null);
+  profileSubmitted = signal(false);
+  adjustmentSubmitted = signal(false);
   
   currentPage = signal(0);
   pageSize = signal(10);
   totalElements = signal(0);
   totalPages = signal(0);
+  private detailRequestToken = 0;
+  private pendingManageUserId = signal<number | null>(null);
 
   profileForm = this.fb.nonNullable.group({
-    firstName: ['', Validators.required],
-    middleName: [''],
-    lastName: ['', Validators.required],
-    userEmail: ['', Validators.required],
-    phone: [''],
+    firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(45), Validators.pattern(/^[A-Za-z][A-Za-z\s'-]*$/)]],
+    middleName: ['', [Validators.maxLength(45), Validators.pattern(/^$|^[A-Za-z][A-Za-z\s'-]*$/)]],
+    lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(45), Validators.pattern(/^[A-Za-z][A-Za-z\s'-]*$/)]],
+    userEmail: ['', [Validators.required, Validators.email, Validators.maxLength(512)]],
+    phone: ['', [Validators.required, Validators.pattern(/^\+?[0-9 ]{10,15}$/)]],
   });
 
   adjustmentForm = this.fb.nonNullable.group({
     amount: [0, [Validators.required, Validators.min(0.01)]],
     adjustmentType: ['credit' as 'credit' | 'debit', Validators.required],
-    description: ['', Validators.required],
+    description: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(150)]],
+  });
+
+  private readonly refreshOnDataChange = effect(() => {
+    if (this.notificationService.dataVersion() === 0) {
+      return;
+    }
+    this.loadUsers(this.currentPage());
+    const detail = this.selectedUser();
+    if (detail) {
+      this.openUser(detail.userId);
+    }
   });
 
   ngOnInit() {
+    this.route.queryParamMap.subscribe(params => {
+      const rawUserId = params.get('manageUserId');
+      this.pendingManageUserId.set(rawUserId ? Number(rawUserId) : null);
+      if (rawUserId) {
+        this.openUser(Number(rawUserId));
+      }
+    });
     this.loadUsers();
   }
 
@@ -237,13 +280,39 @@ export class UsersComponent implements OnInit {
     });
   }
 
+  changePage(page: number): void {
+    this.loadUsers(page);
+    requestAnimationFrame(() => {
+      this.pageTop()?.nativeElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    });
+  }
+
+  exportUsers(): void {
+    const exportSize = Math.max(this.totalElements(), this.pageSize(), 100);
+    this.adminService.getUsers(0, exportSize).subscribe({
+      next: response => this.adminService.exportUsersCSV(
+        response.content,
+        `admin-users-${new Date().toISOString().split('T')[0]}.csv`
+      )
+    });
+  }
+
   openUser(userId: number): void {
+    const requestToken = ++this.detailRequestToken;
     this.actionMessage.set(null);
     this.errorMessage.set(null);
     this.passwordReset.set(null);
+    this.profileSubmitted.set(false);
+    this.adjustmentSubmitted.set(false);
     this.adjustmentForm.reset({ amount: 0, adjustmentType: 'credit', description: '' });
     this.adminService.getUserDetail(userId).subscribe({
       next: detail => {
+        if (requestToken !== this.detailRequestToken) {
+          return;
+        }
         this.selectedUser.set(detail);
         this.profileForm.reset({
           firstName: detail.firstName,
@@ -258,21 +327,37 @@ export class UsersComponent implements OnInit {
   }
 
   closeUser(): void {
+    this.detailRequestToken++;
     this.selectedUser.set(null);
     this.passwordReset.set(null);
+    this.actionMessage.set(null);
+    this.errorMessage.set(null);
+    this.profileSubmitted.set(false);
+    this.adjustmentSubmitted.set(false);
+    if (this.pendingManageUserId() !== null) {
+      this.pendingManageUserId.set(null);
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { manageUserId: null },
+        queryParamsHandling: 'merge'
+      });
+    }
   }
 
   saveProfile(): void {
     const detail = this.selectedUser();
+    this.profileSubmitted.set(true);
+    this.profileForm.markAllAsTouched();
     if (!detail || this.profileForm.invalid) return;
 
     this.adminService.updateUserProfile(detail.userId, this.profileForm.getRawValue()).subscribe({
       next: user => {
+        this.profileSubmitted.set(false);
         this.actionMessage.set('Profile updated.');
         this.loadUsers(this.currentPage());
         this.openUser(user.userId);
       },
-      error: err => this.errorMessage.set(this.extractError(err))
+      error: err => this.handleFormError(err, 'profile')
     });
   }
 
@@ -287,7 +372,7 @@ export class UsersComponent implements OnInit {
           this.openUser(user.userId);
         }
       },
-      error: err => this.errorMessage.set(this.extractError(err))
+      error: err => this.handleFormError(err)
     });
   }
 
@@ -315,7 +400,7 @@ export class UsersComponent implements OnInit {
         this.loadUsers(this.currentPage());
         this.openUser(detail.userId);
       },
-      error: err => this.errorMessage.set(this.extractError(err))
+      error: err => this.handleFormError(err)
     });
   }
 
@@ -328,7 +413,7 @@ export class UsersComponent implements OnInit {
         this.passwordReset.set(response);
         this.actionMessage.set('Temporary password generated.');
       },
-      error: err => this.errorMessage.set(this.extractError(err))
+      error: err => this.handleFormError(err)
     });
   }
 
@@ -341,11 +426,13 @@ export class UsersComponent implements OnInit {
           this.openUser(detail.userId);
         }
       },
-      error: err => this.errorMessage.set(this.extractError(err))
+      error: err => this.handleFormError(err)
     });
   }
 
   submitAdjustment(account: AdminAccount): void {
+    this.adjustmentSubmitted.set(true);
+    this.adjustmentForm.markAllAsTouched();
     if (this.adjustmentForm.invalid) return;
     const detail = this.selectedUser();
     if (!detail) return;
@@ -355,9 +442,10 @@ export class UsersComponent implements OnInit {
       next: () => {
         this.actionMessage.set('Administrative adjustment posted.');
         this.adjustmentForm.reset({ amount: 0, adjustmentType: 'credit', description: '' });
+        this.adjustmentSubmitted.set(false);
         this.openUser(detail.userId);
       },
-      error: err => this.errorMessage.set(this.extractError(err))
+      error: err => this.handleFormError(err, 'adjustment')
     });
   }
 
@@ -374,5 +462,60 @@ export class UsersComponent implements OnInit {
 
   private extractError(err: any): string {
     return typeof err.error === 'string' ? err.error : (err.error?.message || 'Admin action failed.');
+  }
+
+  private handleFormError(err: any, form?: 'profile' | 'adjustment'): void {
+    this.errorMessage.set(this.extractError(err));
+    const fieldErrors = err?.error?.fieldErrors as Record<string, string> | undefined;
+    if (!fieldErrors) {
+      return;
+    }
+
+    const targetForm = form === 'adjustment' ? this.adjustmentForm : this.profileForm;
+    Object.entries(fieldErrors).forEach(([field, message]) => {
+      const control = (targetForm as any).get(field);
+      if (!control) {
+        return;
+      }
+      control.setErrors({ ...(control.errors ?? {}), server: message });
+      control.markAsTouched();
+    });
+  }
+
+  hasProfileError(controlName: string): boolean {
+    const control = this.profileForm.get(controlName);
+    return !!control && control.invalid && (control.touched || this.profileSubmitted());
+  }
+
+  getProfileError(controlName: string): string | null {
+    const control = this.profileForm.get(controlName);
+    if (!control || !this.hasProfileError(controlName)) return null;
+    if (control.hasError('server')) return control.getError('server');
+    if (control.hasError('required')) return controlName === 'phone' ? 'Phone number is required.' : `${controlName === 'userEmail' ? 'Email address' : controlName === 'firstName' ? 'First name' : 'Last name'} is required.`;
+    if (control.hasError('email')) return 'Enter a valid email address.';
+    if (control.hasError('pattern')) return controlName === 'phone'
+      ? 'Phone number must contain 10 to 15 digits and may include spaces or a leading plus sign.'
+      : 'Only letters, spaces, apostrophes, and hyphens are allowed.';
+    if (control.hasError('minlength')) return controlName === 'firstName' ? 'First name must be at least 2 characters.' : 'Last name must be at least 2 characters.';
+    if (control.hasError('maxlength')) return controlName === 'userEmail'
+      ? 'Email address must not exceed 512 characters.'
+      : `${controlName === 'middleName' ? 'Middle name' : controlName === 'firstName' ? 'First name' : 'Last name'} must not exceed 45 characters.`;
+    return null;
+  }
+
+  hasAdjustmentError(controlName: string): boolean {
+    const control = this.adjustmentForm.get(controlName);
+    return !!control && control.invalid && (control.touched || this.adjustmentSubmitted());
+  }
+
+  getAdjustmentError(controlName: string): string | null {
+    const control = this.adjustmentForm.get(controlName);
+    if (!control || !this.hasAdjustmentError(controlName)) return null;
+    if (control.hasError('server')) return control.getError('server');
+    if (control.hasError('required')) return controlName === 'description' ? 'Adjustment reason is required.' : 'This field is required.';
+    if (control.hasError('min')) return 'Adjustment amount must be greater than zero.';
+    if (control.hasError('minlength')) return 'Adjustment reason must be at least 5 characters.';
+    if (control.hasError('maxlength')) return 'Adjustment reason must not exceed 150 characters.';
+    return null;
   }
 }

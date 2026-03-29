@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -44,6 +45,9 @@ public class User {
 
     @Column(name = "user_status", nullable = false)
     private String userStatus;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Account> accounts;

@@ -12,6 +12,7 @@ import com.sovereign_ledger.repository.AccountRepository;
 import com.sovereign_ledger.util.AesEncryptionUtil;
 import org.springframework.beans.factory.annotation.Value;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @SpringBootApplication
 public class BackendApplication {
@@ -44,6 +45,7 @@ public class BackendApplication {
 				admin.setPassword(encoder.encode("admin123"));
 				admin.setRole("admin");
 				admin.setUserStatus("ACTIVE");
+				admin.setCreatedAt(LocalDateTime.now());
 				userRepository.save(admin);
 				System.out.println("====== ADMIN CREATED: alice.santos@email.com / admin123 ======");
 				seedAccountIfMissing(admin, accountRepository, "Savings", "1001001001");
@@ -61,6 +63,7 @@ public class BackendApplication {
 				customer.setPassword(encoder.encode("customer123"));
 				customer.setRole("user"); // Backend role is 'user', frontend maps to 'customer'
 				customer.setUserStatus("ACTIVE");
+				customer.setCreatedAt(LocalDateTime.now());
 				userRepository.save(customer);
 				System.out.println("====== TEST CUSTOMER CREATED: juan.delacruz@email.com / customer123 ======");
 				seedAccountIfMissing(customer, accountRepository, "Savings", "2002002002");
@@ -76,6 +79,7 @@ public class BackendApplication {
 				account.setAccountType(type);
 				account.setAccountBalance(new BigDecimal("50000.00"));
 				account.setAccountStatus("Verified");
+				account.setCreatedAt(LocalDateTime.now());
 				String encrypted = AesEncryptionUtil.encrypt(rawNumber, aesSecretKey);
 				account.setAccountNumber(encrypted);
 				accountRepository.save(account);

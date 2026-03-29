@@ -17,6 +17,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(clonedReq).pipe(
     catchError((error: HttpErrorResponse) => {
+      if ((error.status === 401 || error.status === 403) && authService.isAuthenticated()) {
+        authService.forceLogout('Your session is no longer authorized. Please sign in again.');
+      }
       if (error.status === 401) {
         console.error('Unauthorized request:', req.url);
         console.error('Token present:', !!token);

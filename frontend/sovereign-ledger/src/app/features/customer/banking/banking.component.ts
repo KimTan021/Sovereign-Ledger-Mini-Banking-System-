@@ -9,10 +9,11 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 import { CardComponent } from '../../../shared/components/card/card.component';
 import { AccountService } from '../../../core/services/account.service';
 import { TransactionService } from '../../../core/services/transaction.service';
+import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 
 @Component({
   selector: 'app-banking',  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, RouterLink, NavbarComponent, FooterComponent, CardComponent],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, RouterLink, NavbarComponent, FooterComponent, CardComponent, BadgeComponent],
   templateUrl: './banking.component.html',
 })
 export class BankingComponent {
@@ -25,24 +26,27 @@ export class BankingComponent {
   actionError = signal<string | null>(null);
   actionSuccess = signal<string | null>(null);
   isSubmitting = signal(false);
+  depositSubmitted = signal(false);
+  withdrawSubmitted = signal(false);
+  internalSubmitted = signal(false);
 
   depositForm = this.fb.nonNullable.group({
     accountId: ['', Validators.required],
     amount: [1000, [Validators.required, Validators.min(0.01)]],
-    description: ['Branch cash deposit', Validators.required],
+    description: ['Branch cash deposit', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
   });
 
   withdrawForm = this.fb.nonNullable.group({
     accountId: ['', Validators.required],
     amount: [500, [Validators.required, Validators.min(0.01)]],
-    description: ['ATM cash withdrawal', Validators.required],
+    description: ['ATM cash withdrawal', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
   });
 
   internalTransferForm = this.fb.nonNullable.group({
     sourceAccountId: ['', Validators.required],
     receivingAccountId: ['', Validators.required],
     amount: [1000, [Validators.required, Validators.min(0.01)]],
-    description: ['Internal portfolio rebalance', Validators.required],
+    description: ['Internal portfolio rebalance', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
   });
 
   private setDefaults = effect(() => {
@@ -80,6 +84,8 @@ export class BankingComponent {
     }
   });
 
+  blockedAccounts = computed(() => this.accounts().filter(account => account.status !== 'verified'));
+
   selectTab(tab: 'deposit' | 'withdraw' | 'internal'): void {
     this.activeTab.set(tab);
     this.actionError.set(null);
@@ -87,9 +93,16 @@ export class BankingComponent {
   }
 
   submitDeposit(): void {
+    this.depositSubmitted.set(true);
+    this.depositForm.markAllAsTouched();
     if (this.depositForm.invalid || this.isSubmitting()) return;
 
     const value = this.depositForm.getRawValue();
+    const account = this.accounts().find(item => item.id === value.accountId);
+    if (!this.isEligibleAccount(account?.id ?? null)) {
+      this.actionError.set('Deposits are only available for verified accounts.');
+      return;
+    }
     this.runAction(
       this.transactionService.depositFunds({
         accountId: parseInt(value.accountId, 10),
@@ -101,9 +114,16 @@ export class BankingComponent {
   }
 
   submitWithdrawal(): void {
+    this.withdrawSubmitted.set(true);
+    this.withdrawForm.markAllAsTouched();
     if (this.withdrawForm.invalid || this.isSubmitting()) return;
 
     const value = this.withdrawForm.getRawValue();
+    const account = this.accounts().find(item => item.id === value.accountId);
+    if (!this.isEligibleAccount(account?.id ?? null)) {
+      this.actionError.set('Withdrawals are only available for verified accounts.');
+      return;
+    }
     this.runAction(
       this.transactionService.withdrawFunds({
         accountId: parseInt(value.accountId, 10),
@@ -115,11 +135,17 @@ export class BankingComponent {
   }
 
   submitInternalTransfer(): void {
+    this.internalSubmitted.set(true);
+    this.internalTransferForm.markAllAsTouched();
     if (this.internalTransferForm.invalid || this.isSubmitting()) return;
 
     const value = this.internalTransferForm.getRawValue();
     if (value.sourceAccountId === value.receivingAccountId) {
       this.actionError.set('Select two different accounts for an internal transfer.');
+      return;
+    }
+    if (!this.isEligibleAccount(value.sourceAccountId) || !this.isEligibleAccount(value.receivingAccountId)) {
+      this.actionError.set('Internal transfers require both accounts to be verified.');
       return;
     }
 
@@ -144,7 +170,6 @@ export class BankingComponent {
       next: () => {
         this.isSubmitting.set(false);
         this.actionSuccess.set(successMessage);
-        setTimeout(() => window.location.reload(), 1200);
       },
       error: (err: any) => {
         this.isSubmitting.set(false);
@@ -155,5 +180,41 @@ export class BankingComponent {
         this.actionError.set(backendMessage);
       }
     });
+  }
+
+  isEligibleAccount(accountId: string | null): boolean {
+    if (!accountId) return false;
+    return this.accounts().some(account => account.id === accountId && account.status === 'verified');
+  }
+
+  badgeStatus(value: string): string {
+    return (value || 'neutral').toLowerCase();
+  }
+
+  hasDepositError(controlName: string): boolean {
+    const control = this.depositForm.get(controlName);
+    return !!control && control.invalid && (control.touched || this.depositSubmitted());
+  }
+
+  hasWithdrawError(controlName: string): boolean {
+    const control = this.withdrawForm.get(controlName);
+    return !!control && control.invalid && (control.touched || this.withdrawSubmitted());
+  }
+
+  hasInternalError(controlName: string): boolean {
+    const control = this.internalTransferForm.get(controlName);
+    return !!control && control.invalid && (control.touched || this.internalSubmitted());
+  }
+
+  getFormError(form: 'deposit' | 'withdraw' | 'internal', controlName: string): string | null {
+    const targetForm = form === 'deposit' ? this.depositForm : form === 'withdraw' ? this.withdrawForm : this.internalTransferForm;
+    const submitted = form === 'deposit' ? this.depositSubmitted() : form === 'withdraw' ? this.withdrawSubmitted() : this.internalSubmitted();
+    const control = (targetForm as any).get(controlName);
+    if (!control || !control.invalid || !(control.touched || submitted)) return null;
+    if (control.hasError('required')) return controlName.toLowerCase().includes('account') ? 'Select an account.' : 'This field is required.';
+    if (control.hasError('min')) return 'Amount must be greater than zero.';
+    if (control.hasError('minlength')) return 'Description must be at least 3 characters.';
+    if (control.hasError('maxlength')) return 'Description must not exceed 150 characters.';
+    return null;
   }
 }

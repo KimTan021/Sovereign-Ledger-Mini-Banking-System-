@@ -8,6 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TopAccountDTO {
+    private Integer userId;
     private String firstName;
     private String lastName;
     private BigDecimal accountBalance;

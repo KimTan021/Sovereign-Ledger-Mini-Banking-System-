@@ -1,11 +1,29 @@
 package com.sovereign_ledger.dto.request;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
 import java.math.BigDecimal;
 
 public class TransferByAccountNumberRequestDTO {
+    @NotNull(message = "Source account is required.")
+    @Positive(message = "Source account is invalid.")
     private Integer sourceAccountId;
+
+    @NotBlank(message = "Recipient account number is required.")
+    @Pattern(regexp = "^[0-9]{10,18}$", message = "Recipient account number must be 10 to 18 digits.")
     private String targetAccountNumber;
+
+    @NotNull(message = "Transfer amount is required.")
+    @DecimalMin(value = "0.01", inclusive = true, message = "Transfer amount must be greater than zero.")
     private BigDecimal transAmount;
+
+    @NotBlank(message = "Transfer purpose is required.")
+    @Size(min = 3, max = 150, message = "Transfer purpose must be between 3 and 150 characters.")
     private String description;
 
     // Getters and Setters

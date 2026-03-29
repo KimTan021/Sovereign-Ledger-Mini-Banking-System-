@@ -39,7 +39,7 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     BigDecimal findTotalLiquidity();
     // Query for a placeholder for total liquidity, not meant to represent bank actual liquidity (Q5)
 
-    @Query(value = "SELECT u.first_name, u.last_name, a.account_balance " +
+    @Query(value = "SELECT u.user_id, u.first_name, u.last_name, a.account_balance " +
             "FROM account as a " +
             "INNER JOIN user as u " +
             "ON a.user_id = u.user_id " +

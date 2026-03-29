@@ -3,6 +3,7 @@ package com.sovereign_ledger.controller;
 import com.sovereign_ledger.dto.request.LoginRequestDTO;
 import com.sovereign_ledger.dto.response.LoginResponseDTO;
 import com.sovereign_ledger.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login (@RequestBody LoginRequestDTO request) {
+    public ResponseEntity<LoginResponseDTO> login (@Valid @RequestBody LoginRequestDTO request) {
         return ResponseEntity.ok(authService.login(request));
     }
 }

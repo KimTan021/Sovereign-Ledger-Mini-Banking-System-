@@ -1,18 +1,27 @@
-import { Component, inject, ChangeDetectionStrategy, OnInit, signal } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, OnInit, signal, effect, ElementRef, viewChild } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { AdminService, PendingUser } from '../../../core/services/admin.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-pending-requests',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, CurrencyPipe, DatePipe, PaginationComponent],
   template: `
-    <div class="p-8 lg:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div #pageTop class="p-8 lg:p-12 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header class="space-y-1">
         <h1 class="text-3xl font-headline font-extrabold tracking-tighter text-primary">Pending User Requests</h1>
         <p class="text-on-surface-variant">Review and authorize new network participants</p>
       </header>
+
+      <div class="flex justify-end">
+        <button type="button"
+                (click)="exportPendingUsers()"
+                class="px-4 py-3 rounded-xl bg-primary text-on-primary font-bold text-sm">
+          Export Pending CSV
+        </button>
+      </div>
 
       <div class="bg-surface-container-lowest rounded-2xl shadow-ambient overflow-hidden border-none">
         <div class="overflow-x-auto">
@@ -94,7 +103,7 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
           [totalPages]="totalPages()" 
           [currentPage]="currentPage()" 
           [pageSize]="pageSize()"
-          (pageChange)="loadPendingUsers($event)">
+          (pageChange)="changePage($event)">
         </app-pagination>
       </div>
     </div>
@@ -102,6 +111,8 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
 })
 export class PendingRequestsComponent implements OnInit {
   private readonly adminService = inject(AdminService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly pageTop = viewChild<ElementRef<HTMLElement>>('pageTop');
   
   pendingUsers = signal<PendingUser[]>([]);
   isProcessing = signal<{ [id: number]: boolean }>({});
@@ -111,6 +122,13 @@ export class PendingRequestsComponent implements OnInit {
   pageSize = signal(10);
   totalElements = signal(0);
   totalPages = signal(0);
+
+  private readonly refreshOnDataChange = effect(() => {
+    if (this.notificationService.dataVersion() === 0) {
+      return;
+    }
+    this.loadPendingUsers(this.currentPage());
+  });
 
   ngOnInit(): void {
     this.loadPendingUsers();
@@ -125,6 +143,26 @@ export class PendingRequestsComponent implements OnInit {
         this.currentPage.set(response.number);
       },
       error: (err) => console.error('Failed to load pending users', err)
+    });
+  }
+
+  changePage(page: number): void {
+    this.loadPendingUsers(page);
+    requestAnimationFrame(() => {
+      this.pageTop()?.nativeElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    });
+  }
+
+  exportPendingUsers(): void {
+    const exportSize = Math.max(this.totalElements(), this.pageSize(), 100);
+    this.adminService.getPendingUsers(0, exportSize).subscribe({
+      next: response => this.adminService.exportPendingUsersCSV(
+        response.content,
+        `pending-requests-${new Date().toISOString().split('T')[0]}.csv`
+      )
     });
   }
 

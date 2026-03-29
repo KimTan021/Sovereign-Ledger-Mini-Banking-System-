@@ -10,4 +10,5 @@ import java.util.List;
 public interface PendingUserService {
     PendingUserResponseDTO savePendingUser(PendingUserRequestDTO dto);
     PendingUserResponseDTO requestAdditionalAccount (AdditionalAccountRequestDTO dto, String userEmail);
+    List<PendingUserResponseDTO> findRequestsForUser(String userEmail);
 }

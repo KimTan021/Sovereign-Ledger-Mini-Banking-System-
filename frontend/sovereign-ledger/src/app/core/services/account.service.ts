@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, of, catchError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { NotificationService } from './notification.service';
 
 export interface Account {
   id: string;
@@ -11,8 +12,9 @@ export interface Account {
   balance: number;
   availableBalance: number;
   unclearedFunds: number;
-  status: 'verified' | 'flagged' | 'pending';
+  status: 'verified' | 'flagged' | 'pending' | 'frozen' | 'closed';
   lastFour: string;
+  accountNumber: string;
 }
 
 export interface BackendAccountResponse {
@@ -35,6 +37,7 @@ export interface Recipient {
 export class AccountService {
   private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
+  private readonly notificationService = inject(NotificationService);
   private readonly apiUrl = 'http://localhost:8080/accounts';
 
   private readonly adminAccounts: Account[] = [
@@ -42,16 +45,19 @@ export class AccountService {
       id: 'SL-9921-X', holderName: 'Alexander Magnus', initials: 'AM',
       type: 'Premium', balance: 1240000.00, availableBalance: 1240000.00,
       unclearedFunds: 0, status: 'verified', lastFour: '9921',
+      accountNumber: 'SL9921X',
     },
     {
       id: 'SL-4410-B', holderName: 'Elena Jovic', initials: 'EJ',
       type: 'Premium', balance: 892450.22, availableBalance: 892450.22,
       unclearedFunds: 0, status: 'verified', lastFour: '4410',
+      accountNumber: 'SL4410B',
     },
     {
       id: 'SL-1102-K', holderName: 'Sarah Kessler', initials: 'SK',
       type: 'Standard', balance: 412000.00, availableBalance: 412000.00,
       unclearedFunds: 0, status: 'flagged', lastFour: '1102',
+      accountNumber: 'SL1102K',
     },
   ];
 
@@ -60,17 +66,25 @@ export class AccountService {
   private mapBackendToFrontend(beAcc: BackendAccountResponse, userName: string): Account {
     const acctStr = beAcc.accountNumber || '';
     const lastFour = acctStr.length >= 4 ? acctStr.slice(-4) : acctStr;
+    const normalizedStatus = (beAcc.accountStatus || 'Pending').toLowerCase() as Account['status'];
+    const initials = userName
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
 
     return {
       id: beAcc.accountId.toString(),
       holderName: userName,
-      initials: 'User',
+      initials,
       type: beAcc.accountType || 'Standard',
       balance: beAcc.accountBalance,
       availableBalance: beAcc.accountBalance,
       unclearedFunds: 0,
-      status: 'verified',
-      lastFour: lastFour
+      status: normalizedStatus,
+      lastFour: lastFour,
+      accountNumber: acctStr,
     };
   }
 
@@ -78,15 +92,17 @@ export class AccountService {
     const user = this.authService.user();
     if (!user || !user.userId) return of([]);
 
-    return this.http.get<BackendAccountResponse[]>(`${this.apiUrl}/${user.userId}/accounts`).pipe(
-      map(accounts => {
-        if (!accounts || accounts.length === 0) return [];
-        return accounts.map(acc => this.mapBackendToFrontend(acc, user.name));
-      }),
-      catchError(err => {
-        console.error('Failed to fetch customer accounts:', err);
-        return of([]);
-      })
+    return this.notificationService.watch(() =>
+      this.http.get<BackendAccountResponse[]>(`${this.apiUrl}/${user.userId}/accounts`).pipe(
+        map(accounts => {
+          if (!accounts || accounts.length === 0) return [];
+          return accounts.map(acc => this.mapBackendToFrontend(acc, user.name));
+        }),
+        catchError(err => {
+          console.error('Failed to fetch customer accounts:', err);
+          return of([]);
+        })
+      )
     );
   }
 

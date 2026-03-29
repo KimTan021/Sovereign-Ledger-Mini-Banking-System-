@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -37,6 +38,9 @@ public class Account {
 
     @Column(name = "account_status")
     private String accountStatus;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Transaction> transactions;

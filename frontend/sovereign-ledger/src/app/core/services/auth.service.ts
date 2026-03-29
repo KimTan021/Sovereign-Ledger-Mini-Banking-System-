@@ -35,6 +35,7 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
   readonly userRole = computed(() => this.currentUser()?.role ?? null);
   readonly userName = computed(() => this.currentUser()?.name ?? '');
+  forcedLogoutReason = signal<string | null>(null);
 
   constructor() {
     this.hydrateFromStorage();
@@ -76,6 +77,14 @@ export class AuthService {
   }
 
   logout(): void {
+    this.forcedLogoutReason.set(null);
+    this.currentUser.set(null);
+    localStorage.removeItem('sovereign_session');
+    this.router.navigate(['/login']);
+  }
+
+  forceLogout(reason: string): void {
+    this.forcedLogoutReason.set(reason);
     this.currentUser.set(null);
     localStorage.removeItem('sovereign_session');
     this.router.navigate(['/login']);
@@ -83,5 +92,13 @@ export class AuthService {
 
   getToken(): string | null {
     return this.currentUser()?.token ?? null;
+  }
+
+  patchUser(patch: Partial<User>): void {
+    const existing = this.currentUser();
+    if (!existing) return;
+    const updated = { ...existing, ...patch };
+    this.currentUser.set(updated);
+    localStorage.setItem('sovereign_session', JSON.stringify(updated));
   }
 }

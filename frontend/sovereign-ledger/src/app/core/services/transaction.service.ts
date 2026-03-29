@@ -2,8 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, of, catchError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { NotificationService } from './notification.service';
 
-export type TransactionStatus = 'completed' | 'pending' | 'declined';
+export type TransactionStatus = 'completed' | 'pending' | 'declined' | 'reviewed' | 'escalated';
 export type TransactionType = 'debit' | 'credit';
 
 export interface Transaction {
@@ -19,6 +20,8 @@ export interface Transaction {
   amount: number;
   targetAccountNumber?: string;
   targetAccountName?: string;
+  reviewNote?: string;
+  logs?: string;
 }
 
 export interface BackendTransactionResponse {
@@ -32,6 +35,8 @@ export interface BackendTransactionResponse {
   transactionDescription: string;
   targetAccountNumber?: string;
   targetAccountName?: string;
+  reviewNote?: string;
+  logs?: string;
 }
 
 export interface TransferPayload {
@@ -59,6 +64,7 @@ export interface CashTransactionPayload {
 export class TransactionService {
   private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
+  private readonly notificationService = inject(NotificationService);
   private readonly apiUrl = 'http://localhost:8080/transactions';
 
   private readonly adminAuditLog = [
@@ -96,6 +102,9 @@ export class TransactionService {
     const desc = (beTx.transactionDescription || '').toLowerCase();
     let category = 'General';
     let icon = 'sync_alt';
+    let description = beTx.transactionDescription || 'Transaction';
+    const logs = beTx.logs || '';
+    const normalizedStatus = ((beTx.transactionStatus || 'completed').toLowerCase()) as TransactionStatus;
 
     if (desc.includes('meralco') || desc.includes('water') || desc.includes('bill') || desc.includes('rent') || desc.includes('utilities')) {
        category = 'Bills & Utilities';
@@ -109,6 +118,12 @@ export class TransactionService {
     } else if (desc.includes('internal')) {
        category = 'Internal Transfer';
        icon = 'swap_horiz';
+    } else if (desc.includes('admin adjustment') || logs.toLowerCase().includes('administrative')) {
+       category = 'Account Adjustment';
+       icon = 'admin_panel_settings';
+       description = beTx.transactionType?.toLowerCase() === 'credit'
+        ? 'Administrative credit'
+        : 'Administrative debit';
     } else if (desc.includes('grab') || desc.includes('travel') || desc.includes('flight') || desc.includes('cebu') || desc.includes('leisure')) {
        category = 'Travel & Leisure';
        icon = 'flight_takeoff';
@@ -137,14 +152,16 @@ export class TransactionService {
       accountId: beTx.accountId.toString(),
       date: parsedDate,
       time: parsedTime,
-      description: beTx.transactionDescription || 'Transaction',
+      description,
       category: category,
       icon: icon,
       type: (amt < 0) ? 'debit' : 'credit',
-      status: (beTx.transactionStatus?.toLowerCase() as any) || 'completed',
+      status: normalizedStatus,
       amount: Math.abs(amt),
       targetAccountNumber: beTx.targetAccountNumber,
-      targetAccountName: beTx.targetAccountName
+      targetAccountName: beTx.targetAccountName,
+      reviewNote: beTx.reviewNote,
+      logs: logs
     };
   }
 
@@ -174,13 +191,13 @@ export class TransactionService {
   }
 
   exportToCSV(transactions: Transaction[]): void {
-    const headers = ['ID', 'Date', 'Time', 'Description', 'Category', 'Type', 'Status', 'Amount'];
+    const headers = ['ID', 'Account ID', 'Date', 'Time', 'Description', 'Category', 'Type', 'Status', 'Amount', 'Recipient Account', 'Recipient Name', 'Review Note'];
     const rows = transactions.map(t => [
-      t.id, t.date, t.time, t.description, t.category, t.type, t.status, t.amount
+      t.id, t.accountId, t.date, t.time, t.description, t.category, t.type, t.status, t.amount, t.targetAccountNumber || '', t.targetAccountName || '', t.reviewNote || ''
     ]);
 
     const csvContent = [headers, ...rows]
-      .map(e => e.join(","))
+      .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(','))
       .join("\n");
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -197,34 +214,36 @@ export class TransactionService {
   getRecentTransactions(count = 4): Observable<Transaction[]> {
     const user = this.authService.user();
     if (!user || !user.userId) return of([]);
-    
-    return this.http.get<BackendTransactionResponse[]>(`${this.apiUrl}/${user.userId}/transactions`).pipe(
-      map(txs => {
-         // Sort newest first
-         const sorted = txs.sort((a, b) => new Date(b.transactionTime).getTime() - new Date(a.transactionTime).getTime());
-         return sorted.slice(0, count).map(this.mapBackendToFrontend);
-      }),
-      catchError(err => {
-        console.error('Failed to fetch recent transactions:', err);
-        return of([]);
-      })
+
+    return this.notificationService.watch(() =>
+      this.http.get<BackendTransactionResponse[]>(`${this.apiUrl}/${user.userId}/transactions`).pipe(
+        map(txs => {
+           const sorted = txs.sort((a, b) => new Date(b.transactionTime).getTime() - new Date(a.transactionTime).getTime());
+           return sorted.slice(0, count).map(this.mapBackendToFrontend);
+        }),
+        catchError(err => {
+          console.error('Failed to fetch recent transactions:', err);
+          return of([]);
+        })
+      )
     );
   }
 
   getAllTransactions(): Observable<Transaction[]> {
     const user = this.authService.user();
     if (!user || !user.userId) return of([]);
-    
-    return this.http.get<BackendTransactionResponse[]>(`${this.apiUrl}/${user.userId}/transactions`).pipe(
-      map(txs => {
-         // Sort newest first
-         const sorted = txs.sort((a, b) => new Date(b.transactionTime).getTime() - new Date(a.transactionTime).getTime());
-         return sorted.map(this.mapBackendToFrontend);
-      }),
-      catchError(err => {
-        console.error('Failed to fetch all transactions:', err);
-        return of([]);
-      })
+
+    return this.notificationService.watch(() =>
+      this.http.get<BackendTransactionResponse[]>(`${this.apiUrl}/${user.userId}/transactions`).pipe(
+        map(txs => {
+           const sorted = txs.sort((a, b) => new Date(b.transactionTime).getTime() - new Date(a.transactionTime).getTime());
+           return sorted.map(this.mapBackendToFrontend);
+        }),
+        catchError(err => {
+          console.error('Failed to fetch all transactions:', err);
+          return of([]);
+        })
+      )
     );
   }
 

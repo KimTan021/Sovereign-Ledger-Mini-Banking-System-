@@ -38,9 +38,12 @@
                 class="bg-white border-2 rounded-2xl p-4 w-64 text-left transition-all cursor-pointer {{ activeAccount()?.id === acc.id ? 'border-primary shadow-lg ring-4 ring-primary/5' : 'border-outline-variant/20 hover:border-primary/50 opacity-80' }}">
           <div class="flex justify-between items-start mb-4">
             <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Sovereign {{ acc.type }}</span>
-            <span class="material-symbols-outlined text-sm {{ activeAccount()?.id === acc.id ? 'text-primary' : 'text-outline' }}">
-              {{ activeAccount()?.id === acc.id ? 'check_circle' : 'circle' }}
-            </span>
+            <div class="flex items-center gap-2">
+              <app-badge [status]="badgeStatus(acc.status)" size="xs" [showDot]="true">{{ acc.status }}</app-badge>
+              <span class="material-symbols-outlined text-sm {{ activeAccount()?.id === acc.id ? 'text-primary' : 'text-outline' }}">
+                {{ activeAccount()?.id === acc.id ? 'check_circle' : 'circle' }}
+              </span>
+            </div>
           </div>
           <p class="text-lg font-headline font-bold text-primary">{{ acc.balance | currency:'PHP':'symbol':'1.2-2' }}</p>
           <p class="text-[10px] font-mono text-outline mt-1">**** {{ acc.lastFour }}</p>
@@ -80,10 +83,17 @@
               <p class="text-on-primary text-xl font-headline font-bold">{{ account.availableBalance | currency:'PHP':'symbol':'1.2-2' }}</p>
             </div>
             <div>
-              <p class="text-on-primary-container text-xs font-semibold uppercase tracking-wider">Uncleared Funds</p>
-              <p class="text-on-primary text-xl font-headline font-bold">{{ account.unclearedFunds | currency:'PHP':'symbol':'1.2-2' }}</p>
+              <p class="text-on-primary-container text-xs font-semibold uppercase tracking-wider">Account Status</p>
+              <div class="mt-1">
+                <app-badge [status]="badgeStatus(account.status)" size="sm" [showDot]="true">{{ account.status }}</app-badge>
+              </div>
             </div>
           </div>
+          @if (getAccountStatusMessage(account); as accountStatusMessage) {
+            <div class="mt-6 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold text-on-primary">
+              {{ accountStatusMessage }}
+            </div>
+          }
         </div>
       } @else {
         <div class="relative z-10 h-full flex items-center justify-center animate-pulse">
@@ -131,34 +141,35 @@
       </div>
     </app-card>
 
-    <!-- Monthly Spending -->
     <app-card class="md:col-span-12 lg:col-span-5" customClass="border border-outline-variant/10">
-      <h3 class="text-xl font-headline font-bold text-primary mb-8">Spending Breakdown</h3>
-      <div class="relative h-64 flex items-center justify-center">
-        <div class="w-48 h-48 rounded-full border-[16px] border-surface-container relative flex items-center justify-center">
-          <!-- Dynamic ring rotation based on top category (mocked CSS) -->
-          <div class="absolute inset-0 w-full h-full rounded-full border-[16px] border-primary border-t-transparent border-l-transparent rotate-45"></div>
-          <div class="text-center px-4">
-            <p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest leading-tight">Total Outflow</p>
-            <p class="text-xl font-headline font-bold text-primary">{{ aggregates().totalOutflow | currency:'PHP':'symbol':'1.0-0' }}</p>
-          </div>
-        </div>
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-headline font-bold text-primary">Customer Alerts</h3>
+        <app-badge [status]="activePendingRequestCount() > 0 ? 'pending' : (pendingRequests().length > 0 ? badgeStatus(pendingRequests()[0].requestStatus) : 'verified')" size="xs" [showDot]="true">
+          {{ activePendingRequestCount() > 0 ? activePendingRequestCount() + ' pending' : (pendingRequests().length > 0 ? 'updated' : 'clear') }}
+        </app-badge>
       </div>
-      <div class="mt-8 space-y-3">
-        @for (cat of aggregates().categories.slice(0, 3); track cat.name) {
-          <div class="flex items-center justify-between text-sm">
-            <div class="flex items-center gap-2">
-              <div class="w-2.5 h-2.5 rounded-full" [class]="cat.percentage > 40 ? 'bg-primary' : 'bg-tertiary-container'"></div>
-              <span class="text-on-surface-variant font-medium">{{ cat.name }}</span>
+      <div class="space-y-4">
+        @for (request of pendingRequests(); track request.userId + request.requestTime) {
+          <div class="rounded-2xl border border-outline-variant/10 bg-surface-container-low px-4 py-4">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-sm font-bold text-primary">Additional {{ request.requestAccountType }} request</p>
+                <p class="text-xs text-on-surface-variant mt-1">
+                  {{ request.requestStatus === 'Pending' ? 'Submitted' : 'Reviewed' }}
+                  {{ (request.reviewedAt || request.requestTime) | date:'mediumDate' }}
+                </p>
+              </div>
+              <app-badge [status]="badgeStatus(request.requestStatus)" size="xs">{{ request.requestStatus }}</app-badge>
             </div>
-            <div class="flex items-center gap-3">
-               <span class="text-[10px] font-bold text-on-surface-variant">{{ cat.percentage | number:'1.0-0' }}%</span>
-               <span class="font-bold text-primary">{{ cat.amount | currency:'PHP':'symbol':'1.0-0' }}</span>
-            </div>
+            <p class="mt-3 text-xs font-medium text-on-surface-variant">
+              Initial deposit: {{ request.initialDeposit | currency:'PHP':'symbol':'1.2-2' }}
+            </p>
           </div>
         }
-        @if (aggregates().categories.length === 0) {
-          <div class="text-center py-4 text-xs text-on-surface-variant italic">Start spending to see analysis.</div>
+        @if (pendingRequests().length === 0) {
+          <div class="rounded-2xl border border-outline-variant/10 bg-surface-container-low px-4 py-10 text-center text-sm text-on-surface-variant">
+            No account request updates yet. Approvals and rejections will appear here in real time.
+          </div>
         }
       </div>
     </app-card>
@@ -182,7 +193,7 @@
         <div class="grid grid-cols-2 gap-y-6 text-sm">
           <div>
             <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Status</p>
-            <app-badge [status]="tx.status">{{ tx.status }}</app-badge>
+            <app-badge [status]="badgeStatus(tx.status)">{{ tx.status }}</app-badge>
           </div>
           <div>
             <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Reference ID</p>
@@ -196,6 +207,19 @@
             <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Time</p>
             <p class="font-bold text-on-surface">{{ tx.time }}</p>
           </div>
+          @if (tx.targetAccountNumber || tx.targetAccountName) {
+            <div>
+              <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Recipient</p>
+              <p class="font-bold text-on-surface">{{ tx.targetAccountName || 'Unknown recipient' }}</p>
+              <p class="font-mono text-[11px] text-on-surface-variant">{{ tx.targetAccountNumber || 'Account hidden' }}</p>
+            </div>
+          }
+          @if (tx.reviewNote) {
+            <div>
+              <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Review Note</p>
+              <p class="font-bold text-on-surface">{{ tx.reviewNote }}</p>
+            </div>
+          }
           <div class="col-span-2 pt-4 border-t border-outline-variant/10">
              <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-2">Institutional Verification</p>
              <div class="flex items-center gap-2 text-on-tertiary-fixed-variant bg-tertiary-fixed/10 px-3 py-2 rounded-lg border border-tertiary-fixed/20">

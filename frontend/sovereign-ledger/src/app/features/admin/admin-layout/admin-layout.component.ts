@@ -1,6 +1,7 @@
 import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -111,6 +112,7 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class AdminLayoutComponent {
   private readonly authService = inject(AuthService);
+  private readonly notificationService = inject(NotificationService);
   isSidebarVisible = signal(false);
 
   toggleSidebar(): void {
@@ -124,6 +126,7 @@ export class AdminLayoutComponent {
   }
 
   onLogout(): void {
+    this.notificationService.shutdown();
     this.authService.logout();
   }
 }

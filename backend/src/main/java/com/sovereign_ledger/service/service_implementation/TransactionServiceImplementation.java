@@ -6,6 +6,7 @@ import com.sovereign_ledger.entity.Transaction;
 import com.sovereign_ledger.exception.exception_classes.AccountNotVerifiedException;
 import com.sovereign_ledger.exception.exception_classes.InsufficientBalanceException;
 import com.sovereign_ledger.repository.TransactionRepository;
+import com.sovereign_ledger.service.NotificationService;
 import com.sovereign_ledger.service.TransactionService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -18,14 +19,17 @@ import java.util.List;
 public class TransactionServiceImplementation implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountServiceImplementation accountServiceImplementation;
+    private final NotificationService notificationService;
     @org.springframework.beans.factory.annotation.Value("${aes.secret-key}")
     private String aesSecretKey;
 
     public TransactionServiceImplementation(
             TransactionRepository transactionRepository,
-            AccountServiceImplementation accountServiceImplementation){
+            AccountServiceImplementation accountServiceImplementation,
+            NotificationService notificationService){
         this.transactionRepository = transactionRepository;
         this.accountServiceImplementation = accountServiceImplementation;
+        this.notificationService = notificationService;
     }
 
     private TransactionResponseDTO toTransactionResponseDTO(Transaction transaction){
@@ -51,7 +55,8 @@ public class TransactionServiceImplementation implements TransactionService {
                 transaction.getTransactionDescription(),
                 transaction.getTransactionStatus(),
                 targetAcc,
-                transaction.getTargetAccountName()
+                transaction.getTargetAccountName(),
+                transaction.getReviewNote()
         );
     }
 
@@ -168,6 +173,8 @@ public class TransactionServiceImplementation implements TransactionService {
         String sourceAccountNumber = managedSourceAccount.getAccountNumber();
         String receivingAccountType = managedReceivingAccount.getAccountType();
         String receivingAccountNumber = managedReceivingAccount.getAccountNumber();
+        Integer receivingUserId = managedReceivingAccount.getUser().getUserId();
+        String sourceAccountOwnerName = managedSourceAccount.getUser().getFirstName() + " " + managedSourceAccount.getUser().getLastName();
         String receivingAccountName = managedReceivingAccount.getUser().getFirstName() + " " + managedReceivingAccount.getUser().getLastName();
 
         if ((!managedSourceAccount.getAccountStatus().equals("Verified")) || (!managedReceivingAccount.getAccountStatus().equals("Verified"))){
@@ -214,6 +221,19 @@ public class TransactionServiceImplementation implements TransactionService {
                 null,
                 null
         );
+
+        Transaction latestIncomingTransaction = transactionRepository
+                .findTopByAccount_AccountIdOrderByTransactionTimeDesc(managedReceivingAccount.getAccountId())
+                .orElse(null);
+        notificationService.createNotification(
+                receivingUserId,
+                managedReceivingAccount.getAccountId(),
+                latestIncomingTransaction == null ? null : latestIncomingTransaction.getTransactionId(),
+                "incoming-transfer",
+                "Incoming transfer received",
+                "You received PHP " + transAmount + " in your " + receivingAccountType + " account from " + sourceAccountOwnerName + "."
+        );
+        notificationService.emitDataChange("accounts", "transactions", "notifications", "admin");
     }
 
     @Override
@@ -242,6 +262,7 @@ public class TransactionServiceImplementation implements TransactionService {
                 null,
                 null
         );
+        notificationService.emitDataChange("accounts", "transactions", "admin");
     }
 
     @Override
@@ -274,5 +295,6 @@ public class TransactionServiceImplementation implements TransactionService {
                 null,
                 null
         );
+        notificationService.emitDataChange("accounts", "transactions", "admin");
     }
 }

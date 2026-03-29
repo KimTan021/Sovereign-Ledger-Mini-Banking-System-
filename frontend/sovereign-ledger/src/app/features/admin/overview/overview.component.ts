@@ -1,10 +1,11 @@
-import { Component, inject, ChangeDetectionStrategy, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { AdminService, PendingUser, AdminStats, TopAccount, AuditLogEntry, CategoryMetric } from '../../../core/services/admin.service';
 import { CardComponent } from '../../../shared/components/card/card.component';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
+import { NotificationService } from '../../../core/services/notification.service';
 
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-admin-overview',
@@ -14,6 +15,8 @@ import { RouterModule } from '@angular/router';
 })
 export class OverviewComponent implements OnInit {
   private readonly adminService = inject(AdminService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly router = inject(Router);
 
   pendingUsers = signal<PendingUser[]>([]);
   displayPendingUsers = computed(() => this.pendingUsers().slice(0, 3));
@@ -51,6 +54,14 @@ export class OverviewComponent implements OnInit {
     const badges = initials.slice(0, 3);
     const remaining = Math.max((this.systemStats()?.activeEntities || 0) - badges.length, 0);
     return { badges, remaining };
+  });
+
+  private readonly refreshOnDataChange = effect(() => {
+    if (this.notificationService.dataVersion() === 0) {
+      return;
+    }
+    this.loadPendingUsers();
+    this.loadDashboardData();
   });
 
   ngOnInit(): void {
@@ -104,6 +115,10 @@ export class OverviewComponent implements OnInit {
 
   private setProcessing(id: number, status: boolean): void {
     this.isProcessing.update(prev => ({ ...prev, [id]: status }));
+  }
+
+  manageHighValueEntity(userId: number): void {
+    this.router.navigate(['/admin/users'], { queryParams: { manageUserId: userId } });
   }
 
   private buildRecentDailyVolumeSeries(days: number): CategoryMetric[] {

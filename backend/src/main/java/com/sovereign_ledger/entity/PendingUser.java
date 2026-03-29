@@ -43,6 +43,12 @@ public class PendingUser {
     @Column(name = "request_account_type", nullable = false)
     private String requestAccountType;
 
+    @Column(name = "request_status", nullable = false)
+    private String requestStatus;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
     @Column(name = "phone")
     private String phone;
 

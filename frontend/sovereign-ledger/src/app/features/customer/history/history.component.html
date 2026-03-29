@@ -1,6 +1,6 @@
 <app-navbar />
 
-<main class="max-w-screen-2xl mx-auto px-6 py-12">
+<main #historyTop class="max-w-screen-2xl mx-auto px-6 py-12">
   <!-- Header Section -->
   <header class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
     <div>
@@ -117,7 +117,7 @@
                 </span>
               </td>
               <td class="px-6 py-4">
-                <app-badge [status]="tx.status">
+                <app-badge [status]="badgeStatus(tx.status)">
                   {{ tx.status }}
                 </app-badge>
               </td>
@@ -170,7 +170,7 @@
               : 'text-[9px] font-bold px-2 py-0.5 bg-surface-container-high rounded-full text-on-surface-variant uppercase tracking-wider'">
               {{ tx.type }}
             </span>
-            <app-badge [status]="tx.status" size="xs">
+            <app-badge [status]="badgeStatus(tx.status)" size="xs">
               {{ tx.status }}
             </app-badge>
           </div>
@@ -185,21 +185,24 @@
       </span>
       <div class="flex gap-2">
         <button
+          type="button"
           (click)="goToPage(currentPage() - 1)"
           [disabled]="currentPage() === 1"
           class="p-2 border border-outline-variant/20 rounded-lg hover:bg-surface-container-high transition-all disabled:opacity-40 cursor-pointer">
           <span class="material-symbols-outlined text-sm">chevron_left</span>
         </button>
-        @for (page of [].constructor(totalPages()); track $index) {
+        @for (page of pageNumbers(); track page) {
           <button
-            (click)="goToPage($index + 1)"
-            [class]="currentPage() === $index + 1
+            type="button"
+            (click)="goToPage(page)"
+            [class]="currentPage() === page
               ? 'px-3 py-1 border border-primary bg-primary text-on-primary rounded-lg text-xs font-bold cursor-default'
               : 'px-3 py-1 border border-outline-variant/20 rounded-lg text-xs font-bold text-on-surface-variant hover:bg-surface-container-high transition-all cursor-pointer'">
-            {{ $index + 1 }}
+            {{ page }}
           </button>
         }
         <button
+          type="button"
           (click)="goToPage(currentPage() + 1)"
           [disabled]="currentPage() === totalPages() || totalPages() === 0"
           class="p-2 border border-outline-variant/20 rounded-lg hover:bg-surface-container-high transition-all disabled:opacity-40 cursor-pointer">
@@ -251,7 +254,7 @@
         <div class="grid grid-cols-2 gap-y-6 text-sm">
           <div>
             <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Status</p>
-            <app-badge [status]="tx.status">{{ tx.status }}</app-badge>
+            <app-badge [status]="badgeStatus(tx.status)">{{ tx.status }}</app-badge>
           </div>
           <div>
             <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Reference ID</p>
@@ -265,6 +268,19 @@
             <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Time</p>
             <p class="font-bold text-on-surface">{{ tx.time }}</p>
           </div>
+          @if (tx.targetAccountNumber || tx.targetAccountName) {
+            <div>
+              <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Recipient</p>
+              <p class="font-bold text-on-surface">{{ tx.targetAccountName || 'Unknown recipient' }}</p>
+              <p class="font-mono text-[11px] text-on-surface-variant">{{ tx.targetAccountNumber || 'Account hidden' }}</p>
+            </div>
+          }
+          @if (tx.reviewNote) {
+            <div>
+              <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Review Note</p>
+              <p class="font-bold text-on-surface">{{ tx.reviewNote }}</p>
+            </div>
+          }
           <div class="col-span-2 pt-4 mt-2">
              <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-2">Institutional Verification</p>
              <div class="flex items-center gap-2 text-on-tertiary-fixed-variant bg-tertiary-fixed/10 px-3 py-2 rounded-lg">

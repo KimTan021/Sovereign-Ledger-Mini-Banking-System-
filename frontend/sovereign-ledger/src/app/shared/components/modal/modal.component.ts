@@ -18,6 +18,7 @@ import { CommonModule } from '@angular/common';
         <div class="p-6 flex items-center justify-between bg-surface-container-low">
           <h3 class="text-xl font-headline font-bold text-primary">{{ title() }}</h3>
           <button 
+            type="button"
             (click)="close.emit()"
             class="p-2 hover:bg-surface-container-high rounded-full transition-colors cursor-pointer">
             <span class="material-symbols-outlined">close</span>
@@ -32,6 +33,7 @@ import { CommonModule } from '@angular/common';
         <!-- Footer (Optional) -->
         <div class="p-6 flex justify-end bg-surface-container-low">
           <button 
+            type="button"
             (click)="close.emit()"
             class="px-6 py-2 bg-primary text-on-primary font-bold rounded-xl hover:bg-primary-container transition-all cursor-pointer">
             Done

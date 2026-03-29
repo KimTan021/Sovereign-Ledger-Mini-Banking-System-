@@ -20,7 +20,7 @@ import { CommonModule } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BadgeComponent {
-  status = input<'completed' | 'pending' | 'declined' | 'verified' | 'neutral'>('neutral');
+  status = input<string>('neutral');
   size = input<'xs' | 'sm' | 'md'>('sm');
   showDot = input<boolean>(true);
 
@@ -32,15 +32,23 @@ export class BadgeComponent {
       md: 'text-xs px-3 py-1.5'
     };
 
-    const colors = {
+    const colors: Record<string, string> = {
       completed: 'text-tertiary-fixed bg-tertiary-container',
-      pending: 'text-secondary-fixed bg-secondary-container',
+      reviewed: 'text-tertiary-fixed bg-tertiary-container',
+      active: 'text-tertiary-fixed bg-tertiary-container',
+      approved: 'text-tertiary-fixed bg-tertiary-container',
+      pending: 'text-on-secondary-fixed bg-secondary-container',
+      suspended: 'text-on-secondary-fixed bg-secondary-container',
+      frozen: 'text-on-secondary-fixed bg-secondary-container',
       declined: 'text-error-fixed bg-error-container',
+      rejected: 'text-error-fixed bg-error-container',
+      escalated: 'text-error-fixed bg-error-container',
+      closed: 'text-error-fixed bg-error-container',
       verified: 'text-primary-fixed bg-primary-container',
       neutral: 'text-on-surface-variant bg-surface-container-highest'
     };
-
-    return base + sizes[this.size()] + ' ' + colors[this.status()];
+    const key = (this.status() || 'neutral').toLowerCase();
+    return base + sizes[this.size()] + ' ' + (colors[key] || colors['neutral']);
   });
 
   dotClasses = computed(() => {
@@ -51,14 +59,22 @@ export class BadgeComponent {
       md: 'w-2 h-2'
     };
 
-    const colors = {
+    const colors: Record<string, string> = {
       completed: 'bg-on-tertiary-fixed',
+      reviewed: 'bg-on-tertiary-fixed',
+      active: 'bg-on-tertiary-fixed',
+      approved: 'bg-on-tertiary-fixed',
       pending: 'bg-on-secondary-fixed',
+      suspended: 'bg-on-secondary-fixed',
+      frozen: 'bg-on-secondary-fixed',
       declined: 'bg-on-error-container',
+      rejected: 'bg-on-error-container',
+      escalated: 'bg-on-error-container',
+      closed: 'bg-on-error-container',
       verified: 'bg-on-primary-fixed',
       neutral: 'bg-outline'
     };
-
-    return base + sizes[this.size()] + ' ' + colors[this.status()];
+    const key = (this.status() || 'neutral').toLowerCase();
+    return base + sizes[this.size()] + ' ' + (colors[key] || colors['neutral']);
   });
 }

@@ -5,6 +5,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 import { AccountService, Account } from '../../../core/services/account.service';
 import { TransactionService, Transaction } from '../../../core/services/transaction.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { CustomerService } from '../../../core/services/customer.service';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { CardComponent } from '../../../shared/components/card/card.component';
 import { TransactionItemComponent } from '../../../shared/components/transaction-item/transaction-item.component';
@@ -33,20 +34,36 @@ export class DashboardComponent {
   private readonly accountService = inject(AccountService);
   private readonly transactionService = inject(TransactionService);
   private readonly authService = inject(AuthService);
+  private readonly customerService = inject(CustomerService);
 
   accounts = toSignal(this.accountService.getCustomerAccounts(), { initialValue: [] });
   activeAccount = signal<Account | null>(null);
   
-  // Set the first account as active by default when accounts load
-  private setInitialAccount = effect(() => {
+  // Keep the selected account in sync with live account refreshes.
+  private syncActiveAccount = effect(() => {
     const accs = this.accounts();
-    if (accs.length > 0 && !this.activeAccount()) {
-      this.activeAccount.set(accs[0]);
+    const current = this.activeAccount();
+
+    if (accs.length === 0) {
+      this.activeAccount.set(null);
+      return;
     }
+
+    if (!current) {
+      this.activeAccount.set(accs[0]);
+      return;
+    }
+
+    const updated = accs.find(account => account.id === current.id);
+    this.activeAccount.set(updated ?? accs[0]);
   });
 
   recentTransactions = toSignal(this.transactionService.getRecentTransactions(4), { initialValue: [] });
   allTransactions = toSignal(this.transactionService.getAllTransactions(), { initialValue: [] });
+  pendingRequests = toSignal(this.customerService.getPendingRequests(), { initialValue: [] });
+  activePendingRequestCount = computed(() =>
+    this.pendingRequests().filter(request => request.requestStatus?.toLowerCase() === 'pending').length
+  );
   userName = this.authService.userName();
   selectedTransaction = signal<Transaction | null>(null);
 
@@ -58,5 +75,29 @@ export class DashboardComponent {
 
   setActiveAccount(acc: Account): void {
     this.activeAccount.set(acc);
+  }
+
+  badgeStatus(value: string): string {
+    return (value || 'neutral').toLowerCase();
+  }
+
+  canTransact(account: Account | null): boolean {
+    return !!account && account.status === 'verified';
+  }
+
+  getAccountStatusMessage(account: Account | null): string | null {
+    if (!account || account.status === 'verified') {
+      return null;
+    }
+
+    if (account.status === 'frozen') {
+      return 'This account is currently frozen. Transfers, withdrawals, and deposits are unavailable until an administrator restores access.';
+    }
+
+    if (account.status === 'closed') {
+      return 'This account is closed. It can no longer be used for transfers, withdrawals, or deposits.';
+    }
+
+    return `This account is currently ${account.status}. Transfers, withdrawals, and deposits remain limited until the account returns to verified status.`;
   }
 }

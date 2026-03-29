@@ -22,9 +22,12 @@
             <p class="text-xl font-headline font-bold mt-2 {{ activeSourceAccount()?.id === acc.id ? 'text-on-primary' : 'text-primary' }}">
               {{ acc.balance | currency:'PHP':'symbol':'1.2-2' }}
             </p>
-            <p class="text-[10px] font-mono mt-1 {{ activeSourceAccount()?.id === acc.id ? 'text-on-primary/60' : 'text-outline' }}">
-              **** {{ acc.lastFour }}
-            </p>
+            <div class="mt-2 flex items-center justify-between gap-2">
+              <p class="text-[10px] font-mono {{ activeSourceAccount()?.id === acc.id ? 'text-on-primary/60' : 'text-outline' }}">
+                **** {{ acc.lastFour }}
+              </p>
+              <app-badge [status]="badgeStatus(acc.status)" size="xs" [showDot]="true">{{ acc.status }}</app-badge>
+            </div>
           </button>
         }
       </div>
@@ -41,6 +44,9 @@
                 <p class="text-xs font-bold text-on-surface">{{ active.type }} Account</p>
                 <p class="text-[10px] text-on-surface-variant font-mono">ID: {{ active.id }}</p>
               </div>
+            </div>
+            <div class="mt-4">
+              <app-badge [status]="badgeStatus(active.status)" size="xs">{{ active.status }}</app-badge>
             </div>
           } @else {
             <div class="animate-pulse flex gap-3">
@@ -95,6 +101,13 @@
       </div>
     }
 
+    @if (transferBlockedMessage()) {
+      <div class="mb-6 p-4 bg-secondary-container/25 rounded-xl flex items-center gap-3 text-on-surface" role="alert">
+        <span class="material-symbols-outlined">info</span>
+        <p class="font-semibold text-sm">{{ transferBlockedMessage() }}</p>
+      </div>
+    }
+
     <app-card variant="lowest" [padding]="false" class="overflow-hidden">
       <div class="p-8">
         <form [formGroup]="transferForm" (ngSubmit)="onSubmit()" class="space-y-10">
@@ -114,6 +127,9 @@
                   type="text"
                   placeholder="e.g. 0098 7762 1120"
                   class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface placeholder:text-outline/50 focus:ring-0 focus:bg-white transition-all border-b-2 border-transparent focus:border-primary" />
+                @if (getErrorMessage('recipientAccount')) {
+                  <p class="text-xs font-semibold text-error ml-1">{{ getErrorMessage('recipientAccount') }}</p>
+                }
               </div>
               <div class="space-y-2">
                 <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="recipientName">Account Name</label>
@@ -123,6 +139,9 @@
                   type="text"
                   placeholder="Full legal name"
                   class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface placeholder:text-outline/50 focus:ring-0 focus:bg-white transition-all border-b-2 border-transparent focus:border-primary" />
+                @if (getErrorMessage('recipientName')) {
+                  <p class="text-xs font-semibold text-error ml-1">{{ getErrorMessage('recipientName') }}</p>
+                }
               </div>
             </div>
           </div>
@@ -145,6 +164,9 @@
                     class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface font-headline font-bold text-xl placeholder:text-outline/30 focus:ring-0 focus:bg-white transition-all border-b-2 border-transparent focus:border-primary" />
                   <div class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-label text-xs uppercase">PHP</div>
                 </div>
+                @if (getErrorMessage('amount')) {
+                  <p class="text-xs font-semibold text-error ml-1">{{ getErrorMessage('amount') }}</p>
+                }
               </div>
               <div class="space-y-2">
                 <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="purpose">Purpose</label>
@@ -159,6 +181,9 @@
                   <option value="investment">Investment: Asset Purchase</option>
                   <option value="other">Other: Misc. Transfer</option>
                 </select>
+                @if (getErrorMessage('purpose')) {
+                  <p class="text-xs font-semibold text-error ml-1">{{ getErrorMessage('purpose') }}</p>
+                }
               </div>
             </div>
           </div>
@@ -189,6 +214,7 @@
               </button>
               <button
                 type="submit"
+                [disabled]="!!transferBlockedMessage()"
                 class="w-full md:w-64 bg-primary text-on-primary px-8 py-4 rounded-xl font-headline font-bold flex items-center justify-center gap-3 shadow-lg shadow-primary/20 hover:bg-primary-container transition-all active:scale-95 group">
                 <span>Confirm Transaction</span>
                 <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>

@@ -12,6 +12,7 @@ import com.sovereign_ledger.entity.PendingUser;
 import com.sovereign_ledger.repository.PendingUserRepository;
 import com.sovereign_ledger.service.AdminService;
 import com.sovereign_ledger.service.SeedTransactionService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -111,6 +112,12 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getTransactionDistribution());
     }
 
+    @GetMapping("/analytics/dashboard")
+    public ResponseEntity<AnalyticsDashboardDTO> getAnalyticsDashboard(
+            @RequestParam(defaultValue = "30") Integer days) {
+        return ResponseEntity.ok(adminService.getAnalyticsDashboard(days));
+    }
+
     @GetMapping("/users/{id}")
     public ResponseEntity<AdminUserDetailDTO> getUserDetail(@PathVariable Integer id) {
         return ResponseEntity.ok(adminService.findUserDetail(id));
@@ -118,45 +125,45 @@ public class AdminController {
 
     @PutMapping("/users/{id}/profile")
     public ResponseEntity<UserResponseDTO> updateUserProfile(@PathVariable Integer id,
-                                                             @RequestBody AdminUserProfileUpdateRequestDTO request) {
+                                                             @Valid @RequestBody AdminUserProfileUpdateRequestDTO request) {
         return ResponseEntity.ok(adminService.updateUserProfile(id, request));
     }
 
     @PutMapping("/users/{id}/status")
     public ResponseEntity<UserResponseDTO> updateUserStatus(@PathVariable Integer id,
-                                                            @RequestBody AdminUserStatusRequestDTO request) {
+                                                            @Valid @RequestBody AdminUserStatusRequestDTO request) {
         return ResponseEntity.ok(adminService.updateUserStatus(id, request.getStatus()));
     }
 
     @PutMapping("/users/{id}/role")
     public ResponseEntity<UserResponseDTO> updateUserRole(@PathVariable Integer id,
-                                                          @RequestBody AdminUserRoleUpdateRequestDTO request) {
+                                                          @Valid @RequestBody AdminUserRoleUpdateRequestDTO request) {
         return ResponseEntity.ok(adminService.updateUserRole(id, request.getRole()));
     }
 
     @PutMapping("/users/{id}/reset-password")
     public ResponseEntity<AdminPasswordResetResponseDTO> resetUserPassword(@PathVariable Integer id,
-                                                                           @RequestBody(required = false) AdminPasswordResetRequestDTO request) {
+                                                                           @Valid @RequestBody(required = false) AdminPasswordResetRequestDTO request) {
         String password = request == null ? null : request.getNewPassword();
         return ResponseEntity.ok(adminService.resetUserPassword(id, password));
     }
 
     @PutMapping("/accounts/{id}/status")
     public ResponseEntity<AdminAccountDTO> updateAccountStatus(@PathVariable Integer id,
-                                                               @RequestBody AdminAccountStatusRequestDTO request) {
+                                                               @Valid @RequestBody AdminAccountStatusRequestDTO request) {
         return ResponseEntity.ok(adminService.updateAccountStatus(id, request.getStatus()));
     }
 
     @PostMapping("/accounts/{id}/adjustment")
     public ResponseEntity<Void> postAdjustment(@PathVariable Integer id,
-                                               @RequestBody AdminAdjustmentRequestDTO request) {
+                                               @Valid @RequestBody AdminAdjustmentRequestDTO request) {
         adminService.postAccountAdjustment(id, request);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/transactions/{id}/review")
     public ResponseEntity<AuditLogDTO> reviewTransaction(@PathVariable Integer id,
-                                                         @RequestBody AdminTransactionReviewRequestDTO request) {
+                                                         @Valid @RequestBody AdminTransactionReviewRequestDTO request) {
         return ResponseEntity.ok(adminService.reviewTransaction(id, request.getStatus(), request.getNote()));
     }
 
@@ -174,7 +181,9 @@ public class AdminController {
 
     @PostMapping("/seed/approve-all")
     public ResponseEntity<Map<String, Object>> approveAllPendingUsers() {
-        List<PendingUser> pending = pendingUserRepository.findAll(); // lowercase
+        List<PendingUser> pending = pendingUserRepository
+                .findByRequestStatusIgnoreCaseOrderByRequestTimeDesc("Pending", PageRequest.of(0, Integer.MAX_VALUE))
+                .getContent();
 
         if (pending.isEmpty()) {
             Map<String, Object> response = new LinkedHashMap<>();

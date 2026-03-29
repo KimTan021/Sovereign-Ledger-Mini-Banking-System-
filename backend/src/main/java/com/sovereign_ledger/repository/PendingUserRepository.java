@@ -1,12 +1,16 @@
 package com.sovereign_ledger.repository;
 
 import com.sovereign_ledger.entity.PendingUser;
-import com.sovereign_ledger.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface PendingUserRepository extends JpaRepository<PendingUser, Integer> {
 
-    boolean existsByUserEmail(String userEmail);
+    boolean existsByUserEmailAndRequestStatusIgnoreCase(String userEmail, String requestStatus);
+    List<PendingUser> findByUserEmailOrderByRequestTimeDesc(String userEmail);
+    List<PendingUser> findByExistingUser_UserIdOrderByRequestTimeDesc(Integer userId);
+    Page<PendingUser> findByRequestStatusIgnoreCaseOrderByRequestTimeDesc(String requestStatus, Pageable pageable);
 }

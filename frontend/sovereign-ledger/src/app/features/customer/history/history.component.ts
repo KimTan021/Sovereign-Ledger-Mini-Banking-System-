@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, ElementRef, effect, viewChild } from '@angular/core';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { TransactionService, Transaction } from '../../../core/services/transaction.service';
@@ -29,6 +29,7 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
 export class HistoryComponent {
   private readonly transactionService = inject(TransactionService);
   private readonly accountService = inject(AccountService);
+  private readonly historyTop = viewChild<ElementRef<HTMLElement>>('historyTop');
 
   allTransactions = toSignal(this.transactionService.getAllTransactions(), { initialValue: [] });
   accounts = toSignal(this.accountService.getCustomerAccounts(), { initialValue: [] });
@@ -86,8 +87,23 @@ export class HistoryComponent {
   });
 
   totalPages = computed(() => Math.ceil(this.filteredTransactions().length / this.pageSize));
+  pageNumbers = computed(() => Array.from({ length: this.totalPages() }, (_, index) => index + 1));
   
   aggregates = computed(() => this.transactionService.getAggregates(this.filteredTransactions()));
+
+  private readonly clampCurrentPage = effect(() => {
+    const totalPages = this.totalPages();
+    const currentPage = this.currentPage();
+
+    if (totalPages === 0 && currentPage !== 1) {
+      this.currentPage.set(1);
+      return;
+    }
+
+    if (totalPages > 0 && currentPage > totalPages) {
+      this.currentPage.set(totalPages);
+    }
+  });
 
   onSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -114,9 +130,19 @@ export class HistoryComponent {
     this.transactionService.exportToCSV(this.filteredTransactions());
   }
 
+  badgeStatus(value: string): string {
+    return (value || 'neutral').toLowerCase();
+  }
+
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages()) {
       this.currentPage.set(page);
+      requestAnimationFrame(() => {
+        this.historyTop()?.nativeElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      });
     }
   }
 }

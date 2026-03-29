@@ -8,6 +8,7 @@ import com.sovereign_ledger.dto.response.TransactionResponseDTO;
 import com.sovereign_ledger.entity.Transaction;
 import com.sovereign_ledger.service.AccountService;
 import com.sovereign_ledger.service.TransactionService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -100,7 +101,7 @@ public class TransactionController {
     }
 
     @PutMapping("/transfer-transaction")
-    public ResponseEntity<String> initiateTransaction(@RequestBody TransferRequestDTO request){
+    public ResponseEntity<String> initiateTransaction(@Valid @RequestBody TransferRequestDTO request){
         transactionService.initiateTransaction(
                 accountService.findAccountEntityById(request.getSourceAccountId()),
                 accountService.findAccountEntityById(request.getReceivingAccountId()),
@@ -112,7 +113,7 @@ public class TransactionController {
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<String> initiateTransactionByAccountNumber(@RequestBody TransferByAccountNumberRequestDTO request){
+    public ResponseEntity<String> initiateTransactionByAccountNumber(@Valid @RequestBody TransferByAccountNumberRequestDTO request){
         logger.info("====== TRANSFER INITIATED ======");
         logger.info("Source Account ID in request: {}", request.getSourceAccountId());
         logger.info("Target Account Number: {}", request.getTargetAccountNumber());
@@ -129,7 +130,7 @@ public class TransactionController {
     }
 
     @PostMapping("/deposit")
-    public ResponseEntity<String> depositToAccount(@RequestBody CashTransactionRequestDTO request) {
+    public ResponseEntity<String> depositToAccount(@Valid @RequestBody CashTransactionRequestDTO request) {
         transactionService.depositToAccount(
                 request.getAccountId(),
                 request.getTransAmount(),
@@ -139,7 +140,7 @@ public class TransactionController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<String> withdrawFromAccount(@RequestBody CashTransactionRequestDTO request) {
+    public ResponseEntity<String> withdrawFromAccount(@Valid @RequestBody CashTransactionRequestDTO request) {
         transactionService.withdrawFromAccount(
                 request.getAccountId(),
                 request.getTransAmount(),

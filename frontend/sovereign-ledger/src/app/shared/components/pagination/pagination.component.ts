@@ -19,6 +19,7 @@ import { CommonModule } from '@angular/common';
       <div class="flex items-center gap-1">
         <!-- Previous Button -->
         <button 
+          type="button"
           (click)="onPageChange(currentPage - 1)"
           [disabled]="currentPage === 0"
           class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none group">
@@ -32,6 +33,7 @@ import { CommonModule } from '@angular/common';
               <span class="px-2 text-on-surface-variant opacity-40">...</span>
             } @else {
               <button 
+                type="button"
                 (click)="onPageChange(page)"
                 [class]="page === currentPage 
                   ? 'bg-primary text-on-primary shadow-sm' 
@@ -45,6 +47,7 @@ import { CommonModule } from '@angular/common';
 
         <!-- Next Button -->
         <button 
+          type="button"
           (click)="onPageChange(currentPage + 1)"
           [disabled]="currentPage >= totalPages - 1"
           class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all disabled:opacity-30 disabled:pointer-events-none group">

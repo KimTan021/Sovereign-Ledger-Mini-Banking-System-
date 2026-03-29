@@ -1,14 +1,16 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit, effect, ElementRef, viewChild } from '@angular/core';
 import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AdminService, AuditLogEntry, TransactionSearchFilters } from '../../../core/services/admin.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-admin-audit',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, DatePipe, CurrencyPipe, PaginationComponent],
+  imports: [CommonModule, DatePipe, CurrencyPipe, FormsModule, PaginationComponent],
   template: `
-    <div class="p-8 lg:p-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div #pageTop class="p-8 lg:p-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header class="space-y-1 block">
         <h1 class="text-3xl font-headline font-extrabold tracking-tighter text-primary">Global Transaction Desk</h1>
         <p class="text-on-surface-variant">Search, filter, and export transaction activity across the entire ledger.</p>
@@ -47,6 +49,12 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
           Export CSV
         </button>
       </div>
+
+      @if (message()) {
+        <div class="rounded-xl border border-tertiary-fixed/20 bg-tertiary-fixed/10 px-4 py-3 text-sm text-on-tertiary-fixed-variant">
+          {{ message() }}
+        </div>
+      }
       
       <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
@@ -58,6 +66,7 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
                 <th class="px-6 py-4">Event Description</th>
                 <th class="px-6 py-4">Status</th>
                 <th class="px-6 py-4 text-right">Value Flux</th>
+                <th class="px-6 py-4">Review Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant/10">
@@ -86,10 +95,36 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
                   <td class="px-6 py-4 text-right font-headline font-bold">
                     {{ (log.type === 'credit' ? '+' : '-') }}{{ log.amount | currency:'PHP':'symbol':'1.2-2' }}
                   </td>
+                  <td class="px-6 py-4 min-w-[320px]">
+                    @if (canReview(log)) {
+                      <div class="space-y-2">
+                        <input
+                          [ngModel]="reviewNotes()[log.transactionId] || ''"
+                          (ngModelChange)="setReviewNote(log.transactionId, $event)"
+                          type="text"
+                          class="w-full rounded-xl bg-white px-4 py-3 border border-outline-variant/20"
+                          placeholder="Reviewer note or escalation reason" />
+                        <div class="flex gap-2">
+                          <button type="button"
+                                  (click)="review(log, 'Reviewed')"
+                                  class="rounded-xl border border-outline-variant/20 px-3 py-2 font-bold text-xs">
+                            Mark Reviewed
+                          </button>
+                          <button type="button"
+                                  (click)="review(log, 'Escalated')"
+                                  class="rounded-xl bg-error text-on-error px-3 py-2 font-bold text-xs">
+                            Escalate
+                          </button>
+                        </div>
+                      </div>
+                    } @else {
+                      <span class="text-xs text-on-surface-variant">No action needed</span>
+                    }
+                  </td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="5" class="px-6 py-10 text-center text-on-surface-variant">No transactions match the current filters.</td>
+                  <td colspan="6" class="px-6 py-10 text-center text-on-surface-variant">No transactions match the current filters.</td>
                 </tr>
               }
             </tbody>
@@ -101,7 +136,7 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
           [totalPages]="totalPages()" 
           [currentPage]="currentPage()" 
           [pageSize]="pageSize()"
-          (pageChange)="loadAuditLogs($event)">
+          (pageChange)="changePage($event)">
         </app-pagination>
       </div>
     </div>
@@ -109,13 +144,24 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
 })
 export class AuditComponent implements OnInit {
   private adminService = inject(AdminService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly pageTop = viewChild<ElementRef<HTMLElement>>('pageTop');
   auditLogs = signal<AuditLogEntry[]>([]);
   filters = signal<TransactionSearchFilters>({});
+  reviewNotes = signal<Record<number, string>>({});
+  message = signal<string | null>(null);
   
   currentPage = signal(0);
   pageSize = signal(10);
   totalElements = signal(0);
   totalPages = signal(0);
+
+  private readonly refreshOnDataChange = effect(() => {
+    if (this.notificationService.dataVersion() === 0) {
+      return;
+    }
+    this.loadAuditLogs(this.currentPage());
+  });
 
   ngOnInit() {
     this.loadAuditLogs();
@@ -129,6 +175,16 @@ export class AuditComponent implements OnInit {
         this.totalPages.set(response.totalPages);
         this.currentPage.set(response.number);
       }
+    });
+  }
+
+  changePage(page: number): void {
+    this.loadAuditLogs(page);
+    requestAnimationFrame(() => {
+      this.pageTop()?.nativeElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
     });
   }
 
@@ -170,6 +226,24 @@ export class AuditComponent implements OnInit {
 
   exportAudit(): void {
     this.adminService.exportAuditCSV(this.auditLogs(), `audit-report-page-${this.currentPage() + 1}.csv`);
+  }
+
+  canReview(log: AuditLogEntry): boolean {
+    return ['failed', 'review required', 'escalated'].includes((log.status || '').toLowerCase());
+  }
+
+  setReviewNote(transactionId: number, note: string): void {
+    this.reviewNotes.update(current => ({ ...current, [transactionId]: note }));
+  }
+
+  review(log: AuditLogEntry, status: 'Reviewed' | 'Escalated'): void {
+    const note = this.reviewNotes()[log.transactionId] || '';
+    this.adminService.reviewTransaction(log.transactionId, status, note).subscribe({
+      next: () => {
+        this.message.set(`Transaction #${log.transactionId} marked as ${status.toLowerCase()}.`);
+        this.loadAuditLogs(this.currentPage());
+      }
+    });
   }
 
   private patchFilters(patch: Partial<TransactionSearchFilters>): void {

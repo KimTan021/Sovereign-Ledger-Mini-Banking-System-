@@ -13,6 +13,7 @@ import com.sovereign_ledger.repository.PendingUserRepository;
 import com.sovereign_ledger.repository.TransactionRepository;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.AdminService;
+import com.sovereign_ledger.service.NotificationService;
 import com.sovereign_ledger.util.AesEncryptionUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -23,8 +24,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -38,6 +43,7 @@ public class AdminServiceImplementation implements AdminService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final NotificationService notificationService;
 
     @Value("${aes.secret-key}")
     private String aesSecretKey;
@@ -46,12 +52,14 @@ public class AdminServiceImplementation implements AdminService {
                                       PendingUserRepository pendingUserRepository,
                                       AccountRepository accountRepository,
                                       TransactionRepository transactionRepository,
-                                      BCryptPasswordEncoder passwordEncoder) {
+                                      BCryptPasswordEncoder passwordEncoder,
+                                      NotificationService notificationService) {
         this.userRepository = userRepository;
         this.pendingUserRepository = pendingUserRepository;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.passwordEncoder = passwordEncoder;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -65,7 +73,7 @@ public class AdminServiceImplementation implements AdminService {
 
     @Override
     public PaginatedResponseDTO<PendingUserResponseDTO> findAllPendingUsers(Pageable pageable) {
-        Page<PendingUser> pendingPage = pendingUserRepository.findAll(pageable);
+        Page<PendingUser> pendingPage = pendingUserRepository.findByRequestStatusIgnoreCaseOrderByRequestTimeDesc("Pending", pageable);
         List<PendingUserResponseDTO> content = pendingPage.getContent().stream()
                 .map(PendingUserResponseDTO::fromEntity)
                 .collect(Collectors.toList());
@@ -77,6 +85,9 @@ public class AdminServiceImplementation implements AdminService {
     public UserApprovalResponseDTO approvePendingUser(Integer id) {
         PendingUser pendingUser = pendingUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pending user not found with id: " + id));
+        if (!"Pending".equalsIgnoreCase(pendingUser.getRequestStatus())) {
+            throw new IllegalArgumentException("Only pending requests can be approved.");
+        }
 
         User user;
 
@@ -92,8 +103,10 @@ public class AdminServiceImplementation implements AdminService {
             user.setRole("user");
             user.setPhone(pendingUser.getPhone());
             user.setUserStatus("ACTIVE");
+            user.setCreatedAt(LocalDateTime.now());
             userRepository.save(user);
         }
+        pendingUser.setExistingUser(user);
 
         String rawAccountNumber = generateAccountNumber();
         String encryptedAccountNumber;
@@ -109,9 +122,21 @@ public class AdminServiceImplementation implements AdminService {
         account.setAccountType(pendingUser.getRequestAccountType());
         account.setAccountBalance(pendingUser.getInitialDeposit() != null ? pendingUser.getInitialDeposit() : BigDecimal.ZERO);
         account.setAccountStatus("Verified");
+        account.setCreatedAt(LocalDateTime.now());
         accountRepository.save(account);
+        pendingUser.setRequestStatus("Approved");
+        pendingUser.setReviewedAt(LocalDateTime.now());
+        pendingUserRepository.save(pendingUser);
+        notificationService.createNotification(
+                user.getUserId(),
+                account.getAccountId(),
+                null,
+                "account-approved",
+                "Account request approved",
+                "Your " + account.getAccountType() + " account request has been approved and the account is ready to use."
+        );
 
-        pendingUserRepository.deleteById(id);
+        notificationService.emitDataChange("pending-users", "accounts", "users", "notifications", "admin");
 
         UserApprovalResponseDTO response = new UserApprovalResponseDTO();
         response.setUserId(user.getUserId());
@@ -131,7 +156,31 @@ public class AdminServiceImplementation implements AdminService {
     public void rejectPendingUser(Integer id) {
         PendingUser pendingUser = pendingUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pending user not found with id: " + id));
-        pendingUserRepository.deleteById(pendingUser.getUserId());
+        if (!"Pending".equalsIgnoreCase(pendingUser.getRequestStatus())) {
+            throw new IllegalArgumentException("Only pending requests can be rejected.");
+        }
+
+        pendingUser.setRequestStatus("Rejected");
+        pendingUser.setReviewedAt(LocalDateTime.now());
+        pendingUserRepository.save(pendingUser);
+
+        User targetUser = pendingUser.getExistingUser();
+        if (targetUser == null) {
+            targetUser = userRepository.findByUserEmail(pendingUser.getUserEmail()).orElse(null);
+        }
+        if (targetUser != null) {
+            notificationService.createNotification(
+                    targetUser.getUserId(),
+                    null,
+                    null,
+                    "account-request-rejected",
+                    "Account request rejected",
+                    "Your " + pendingUser.getRequestAccountType() + " account request submitted on "
+                            + pendingUser.getRequestTime().toLocalDate() + " was rejected."
+            );
+        }
+
+        notificationService.emitDataChange("pending-users", "notifications", "admin");
     }
 
     @Override
@@ -178,6 +227,39 @@ public class AdminServiceImplementation implements AdminService {
     }
 
     @Override
+    public AnalyticsDashboardDTO getAnalyticsDashboard(Integer days) {
+        int rangeDays = (days == null || days <= 0) ? 30 : days;
+        LocalDate today = LocalDate.now();
+        LocalDate startDate = today.minusDays(rangeDays - 1L);
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+
+        List<Transaction> allTransactions = transactionRepository.findAll(Sort.by(Sort.Direction.ASC, "transactionTime"));
+        List<Transaction> filteredTransactions = allTransactions.stream()
+                .filter(transaction -> !transaction.getTransactionTime().isBefore(startDateTime))
+                .toList();
+
+        List<User> allUsers = userRepository.findAll();
+        List<Account> allAccounts = accountRepository.findAll();
+        List<PendingUser> pendingUsers = pendingUserRepository.findAll();
+
+        return new AnalyticsDashboardDTO(
+                buildDailyVolumeMetrics(filteredTransactions, startDate, today),
+                buildTransactionDistributionMetrics(filteredTransactions),
+                buildVolumeByAmountMetrics(filteredTransactions),
+                buildAccountGrowthMetrics(allUsers, allAccounts, startDate, today),
+                buildFlaggedTrendMetrics(filteredTransactions, startDate, today),
+                buildNetFlowMetrics(filteredTransactions, startDate, today),
+                buildApprovalAgingMetrics(pendingUsers),
+                buildAccountStatusBreakdown(allAccounts),
+                buildUserStatusBreakdown(allUsers),
+                buildAdjustmentMetrics(filteredTransactions),
+                buildComplianceReviewMetrics(filteredTransactions),
+                buildTopUserTransactors(filteredTransactions),
+                buildTopAccountTransactors(filteredTransactions)
+        );
+    }
+
+    @Override
     public AdminUserDetailDTO findUserDetail(Integer id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
@@ -210,7 +292,9 @@ public class AdminServiceImplementation implements AdminService {
         user.setLastName(request.getLastName());
         user.setUserEmail(request.getUserEmail());
         user.setPhone(request.getPhone());
-        return toUserResponseDTO(userRepository.save(user));
+        UserResponseDTO response = toUserResponseDTO(userRepository.save(user));
+        notificationService.emitDataChange("users", "admin");
+        return response;
     }
 
     @Override
@@ -219,7 +303,29 @@ public class AdminServiceImplementation implements AdminService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         user.setUserStatus(normalizeUserStatus(status));
-        return toUserResponseDTO(userRepository.save(user));
+        User savedUser = userRepository.save(user);
+        if ("SUSPENDED".equalsIgnoreCase(savedUser.getUserStatus())) {
+            notificationService.createNotification(
+                    savedUser.getUserId(),
+                    null,
+                    null,
+                    "user-suspended",
+                    "Account access suspended",
+                    "Your account access has been suspended by an administrator. You will be signed out immediately."
+            );
+        } else {
+            notificationService.createNotification(
+                    savedUser.getUserId(),
+                    null,
+                    null,
+                    "user-reactivated",
+                    "Account access restored",
+                    "Your account has been restored and you can sign in again."
+            );
+        }
+        UserResponseDTO response = toUserResponseDTO(savedUser);
+        notificationService.emitDataChange("users", "notifications", "customer-profile", "admin");
+        return response;
     }
 
     @Override
@@ -228,7 +334,9 @@ public class AdminServiceImplementation implements AdminService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         user.setRole(normalizeRole(role));
-        return toUserResponseDTO(userRepository.save(user));
+        UserResponseDTO response = toUserResponseDTO(userRepository.save(user));
+        notificationService.emitDataChange("users", "admin");
+        return response;
     }
 
     @Override
@@ -241,6 +349,7 @@ public class AdminServiceImplementation implements AdminService {
                 : newPassword;
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
+        notificationService.emitDataChange("users", "admin");
         return new AdminPasswordResetResponseDTO(user.getUserId(), password);
     }
 
@@ -250,7 +359,17 @@ public class AdminServiceImplementation implements AdminService {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
         account.setAccountStatus(normalizeAccountStatus(status));
-        return toAdminAccountDTO(accountRepository.save(account));
+        AdminAccountDTO updatedAccount = toAdminAccountDTO(accountRepository.save(account));
+        notificationService.createNotification(
+                account.getUser().getUserId(),
+                account.getAccountId(),
+                null,
+                "account-status",
+                "Account status updated",
+                "Your " + account.getAccountType() + " account is now " + account.getAccountStatus() + "."
+        );
+        notificationService.emitDataChange("accounts", "notifications", "admin");
+        return updatedAccount;
     }
 
     @Override
@@ -286,6 +405,16 @@ public class AdminServiceImplementation implements AdminService {
                     null,
                     null
             );
+            Transaction latestTransaction = transactionRepository.findTopByAccount_AccountIdOrderByTransactionTimeDesc(accountId).orElse(null);
+            notificationService.createNotification(
+                    account.getUser().getUserId(),
+                    account.getAccountId(),
+                    latestTransaction == null ? null : latestTransaction.getTransactionId(),
+                    "admin-adjustment",
+                    "Administrative debit posted",
+                    "An administrative debit of PHP " + amount + " was applied to your " + account.getAccountType() + " account. Reason: " + description
+            );
+            notificationService.emitDataChange("accounts", "transactions", "notifications", "admin");
             return;
         }
 
@@ -301,6 +430,16 @@ public class AdminServiceImplementation implements AdminService {
                 null,
                 null
         );
+        Transaction latestTransaction = transactionRepository.findTopByAccount_AccountIdOrderByTransactionTimeDesc(accountId).orElse(null);
+        notificationService.createNotification(
+                account.getUser().getUserId(),
+                account.getAccountId(),
+                latestTransaction == null ? null : latestTransaction.getTransactionId(),
+                "admin-adjustment",
+                "Administrative credit posted",
+                "An administrative credit of PHP " + amount + " was applied to your " + account.getAccountType() + " account. Reason: " + description
+        );
+        notificationService.emitDataChange("accounts", "transactions", "notifications", "admin");
     }
 
     @Override
@@ -353,7 +492,18 @@ public class AdminServiceImplementation implements AdminService {
                 .orElseThrow(() -> new RuntimeException("Transaction not found with id: " + transactionId));
         transaction.setTransactionStatus(normalizeTransactionStatus(status));
         transaction.setReviewNote(note);
-        return mapToAuditLogEntry(transactionRepository.save(transaction));
+        Transaction saved = transactionRepository.save(transaction);
+        notificationService.createNotification(
+                saved.getAccount().getUser().getUserId(),
+                saved.getAccount().getAccountId(),
+                saved.getTransactionId(),
+                "transaction-review",
+                "Transaction status updated",
+                "Transaction #" + saved.getTransactionId() + " is now " + saved.getTransactionStatus() +
+                        ((saved.getReviewNote() == null || saved.getReviewNote().isBlank()) ? "." : ". Note: " + saved.getReviewNote())
+        );
+        notificationService.emitDataChange("transactions", "notifications", "admin");
+        return mapToAuditLogEntry(saved);
     }
 
     private UserResponseDTO toUserResponseDTO(User user) {
@@ -502,8 +652,208 @@ public class AdminServiceImplementation implements AdminService {
         return LocalDate.parse(raw);
     }
 
+    private List<CategoryMetricDTO> buildDailyVolumeMetrics(List<Transaction> transactions, LocalDate startDate, LocalDate endDate) {
+        Map<String, Double> counts = initDateSeries(startDate, endDate);
+        transactions.forEach(transaction -> {
+            String key = transaction.getTransactionTime().toLocalDate().format(DateTimeFormatter.ISO_DATE);
+            counts.computeIfPresent(key, (ignored, current) -> current + 1);
+        });
+        return toCategoryMetricList(counts);
+    }
+
+    private List<CategoryMetricDTO> buildTransactionDistributionMetrics(List<Transaction> transactions) {
+        Map<String, Double> distribution = new LinkedHashMap<>();
+        transactions.forEach(transaction -> distribution.merge(transaction.getTransactionType(), 1.0, Double::sum));
+        return toCategoryMetricList(distribution);
+    }
+
+    private List<CategoryMetricDTO> buildVolumeByAmountMetrics(List<Transaction> transactions) {
+        Map<String, Double> buckets = new LinkedHashMap<>();
+        buckets.put("0-1k", 0.0);
+        buckets.put("1k-10k", 0.0);
+        buckets.put("10k-100k", 0.0);
+        buckets.put("100k+", 0.0);
+
+        transactions.forEach(transaction -> {
+            BigDecimal amount = Optional.ofNullable(transaction.getTransactionAmount()).orElse(BigDecimal.ZERO).abs();
+            String bucket = amount.compareTo(new BigDecimal("1000")) < 0 ? "0-1k"
+                    : amount.compareTo(new BigDecimal("10000")) < 0 ? "1k-10k"
+                    : amount.compareTo(new BigDecimal("100000")) < 0 ? "10k-100k"
+                    : "100k+";
+            buckets.merge(bucket, 1.0, Double::sum);
+        });
+
+        return toCategoryMetricList(buckets);
+    }
+
+    private List<CategoryMetricDTO> buildAccountGrowthMetrics(List<User> users, List<Account> accounts, LocalDate startDate, LocalDate endDate) {
+        Map<String, Double> growth = initDateSeries(startDate, endDate);
+        users.stream()
+                .filter(user -> user.getCreatedAt() != null && !user.getCreatedAt().toLocalDate().isBefore(startDate))
+                .forEach(user -> incrementMetric(growth, user.getCreatedAt().toLocalDate()));
+        accounts.stream()
+                .filter(account -> account.getCreatedAt() != null && !account.getCreatedAt().toLocalDate().isBefore(startDate))
+                .forEach(account -> incrementMetric(growth, account.getCreatedAt().toLocalDate()));
+        return toCategoryMetricList(growth);
+    }
+
+    private List<CategoryMetricDTO> buildFlaggedTrendMetrics(List<Transaction> transactions, LocalDate startDate, LocalDate endDate) {
+        Map<String, Double> flags = initDateSeries(startDate, endDate);
+        transactions.stream()
+                .filter(transaction -> {
+                    String status = Optional.ofNullable(transaction.getTransactionStatus()).orElse("").toLowerCase();
+                    return status.equals("failed") || status.equals("declined") || status.equals("review required") || status.equals("escalated");
+                })
+                .forEach(transaction -> incrementMetric(flags, transaction.getTransactionTime().toLocalDate()));
+        return toCategoryMetricList(flags);
+    }
+
+    private List<CategoryMetricDTO> buildNetFlowMetrics(List<Transaction> transactions, LocalDate startDate, LocalDate endDate) {
+        Map<String, Double> flow = initDateSeries(startDate, endDate);
+        transactions.forEach(transaction -> {
+            String key = transaction.getTransactionTime().toLocalDate().format(DateTimeFormatter.ISO_DATE);
+            double amount = Optional.ofNullable(transaction.getTransactionAmount()).orElse(BigDecimal.ZERO).doubleValue();
+            double signed = "debit".equalsIgnoreCase(transaction.getTransactionType()) ? -amount : amount;
+            flow.computeIfPresent(key, (ignored, current) -> current + signed);
+        });
+        return toCategoryMetricList(flow);
+    }
+
+    private List<CategoryMetricDTO> buildApprovalAgingMetrics(List<PendingUser> pendingUsers) {
+        Map<String, Double> aging = new LinkedHashMap<>();
+        aging.put("same-day", 0.0);
+        aging.put("1-3 days", 0.0);
+        aging.put("3+ days", 0.0);
+
+        LocalDate today = LocalDate.now();
+        pendingUsers.forEach(user -> {
+            long ageDays = java.time.Duration.between(user.getRequestTime(), today.plusDays(1).atStartOfDay()).toDays();
+            String bucket = ageDays <= 1 ? "same-day" : ageDays <= 3 ? "1-3 days" : "3+ days";
+            aging.merge(bucket, 1.0, Double::sum);
+        });
+        return toCategoryMetricList(aging);
+    }
+
+    private List<CategoryMetricDTO> buildAccountStatusBreakdown(List<Account> accounts) {
+        Map<String, Double> breakdown = new LinkedHashMap<>();
+        accounts.forEach(account -> breakdown.merge(account.getAccountStatus(), 1.0, Double::sum));
+        return toCategoryMetricList(breakdown);
+    }
+
+    private List<CategoryMetricDTO> buildUserStatusBreakdown(List<User> users) {
+        Map<String, Double> breakdown = new LinkedHashMap<>();
+        users.forEach(user -> breakdown.merge(user.getUserStatus(), 1.0, Double::sum));
+        return toCategoryMetricList(breakdown);
+    }
+
+    private List<CategoryMetricDTO> buildAdjustmentMetrics(List<Transaction> transactions) {
+        Map<String, Double> metrics = new LinkedHashMap<>();
+        metrics.put("credit adjustments", 0.0);
+        metrics.put("debit adjustments", 0.0);
+
+        transactions.stream()
+                .filter(transaction -> Optional.ofNullable(transaction.getTransactionDescription()).orElse("").toLowerCase().contains("admin adjustment"))
+                .forEach(transaction -> {
+                    String bucket = "debit".equalsIgnoreCase(transaction.getTransactionType()) ? "debit adjustments" : "credit adjustments";
+                    metrics.merge(bucket, Optional.ofNullable(transaction.getTransactionAmount()).orElse(BigDecimal.ZERO).doubleValue(), Double::sum);
+                });
+
+        return toCategoryMetricList(metrics);
+    }
+
+    private List<CategoryMetricDTO> buildComplianceReviewMetrics(List<Transaction> transactions) {
+        Map<String, Double> metrics = new LinkedHashMap<>();
+        metrics.put("reviewed", 0.0);
+        metrics.put("escalated", 0.0);
+        metrics.put("review required", 0.0);
+
+        transactions.forEach(transaction -> {
+            String status = Optional.ofNullable(transaction.getTransactionStatus()).orElse("").toLowerCase();
+            if (metrics.containsKey(status)) {
+                metrics.merge(status, 1.0, Double::sum);
+            }
+        });
+        return toCategoryMetricList(metrics);
+    }
+
+    private List<TopTransactorDTO> buildTopUserTransactors(List<Transaction> transactions) {
+        Map<Integer, TopTransactorAccumulator> accumulators = new LinkedHashMap<>();
+        transactions.forEach(transaction -> {
+            Integer userId = transaction.getAccount().getUser().getUserId();
+            TopTransactorAccumulator accumulator = accumulators.computeIfAbsent(userId, ignored ->
+                    new TopTransactorAccumulator(
+                            userId,
+                            transaction.getAccount().getUser().getFirstName() + " " + transaction.getAccount().getUser().getLastName()
+                    ));
+            accumulator.add(Optional.ofNullable(transaction.getTransactionAmount()).orElse(BigDecimal.ZERO));
+        });
+        return accumulators.values().stream()
+                .sorted((left, right) -> right.totalAmount.compareTo(left.totalAmount))
+                .limit(5)
+                .map(TopTransactorAccumulator::toDto)
+                .toList();
+    }
+
+    private List<TopTransactorDTO> buildTopAccountTransactors(List<Transaction> transactions) {
+        Map<Integer, TopTransactorAccumulator> accumulators = new LinkedHashMap<>();
+        transactions.forEach(transaction -> {
+            Integer accountId = transaction.getAccount().getAccountId();
+            TopTransactorAccumulator accumulator = accumulators.computeIfAbsent(accountId, ignored ->
+                    new TopTransactorAccumulator(
+                            accountId,
+                            decryptAccountNumber(transaction.getAccount().getAccountNumber())
+                    ));
+            accumulator.add(Optional.ofNullable(transaction.getTransactionAmount()).orElse(BigDecimal.ZERO));
+        });
+        return accumulators.values().stream()
+                .sorted((left, right) -> right.totalAmount.compareTo(left.totalAmount))
+                .limit(5)
+                .map(TopTransactorAccumulator::toDto)
+                .toList();
+    }
+
+    private Map<String, Double> initDateSeries(LocalDate startDate, LocalDate endDate) {
+        Map<String, Double> series = new LinkedHashMap<>();
+        for (LocalDate cursor = startDate; !cursor.isAfter(endDate); cursor = cursor.plusDays(1)) {
+            series.put(cursor.format(DateTimeFormatter.ISO_DATE), 0.0);
+        }
+        return series;
+    }
+
+    private void incrementMetric(Map<String, Double> series, LocalDate date) {
+        String key = date.format(DateTimeFormatter.ISO_DATE);
+        series.computeIfPresent(key, (ignored, current) -> current + 1);
+    }
+
+    private List<CategoryMetricDTO> toCategoryMetricList(Map<String, Double> metrics) {
+        return metrics.entrySet().stream()
+                .map(entry -> new CategoryMetricDTO(entry.getKey(), entry.getValue()))
+                .toList();
+    }
+
     private String generateAccountNumber() {
         long number = (long) (Math.random() * 9_000_000_000L) + 1_000_000_000L;
         return String.valueOf(number);
+    }
+
+    private static class TopTransactorAccumulator {
+        private final Integer id;
+        private final String label;
+        private BigDecimal totalAmount = BigDecimal.ZERO;
+        private int transactionCount = 0;
+
+        private TopTransactorAccumulator(Integer id, String label) {
+            this.id = id;
+            this.label = label;
+        }
+
+        private void add(BigDecimal amount) {
+            totalAmount = totalAmount.add(amount.abs());
+            transactionCount++;
+        }
+
+        private TopTransactorDTO toDto() {
+            return new TopTransactorDTO(id, label, totalAmount, transactionCount);
+        }
     }
 }

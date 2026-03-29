@@ -173,7 +173,13 @@
                       {{ acc.accountBalance | currency:'PHP':'symbol':'1.2-2' }}
                     </td>
                     <td class="px-8 py-6 text-right">
-                      <button class="material-symbols-outlined text-outline/60 hover:text-primary transition-colors p-2 rounded-full hover:bg-primary/5" aria-label="More options">more_vert</button>
+                      <button
+                        type="button"
+                        (click)="manageHighValueEntity(acc.userId)"
+                        class="material-symbols-outlined text-outline/60 hover:text-primary transition-colors p-2 rounded-full hover:bg-primary/5"
+                        aria-label="Manage user">
+                        more_vert
+                      </button>
                     </td>
                   </tr>
                 }

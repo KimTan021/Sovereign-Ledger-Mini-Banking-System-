@@ -46,6 +46,10 @@ public class SecurityConfig {
 
                 // Customer Profile endpoints
                 .requestMatchers("/pending-user/request-account").hasRole("USER")
+                .requestMatchers("/pending-user/my-requests").hasRole("USER")
+                .requestMatchers("/customer/profile/**").hasRole("USER")
+                .requestMatchers("/notifications/stream").permitAll()
+                .requestMatchers("/notifications/**").hasRole("USER")
 
                 // Broad restrictions (Admin-only)
                 .requestMatchers("/admin/**").hasRole("ADMIN")

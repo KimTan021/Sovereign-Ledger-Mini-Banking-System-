@@ -19,6 +19,7 @@ public class TransactionResponseDTO {
     private String transactionStatus;
     private String targetAccountNumber;
     private String targetAccountName;
+    private String reviewNote;
 
     public Integer getTransactionId() { return transactionId; }
     public void setTransactionId(Integer transactionId) { this.transactionId = transactionId; }
@@ -52,4 +53,7 @@ public class TransactionResponseDTO {
 
     public String getTargetAccountName() { return targetAccountName; }
     public void setTargetAccountName(String targetAccountName) { this.targetAccountName = targetAccountName; }
+
+    public String getReviewNote() { return reviewNote; }
+    public void setReviewNote(String reviewNote) { this.reviewNote = reviewNote; }
 }

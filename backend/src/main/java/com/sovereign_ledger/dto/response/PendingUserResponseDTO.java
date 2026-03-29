@@ -24,6 +24,8 @@ public class PendingUserResponseDTO {
     private String phone;
     private BigDecimal initialDeposit;
     private LocalDateTime requestTime;
+    private String requestStatus;
+    private LocalDateTime reviewedAt;
 
     public static PendingUserResponseDTO fromEntity(PendingUser pendingUser) {
         PendingUserResponseDTO dto = new PendingUserResponseDTO();
@@ -36,6 +38,8 @@ public class PendingUserResponseDTO {
         dto.setPhone(pendingUser.getPhone());
         dto.setInitialDeposit(pendingUser.getInitialDeposit());
         dto.setRequestTime(pendingUser.getRequestTime());
+        dto.setRequestStatus(pendingUser.getRequestStatus());
+        dto.setReviewedAt(pendingUser.getReviewedAt());
         return dto;
     }
 }
