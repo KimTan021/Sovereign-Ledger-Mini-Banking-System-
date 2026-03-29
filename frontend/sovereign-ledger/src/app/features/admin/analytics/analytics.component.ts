@@ -54,7 +54,7 @@ import { NotificationService } from '../../../core/services/notification.service
       </div>
 
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient min-h-[420px] flex flex-col">
           <h2 class="text-xl font-headline font-bold text-primary mb-4">Daily Transaction Pulse</h2>
           <div class="flex-1 relative">
             @if (isLoading()) {
@@ -65,7 +65,7 @@ import { NotificationService } from '../../../core/services/notification.service
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient min-h-[420px] flex flex-col">
           <h2 class="text-xl font-headline font-bold text-primary mb-4">Net Flow Trend</h2>
           <div class="flex-1 relative">
             @if (isLoading()) {
@@ -76,7 +76,7 @@ import { NotificationService } from '../../../core/services/notification.service
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient min-h-[420px] flex flex-col">
           <h2 class="text-xl font-headline font-bold text-primary mb-4">Volume by Amount Bucket</h2>
           <div class="flex-1 relative">
             @if (isLoading()) {
@@ -87,7 +87,7 @@ import { NotificationService } from '../../../core/services/notification.service
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient min-h-[420px] flex flex-col">
           <h2 class="text-xl font-headline font-bold text-primary mb-4">Flagged / Failed Trend</h2>
           <div class="flex-1 relative">
             @if (isLoading()) {
@@ -98,7 +98,7 @@ import { NotificationService } from '../../../core/services/notification.service
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient min-h-[420px] flex flex-col">
           <h2 class="text-xl font-headline font-bold text-primary mb-4">Onboarding and Account Growth</h2>
           <div class="flex-1 relative">
             @if (isLoading()) {
@@ -109,15 +109,15 @@ import { NotificationService } from '../../../core/services/notification.service
           </div>
         </section>
 
-        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient h-[420px] flex flex-col">
+        <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient min-h-[420px] flex flex-col">
           <h2 class="text-xl font-headline font-bold text-primary mb-4">Status and Review Mix</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
-            <div class="relative">
-              <canvas baseChart [data]="statusBreakdownChart()" [options]="doughnutChartOptions" [type]="'doughnut'"></canvas>
-            </div>
-            <div class="relative">
-              <canvas baseChart [data]="complianceChart()" [options]="doughnutChartOptions" [type]="'doughnut'"></canvas>
-            </div>
+            <div class="relative min-h-[300px] md:min-h-0">
+               <canvas baseChart [data]="statusBreakdownChart()" [options]="doughnutChartOptions" [type]="'doughnut'"></canvas>
+             </div>
+             <div class="relative min-h-[300px] md:min-h-0">
+               <canvas baseChart [data]="complianceChart()" [options]="doughnutChartOptions" [type]="'doughnut'"></canvas>
+             </div>
           </div>
         </section>
       </div>

@@ -47,6 +47,30 @@ public class PendingUserServiceImplementation implements PendingUserService {
             throw new RuntimeException("Email already used");
         }
 
+        // Normalize inputs to ensure robust matching
+        String firstName = dto.getFirstName() != null ? dto.getFirstName().trim() : "";
+        String middleName = dto.getMiddleName() != null ? dto.getMiddleName().trim() : "";
+        String lastName = dto.getLastName() != null ? dto.getLastName().trim() : "";
+        String phone = dto.getPhone() != null ? dto.getPhone().trim() : "";
+
+        // Phone uniqueness check (Cross-table protection)
+        if (pendingUserRepository.existsByPhoneAndRequestStatusIgnoreCase(phone, "Pending")) {
+            throw new RuntimeException("This phone number is already associated with an active registration request.");
+        }
+        if (userRepository.existsByPhone(phone)) {
+            throw new RuntimeException("This phone number is already linked to an existing profile. Please sign in to request additional ledger accounts.");
+        }
+
+        // Legal Name Safeguard (Institutional Duplicate Prevention)
+        if (pendingUserRepository.existsByFirstNameIgnoreCaseAndMiddleNameIgnoreCaseAndLastNameIgnoreCaseAndRequestStatusIgnoreCase(
+                firstName, middleName, lastName, "Pending")) {
+            throw new RuntimeException("An identity with this legal name is already undergoing mandatory review. Multiple identity files are prohibited.");
+        }
+        if (userRepository.existsByFirstNameIgnoreCaseAndMiddleNameIgnoreCaseAndLastNameIgnoreCase(
+                firstName, middleName, lastName)) {
+            throw new RuntimeException("A verified legal identity with this name already exists in our network. To prevent profile duplication, please sign in to your existing account.");
+        }
+
         PendingUser pendingUser = new PendingUser();
         pendingUser.setFirstName(dto.getFirstName());
         pendingUser.setMiddleName(dto.getMiddleName());

@@ -20,7 +20,7 @@ public class PendingUserRequestDTO {
     private String firstName;
 
     @Size(max = 45, message = "Middle name must not exceed 45 characters.")
-    @Pattern(regexp = "^$|^[A-Za-z][A-Za-z\\s'\\-]*$", message = "Middle name may only contain letters, spaces, apostrophes, and hyphens.")
+    @Pattern(regexp = "^$|^[A-Za-z][A-Za-z\\s'\\-]{1,44}$", message = "Middle name must be at least 2 characters if provided and may only contain letters, spaces, apostrophes, and hyphens.")
     private String middleName;
 
     @NotBlank(message = "Last name is required.")

@@ -161,7 +161,7 @@ export class RequestAccountComponent {
     if (control.hasError('pattern')) {
       const patternMessages: Record<string, string> = {
         firstName: 'First name may only contain letters, spaces, apostrophes, and hyphens.',
-        middleName: 'Middle name may only contain letters, spaces, apostrophes, and hyphens.',
+        middleName: 'Middle name is optional, but if provided it may only contain letters, spaces, apostrophes, and hyphens.',
         lastName: 'Last name may only contain letters, spaces, apostrophes, and hyphens.',
         phone: 'Phone number must contain 10 to 15 digits and may include spaces or a leading plus sign.'
       };

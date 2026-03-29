@@ -71,9 +71,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({IllegalArgumentException.class, RuntimeException.class})
-    public ResponseEntity<String> handleBadRequest(RuntimeException e) {
+    public ResponseEntity<Map<String, String>> handleBadRequest(RuntimeException e) {
+        Map<String, String> body = new LinkedHashMap<>();
+        body.put("message", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(e.getMessage());
+                .body(body);
     }
 }
