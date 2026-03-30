@@ -53,12 +53,5 @@ public class NotificationController {
         }
         return notificationService.registerEmitter(user.getUserId());
     }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleStreamError(IllegalArgumentException e) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(e.getMessage());
-    }
 }
 

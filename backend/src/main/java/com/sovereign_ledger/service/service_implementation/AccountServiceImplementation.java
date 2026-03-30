@@ -2,12 +2,16 @@ package com.sovereign_ledger.service.service_implementation;
 
 import com.sovereign_ledger.dto.response.AccountResponseDTO;
 import com.sovereign_ledger.dto.response.TopAccountDTO;
+import com.sovereign_ledger.dto.response.UserResponseDTO;
 import com.sovereign_ledger.entity.Account;
+import com.sovereign_ledger.entity.User;
 import com.sovereign_ledger.exception.exception_classes.AccountNotFoundException;
 import com.sovereign_ledger.repository.AccountRepository;
+import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.AccountService;
 import com.sovereign_ledger.util.AesEncryptionUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -16,12 +20,15 @@ import java.util.List;
 @Service
 public class AccountServiceImplementation implements AccountService {
     private final AccountRepository accountRepository;
+    private final UserRepository userRepository;
 
     @Value("${aes.secret-key}")
     private String aesSecretKey;
 
-    public AccountServiceImplementation(AccountRepository accountRepository) {
+    public AccountServiceImplementation(AccountRepository accountRepository,
+                                        UserRepository userRepository) {
         this.accountRepository = accountRepository;
+        this.userRepository = userRepository;
     }
 
     private AccountResponseDTO toAccountResponseDTO(Account account){
@@ -97,6 +104,14 @@ public class AccountServiceImplementation implements AccountService {
 
     @Override
     public List<AccountResponseDTO> findAllAccountsByUserId(Integer id){
+        User userCheck = userRepository.findById(id).orElse(null);
+
+        String userCurrent = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        if(!userCheck.getUserEmail().equals(userCurrent)){
+            throw new IllegalArgumentException("You do not have permission to view this user's accounts.");
+        }
+
         List<AccountResponseDTO> account = accountRepository.findAllAccountsByUserId(id)
                 .stream()
                 .map(a -> toAccountResponseDTO(a))
