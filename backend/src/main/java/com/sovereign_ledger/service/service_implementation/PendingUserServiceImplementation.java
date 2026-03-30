@@ -5,6 +5,7 @@ import com.sovereign_ledger.dto.request.PendingUserRequestDTO;
 import com.sovereign_ledger.dto.response.PendingUserResponseDTO;
 import com.sovereign_ledger.entity.PendingUser;
 import com.sovereign_ledger.entity.User;
+import com.sovereign_ledger.exception.exception_classes.UserNotFoundException;
 import com.sovereign_ledger.repository.PendingUserRepository;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.NotificationService;
@@ -95,7 +96,7 @@ public class PendingUserServiceImplementation implements PendingUserService {
 
         // Fetch the currently logged in user
         User existingUser = userRepository.findByUserEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (pendingUserRepository.existsByUserEmailAndRequestStatusIgnoreCase(existingUser.getUserEmail(), "Pending")) {
             throw new RuntimeException("You already have a pending account request under review.");

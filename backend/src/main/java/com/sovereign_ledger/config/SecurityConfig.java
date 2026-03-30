@@ -56,6 +56,7 @@ public class SecurityConfig {
                 .requestMatchers("/seed").hasRole("ADMIN")
                 .requestMatchers("/accounts/**").hasRole("ADMIN")
                 .requestMatchers("/transactions/**").hasRole("ADMIN")
+                .requestMatchers("/otp/**").hasRole("ADMIN")
 
                 .anyRequest().authenticated()
             )

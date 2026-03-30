@@ -3,6 +3,7 @@ package com.sovereign_ledger.exception;
 import com.sovereign_ledger.exception.exception_classes.AccountNotFoundException;
 import com.sovereign_ledger.exception.exception_classes.AccountNotVerifiedException;
 import com.sovereign_ledger.exception.exception_classes.InsufficientBalanceException;
+import com.sovereign_ledger.exception.exception_classes.UserNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +45,22 @@ public class GlobalExceptionHandler {
                 .body(e.getMessage());
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<String> handleUserNotFound(
+            UserNotFoundException e
+    ){
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleStreamError(IllegalArgumentException e) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException e) {
         Map<String, String> fieldErrors = new LinkedHashMap<>();
@@ -70,7 +87,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    @ExceptionHandler({IllegalArgumentException.class, RuntimeException.class})
+    @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleBadRequest(RuntimeException e) {
         Map<String, String> body = new LinkedHashMap<>();
         body.put("message", e.getMessage());

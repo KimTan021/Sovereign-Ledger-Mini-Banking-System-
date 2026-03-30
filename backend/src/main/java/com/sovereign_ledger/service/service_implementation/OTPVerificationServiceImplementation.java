@@ -12,9 +12,9 @@ import java.util.List;
 
 @Service
 public class OTPVerificationServiceImplementation implements OTPVerificationService {
-    private OTPVerificationRepository otpVerificationRepository;
-    private TransactionRepository transactionRepository;
-    private PendingUserRepository pendingUserRepository;
+    private final OTPVerificationRepository otpVerificationRepository;
+    private final TransactionRepository transactionRepository;
+    private final PendingUserRepository pendingUserRepository;
 
     public OTPVerificationServiceImplementation(OTPVerificationRepository otpVerificationRepository,
                                                 TransactionRepository transactionRepository,

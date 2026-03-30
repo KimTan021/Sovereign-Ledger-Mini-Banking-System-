@@ -4,6 +4,7 @@ import com.sovereign_ledger.dto.request.CustomerPasswordChangeRequestDTO;
 import com.sovereign_ledger.dto.request.CustomerProfileUpdateRequestDTO;
 import com.sovereign_ledger.dto.response.CustomerProfileDTO;
 import com.sovereign_ledger.entity.User;
+import com.sovereign_ledger.exception.exception_classes.UserNotFoundException;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.NotificationService;
 import jakarta.validation.Valid;
@@ -65,7 +66,7 @@ public class CustomerController {
 
     private User findUser(String userEmail) {
         return userRepository.findByUserEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
     private CustomerProfileDTO toCustomerProfileDTO(User user) {

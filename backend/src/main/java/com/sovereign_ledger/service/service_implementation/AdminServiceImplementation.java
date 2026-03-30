@@ -7,7 +7,9 @@ import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.entity.PendingUser;
 import com.sovereign_ledger.entity.Transaction;
 import com.sovereign_ledger.entity.User;
+import com.sovereign_ledger.exception.exception_classes.AccountNotFoundException;
 import com.sovereign_ledger.exception.exception_classes.InsufficientBalanceException;
+import com.sovereign_ledger.exception.exception_classes.UserNotFoundException;
 import com.sovereign_ledger.repository.AccountRepository;
 import com.sovereign_ledger.repository.PendingUserRepository;
 import com.sovereign_ledger.repository.TransactionRepository;
@@ -262,7 +264,7 @@ public class AdminServiceImplementation implements AdminService {
     @Override
     public AdminUserDetailDTO findUserDetail(Integer id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
         List<Account> accounts = accountRepository.findAllAccountsByUserId(id);
         BigDecimal totalBalance = accounts.stream()
                 .map(Account::getAccountBalance)
@@ -286,7 +288,7 @@ public class AdminServiceImplementation implements AdminService {
     @Transactional
     public UserResponseDTO updateUserProfile(Integer id, AdminUserProfileUpdateRequestDTO request) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
         user.setFirstName(request.getFirstName());
         user.setMiddleName(request.getMiddleName());
         user.setLastName(request.getLastName());
@@ -301,7 +303,7 @@ public class AdminServiceImplementation implements AdminService {
     @Transactional
     public UserResponseDTO updateUserStatus(Integer id, String status) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
         user.setUserStatus(normalizeUserStatus(status));
         User savedUser = userRepository.save(user);
         if ("SUSPENDED".equalsIgnoreCase(savedUser.getUserStatus())) {
@@ -332,7 +334,7 @@ public class AdminServiceImplementation implements AdminService {
     @Transactional
     public UserResponseDTO updateUserRole(Integer id, String role) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
         user.setRole(normalizeRole(role));
         UserResponseDTO response = toUserResponseDTO(userRepository.save(user));
         notificationService.emitDataChange("users", "admin");
@@ -343,7 +345,7 @@ public class AdminServiceImplementation implements AdminService {
     @Transactional
     public AdminPasswordResetResponseDTO resetUserPassword(Integer id, String newPassword) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
         String password = (newPassword == null || newPassword.isBlank())
                 ? UUID.randomUUID().toString().replace("-", "").substring(0, 12)
                 : newPassword;
@@ -357,7 +359,7 @@ public class AdminServiceImplementation implements AdminService {
     @Transactional
     public AdminAccountDTO updateAccountStatus(Integer accountId, String status) {
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + accountId));
         account.setAccountStatus(normalizeAccountStatus(status));
         AdminAccountDTO updatedAccount = toAdminAccountDTO(accountRepository.save(account));
         notificationService.createNotification(
@@ -376,7 +378,7 @@ public class AdminServiceImplementation implements AdminService {
     @Transactional
     public void postAccountAdjustment(Integer accountId, AdminAdjustmentRequestDTO request) {
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + accountId));
         BigDecimal amount = Optional.ofNullable(request.getAmount()).orElse(BigDecimal.ZERO);
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Adjustment amount must be greater than zero.");

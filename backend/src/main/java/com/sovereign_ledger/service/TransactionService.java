@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Service
 public interface TransactionService {
     List<TransactionResponseDTO> findAllTransactions();
     TransactionResponseDTO findTransactionById(Integer id);

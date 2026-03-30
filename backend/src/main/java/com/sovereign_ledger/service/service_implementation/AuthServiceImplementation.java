@@ -3,6 +3,7 @@ package com.sovereign_ledger.service.service_implementation;
 import com.sovereign_ledger.dto.request.LoginRequestDTO;
 import com.sovereign_ledger.dto.response.LoginResponseDTO;
 import com.sovereign_ledger.entity.User;
+import com.sovereign_ledger.exception.exception_classes.UserNotFoundException;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.security.JwtUtil;
 import com.sovereign_ledger.service.AuthService;
@@ -34,7 +35,7 @@ public class AuthServiceImplementation implements AuthService {
         }
 
       User existingUser = userRepository.findByUserEmail(request.getUserEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
       if (!"ACTIVE".equalsIgnoreCase(existingUser.getUserStatus())) {
             throw new IllegalArgumentException("User access is currently suspended");

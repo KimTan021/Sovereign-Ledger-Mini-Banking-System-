@@ -5,6 +5,7 @@ import com.sovereign_ledger.dto.request.CashTransactionRequestDTO;
 import com.sovereign_ledger.dto.request.TransferRequestDTO;
 import com.sovereign_ledger.dto.request.TransferByAccountNumberRequestDTO;
 import com.sovereign_ledger.dto.response.TransactionResponseDTO;
+import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.entity.Transaction;
 import com.sovereign_ledger.service.AccountService;
 import com.sovereign_ledger.service.TransactionService;
@@ -12,6 +13,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -102,6 +104,7 @@ public class TransactionController {
 
     @PutMapping("/transfer-transaction")
     public ResponseEntity<String> initiateTransaction(@Valid @RequestBody TransferRequestDTO request){
+
         transactionService.initiateTransaction(
                 accountService.findAccountEntityById(request.getSourceAccountId()),
                 accountService.findAccountEntityById(request.getReceivingAccountId()),
