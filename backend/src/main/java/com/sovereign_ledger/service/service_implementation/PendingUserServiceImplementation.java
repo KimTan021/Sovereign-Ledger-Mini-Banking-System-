@@ -83,6 +83,7 @@ public class PendingUserServiceImplementation implements PendingUserService {
         pendingUser.setPhone(dto.getPhone());
         pendingUser.setInitialDeposit(dto.getInitialDeposit());
         pendingUser.setRequestTime(LocalDateTime.now());
+        pendingUser.setEmailStatus("Unconfirmed");
 
         PendingUserResponseDTO response = PendingUserResponseDTO.fromEntity(pendingUserRepository.save(pendingUser));
         notificationService.emitDataChange("pending-users", "admin");
@@ -113,6 +114,7 @@ public class PendingUserServiceImplementation implements PendingUserService {
         pendingUser.setInitialDeposit(dto.getInitialDeposit());
         pendingUser.setRequestTime(LocalDateTime.now());
         pendingUser.setExistingUser(existingUser); // sets the user_id foreign key
+        pendingUser.setEmailStatus("Confirmed");
 
         PendingUser saved = pendingUserRepository.save(pendingUser);
 
@@ -127,6 +129,7 @@ public class PendingUserServiceImplementation implements PendingUserService {
         response.setRequestTime(saved.getRequestTime());
         response.setRequestStatus(saved.getRequestStatus());
         response.setReviewedAt(saved.getReviewedAt());
+        response.setEmailStatus(saved.getEmailStatus());
         notificationService.emitDataChange("pending-users", "admin");
         return response;
     }
