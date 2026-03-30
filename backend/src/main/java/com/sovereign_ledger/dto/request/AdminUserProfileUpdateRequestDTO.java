@@ -33,7 +33,6 @@ public class AdminUserProfileUpdateRequestDTO {
     @Size(max = 512, message = "Email address must not exceed 512 characters.")
     private String userEmail;
 
-    @NotBlank(message = "Phone number is required.")
-    @Pattern(regexp = "^\\+?[0-9 ]{10,15}$", message = "Phone number must contain 10 to 15 digits and may include spaces or a leading plus sign.")
+    @Pattern(regexp = "^$|^\\+?[0-9 ]{10,15}$", message = "Phone number must contain 10 to 15 digits and may include spaces or a leading plus sign.")
     private String phone;
 }

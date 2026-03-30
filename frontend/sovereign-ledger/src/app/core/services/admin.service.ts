@@ -189,6 +189,14 @@ export class AdminService {
     return this.http.put<PasswordResetResponse>(`${this.apiUrl}/users/${userId}/reset-password`, { newPassword: newPassword || '' });
   }
 
+  deleteUser(userId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/users/${userId}`);
+  }
+
+  createAdmin(payload: any): Observable<SystemUser> {
+    return this.http.post<SystemUser>(`${this.apiUrl}/admin-accounts`, payload);
+  }
+
   updateAccountStatus(accountId: number, status: string): Observable<AdminAccount> {
     return this.http.put<AdminAccount>(`${this.apiUrl}/accounts/${accountId}/status`, { status });
   }

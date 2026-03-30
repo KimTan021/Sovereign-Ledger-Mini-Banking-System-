@@ -57,7 +57,7 @@ export class LoginComponent {
       next: () => {
         this.isLoading.set(false);
         this.loginError.set(null);
-        if (this.selectedRole() === 'admin') {
+        if (this.authService.isAdmin()) {
           this.router.navigate(['/admin']);
         } else {
           this.router.navigate(['/customer/dashboard']);

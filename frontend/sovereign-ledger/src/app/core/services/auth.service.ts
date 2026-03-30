@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { tap, catchError } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
 
-export type UserRole = 'customer' | 'admin';
+export type UserRole = 'customer' | 'admin' | 'super_admin';
 
 export interface User {
   identifier: string;
@@ -34,6 +34,8 @@ export class AuthService {
   readonly user = this.currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
   readonly userRole = computed(() => this.currentUser()?.role ?? null);
+  readonly isSuperAdmin = computed(() => this.currentUser()?.role === 'super_admin');
+  readonly isAdmin = computed(() => this.currentUser()?.role === 'admin' || this.isSuperAdmin());
   readonly userName = computed(() => this.currentUser()?.name ?? '');
   forcedLogoutReason = signal<string | null>(null);
 
@@ -59,8 +61,10 @@ export class AuthService {
       password: password
     }).pipe(
       tap(response => {
-        // Map backend roles ('user', 'admin') to frontend roles ('customer', 'admin')
-        const frontendRole: UserRole = response.role === 'user' ? 'customer' : 'admin';
+        // Map backend roles ('user', 'admin', 'super_admin') to frontend roles ('customer', 'admin', 'super_admin')
+        let frontendRole: UserRole = 'customer';
+        if (response.role === 'admin') frontendRole = 'admin';
+        else if (response.role === 'super_admin') frontendRole = 'super_admin';
         
         const user: User = {
           identifier: response.userEmail,

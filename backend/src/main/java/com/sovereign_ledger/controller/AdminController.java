@@ -148,6 +148,17 @@ public class AdminController {
         return ResponseEntity.ok(adminService.resetUserPassword(id, password));
     }
 
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
+        adminService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/admin-accounts")
+    public ResponseEntity<UserResponseDTO> createAdmin(@Valid @RequestBody com.sovereign_ledger.dto.request.AdminRegistrationRequestDTO request) {
+        return ResponseEntity.ok(adminService.createAdmin(request));
+    }
+
     @PutMapping("/accounts/{id}/status")
     public ResponseEntity<AdminAccountDTO> updateAccountStatus(@PathVariable Integer id,
                                                                @Valid @RequestBody AdminAccountStatusRequestDTO request) {

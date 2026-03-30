@@ -1,6 +1,7 @@
 package com.sovereign_ledger.service.service_implementation;
 
 import com.sovereign_ledger.dto.request.AdminAdjustmentRequestDTO;
+import com.sovereign_ledger.dto.request.AdminRegistrationRequestDTO;
 import com.sovereign_ledger.dto.request.AdminUserProfileUpdateRequestDTO;
 import com.sovereign_ledger.dto.response.*;
 import com.sovereign_ledger.entity.Account;
@@ -20,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -285,6 +288,7 @@ public class AdminServiceImplementation implements AdminService {
     @Override
     @Transactional
     public UserResponseDTO updateUserProfile(Integer id, AdminUserProfileUpdateRequestDTO request) {
+        validateAdministrativeAction(id, "update profile of");
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         user.setFirstName(request.getFirstName());
@@ -293,13 +297,22 @@ public class AdminServiceImplementation implements AdminService {
         user.setUserEmail(request.getUserEmail());
         user.setPhone(request.getPhone());
         UserResponseDTO response = toUserResponseDTO(userRepository.save(user));
-        notificationService.emitDataChange("users", "admin");
+        notificationService.createNotification(
+                user.getUserId(),
+                null,
+                null,
+                "profile-update",
+                "Profile identity updated",
+                "Your profile information has been securely updated by an administrator. Review your settings for current details."
+        );
+        notificationService.emitDataChange("users", "customer-profile", "notifications", "admin");
         return response;
     }
 
     @Override
     @Transactional
     public UserResponseDTO updateUserStatus(Integer id, String status) {
+        validateAdministrativeAction(id, "suspend or reactivate");
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         user.setUserStatus(normalizeUserStatus(status));
@@ -331,9 +344,22 @@ public class AdminServiceImplementation implements AdminService {
     @Override
     @Transactional
     public UserResponseDTO updateUserRole(Integer id, String role) {
+        validateAdministrativeAction(id, "change the role of");
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        user.setRole(normalizeRole(role));
+
+        String newRole = normalizeRole(role);
+        String currentRole = user.getRole().toLowerCase();
+
+        // Enforce Role Domain Separation: Prevent Customer <-> Admin transitions
+        boolean isCurrentAdmin = "admin".equals(currentRole) || "super_admin".equals(currentRole);
+        boolean isNewAdmin = "admin".equals(newRole) || "super_admin".equals(newRole);
+
+        if (isCurrentAdmin != isNewAdmin) {
+            throw new AccessDeniedException("Administrative domain violation: Cannot transition between Customer and Administrator roles. To create a new administrator, please use the 'Add Administrative Account' tool.");
+        }
+
+        user.setRole(newRole);
         UserResponseDTO response = toUserResponseDTO(userRepository.save(user));
         notificationService.emitDataChange("users", "admin");
         return response;
@@ -341,7 +367,36 @@ public class AdminServiceImplementation implements AdminService {
 
     @Override
     @Transactional
+    public UserResponseDTO createAdmin(AdminRegistrationRequestDTO request) {
+        // Only Super Admins can call this (enforced by SecurityConfig but checked here for safety)
+        User currentUser = getCurrentUser();
+        if (!"super_admin".equalsIgnoreCase(currentUser.getRole())) {
+            throw new AccessDeniedException("Insufficient authority: Only super administrators can provision new administrative accounts.");
+        }
+
+        if (userRepository.findByUserEmail(request.getUserEmail()).isPresent()) {
+            throw new IllegalArgumentException("User with this email already exists.");
+        }
+
+        User admin = new User();
+        admin.setFirstName(request.getFirstName());
+        admin.setMiddleName(request.getMiddleName());
+        admin.setLastName(request.getLastName());
+        admin.setUserEmail(request.getUserEmail());
+        admin.setPassword(passwordEncoder.encode(request.getPassword()));
+        admin.setRole(normalizeRole(request.getRole()));
+        admin.setUserStatus("ACTIVE");
+        admin.setCreatedAt(LocalDateTime.now());
+
+        User saved = userRepository.save(admin);
+        notificationService.emitDataChange("users", "admin");
+        return toUserResponseDTO(saved);
+    }
+
+    @Override
+    @Transactional
     public AdminPasswordResetResponseDTO resetUserPassword(Integer id, String newPassword) {
+        validateAdministrativeAction(id, "reset the password of");
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         String password = (newPassword == null || newPassword.isBlank())
@@ -349,7 +404,15 @@ public class AdminServiceImplementation implements AdminService {
                 : newPassword;
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
-        notificationService.emitDataChange("users", "admin");
+        notificationService.createNotification(
+                user.getUserId(),
+                null,
+                null,
+                "security-alert",
+                "Administrative password reset",
+                "Your account password has been reset by an administrator. Your new temporary password is: " + password + " - Please sign in and update your credentials immediately for maximal security."
+        );
+        notificationService.emitDataChange("users", "customer-profile", "notifications", "admin");
         return new AdminPasswordResetResponseDTO(user.getUserId(), password);
     }
 
@@ -506,6 +569,16 @@ public class AdminServiceImplementation implements AdminService {
         return mapToAuditLogEntry(saved);
     }
 
+    @Override
+    @Transactional
+    public void deleteUser(Integer id) {
+        validateAdministrativeAction(id, "delete");
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        userRepository.delete(user);
+        notificationService.emitDataChange("users", "admin");
+    }
+
     private UserResponseDTO toUserResponseDTO(User user) {
         List<Account> accounts = accountRepository.findAllAccountsByUserId(user.getUserId());
         String accountNumber = accounts.isEmpty() ? null : decryptAccountNumber(accounts.get(0).getAccountNumber());
@@ -607,6 +680,35 @@ public class AdminServiceImplementation implements AdminService {
         }
     }
 
+    private User getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUserEmail(email)
+                .orElseThrow(() -> new RuntimeException("Current authenticated user not found in database."));
+    }
+
+    private void validateAdministrativeAction(Integer targetUserId, String action) {
+        User currentUser = getCurrentUser();
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new RuntimeException("Target user not found with id: " + targetUserId));
+
+        // Stricter self-action check: No admin can ever manage themselves through the admin portal
+        if (currentUser.getUserId().equals(targetUserId)) {
+            throw new AccessDeniedException("Administrative restriction: You cannot " + action + " your own account for security and audit integrity.");
+        }
+
+        String currentRole = currentUser.getRole().toLowerCase();
+        String targetRole = targetUser.getRole().toLowerCase();
+
+        // Authority Level Enforcement
+        if (currentRole.equals("admin")) {
+            // Standard Admins cannot manage other Admins or Super Admins
+            if (targetRole.equals("admin") || targetRole.equals("super_admin")) {
+                throw new AccessDeniedException("Insufficient authority: Standard administrators cannot manage other administrative accounts.");
+            }
+        }
+        // Super Admins can manage everything except themselves
+    }
+
     private String normalizeUserStatus(String status) {
         String normalized = Optional.ofNullable(status).orElse("ACTIVE").trim().toUpperCase();
         return switch (normalized) {
@@ -618,7 +720,7 @@ public class AdminServiceImplementation implements AdminService {
     private String normalizeRole(String role) {
         String normalized = Optional.ofNullable(role).orElse("user").trim().toLowerCase();
         return switch (normalized) {
-            case "user", "admin" -> normalized;
+            case "user", "admin", "super_admin" -> normalized;
             default -> throw new IllegalArgumentException("Unsupported role: " + role);
         };
     }

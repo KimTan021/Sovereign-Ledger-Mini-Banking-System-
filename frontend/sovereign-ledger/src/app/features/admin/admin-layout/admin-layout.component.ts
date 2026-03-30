@@ -29,10 +29,12 @@ import { NotificationService } from '../../../core/services/notification.service
           </button>
         </div>
         <div class="flex items-center gap-3 mt-4">
-          <div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-on-primary text-xs font-bold shadow-sm">SO</div>
+          <div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-on-primary text-xs font-bold shadow-sm">
+            {{ isSuperAdmin() ? 'SA' : 'SO' }}
+          </div>
           <div>
-            <p class="text-on-surface font-bold leading-tight">System Oversight</p>
-            <p class="text-xs text-on-surface-variant font-normal">Authority Level 4</p>
+            <p class="text-on-surface font-bold leading-tight truncate max-w-[140px]">{{ isSuperAdmin() ? 'Super Admin' : 'System Oversight' }}</p>
+            <p class="text-xs text-on-surface-variant font-normal">Authority Level {{ isSuperAdmin() ? 5 : 4 }}</p>
           </div>
         </div>
       </div>
@@ -114,6 +116,7 @@ export class AdminLayoutComponent {
   private readonly authService = inject(AuthService);
   private readonly notificationService = inject(NotificationService);
   isSidebarVisible = signal(false);
+  isSuperAdmin = this.authService.isSuperAdmin;
 
   toggleSidebar(): void {
     this.isSidebarVisible.set(!this.isSidebarVisible());

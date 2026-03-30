@@ -13,6 +13,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AdminUserRoleUpdateRequestDTO {
     @NotBlank(message = "Role is required.")
-    @Pattern(regexp = "^(?i)(user|admin)$", message = "Role must be user or admin.")
+    @Pattern(regexp = "^(?i)(user|admin|super_admin)$", message = "Role must be user, admin, or super_admin.")
     private String role;
 }

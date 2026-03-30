@@ -64,7 +64,7 @@ export class DashboardComponent {
   activePendingRequestCount = computed(() =>
     this.pendingRequests().filter(request => request.requestStatus?.toLowerCase() === 'pending').length
   );
-  userName = this.authService.userName();
+  userName = this.authService.userName;
   selectedTransaction = signal<Transaction | null>(null);
 
   aggregates = computed(() => this.transactionService.getAggregates(this.allTransactions()));

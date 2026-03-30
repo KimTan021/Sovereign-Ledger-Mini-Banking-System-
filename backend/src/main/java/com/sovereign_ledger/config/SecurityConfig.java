@@ -52,10 +52,13 @@ public class SecurityConfig {
                 .requestMatchers("/notifications/**").hasRole("USER")
 
                 // Broad restrictions (Admin-only)
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/seed").hasRole("ADMIN")
-                .requestMatchers("/accounts/**").hasRole("ADMIN")
-                .requestMatchers("/transactions/**").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/admin/users/**").hasRole("SUPER_ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/admin/users/*/role").hasRole("SUPER_ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/admin/admin-accounts").hasRole("SUPER_ADMIN")
+                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/seed").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/accounts/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/transactions/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                 .anyRequest().authenticated()
             )

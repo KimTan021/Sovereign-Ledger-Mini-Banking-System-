@@ -42,4 +42,6 @@ public interface AdminService {
             Pageable pageable
     );
     AuditLogDTO reviewTransaction(Integer transactionId, String status, String note);
+    void deleteUser(Integer id);
+    UserResponseDTO createAdmin(AdminRegistrationRequestDTO request);
 }

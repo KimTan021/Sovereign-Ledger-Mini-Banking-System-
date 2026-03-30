@@ -30,12 +30,11 @@ public class BackendApplication {
 			AccountRepository accountRepository,
 			BCryptPasswordEncoder encoder) {
 		return args -> {
-			// Ensure Admin exists and has correct password
+			// Ensure Super Admin exists (Alice)
 			userRepository.findByUserEmail("alice.santos@email.com").ifPresentOrElse(user -> {
 				user.setPassword(encoder.encode("admin123"));
 				userRepository.save(user);
-				System.out.println("====== ADMIN PASSWORD RESET TO 'admin123' ======");
-				seedAccountIfMissing(user, accountRepository, "Savings", "1001001001");
+				System.out.println("====== SUPER ADMIN PASSWORD RESET TO 'admin123' ======");
 			}, () -> {
 				com.sovereign_ledger.entity.User admin = new com.sovereign_ledger.entity.User();
 				admin.setFirstName("Alice");
@@ -43,12 +42,29 @@ public class BackendApplication {
 				admin.setMiddleName("Marie");
 				admin.setUserEmail("alice.santos@email.com");
 				admin.setPassword(encoder.encode("admin123"));
-				admin.setRole("admin");
+				admin.setRole("super_admin");
 				admin.setUserStatus("ACTIVE");
 				admin.setCreatedAt(LocalDateTime.now());
 				userRepository.save(admin);
-				System.out.println("====== ADMIN CREATED: alice.santos@email.com / admin123 ======");
-				seedAccountIfMissing(admin, accountRepository, "Savings", "1001001001");
+				System.out.println("====== SUPER ADMIN CREATED: alice.santos@email.com / admin123 ======");
+			});
+
+			// Ensure a standard Admin exists (Bob)
+			userRepository.findByUserEmail("bob.admin@email.com").ifPresentOrElse(user -> {
+				user.setPassword(encoder.encode("admin123"));
+				userRepository.save(user);
+			}, () -> {
+				com.sovereign_ledger.entity.User bob = new com.sovereign_ledger.entity.User();
+				bob.setFirstName("Bob");
+				bob.setLastName("Admin");
+				bob.setMiddleName("The");
+				bob.setUserEmail("bob.admin@email.com");
+				bob.setPassword(encoder.encode("admin123"));
+				bob.setRole("admin");
+				bob.setUserStatus("ACTIVE");
+				bob.setCreatedAt(LocalDateTime.now());
+				userRepository.save(bob);
+				System.out.println("====== STANDARD ADMIN CREATED: bob.admin@email.com / admin123 ======");
 			});
 
 			// Ensure a Test Customer exists for immediate testing
