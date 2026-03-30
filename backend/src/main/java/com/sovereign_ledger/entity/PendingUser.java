@@ -58,4 +58,8 @@ public class PendingUser {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = true)
     private User existingUser;
+
+    @Column(name = "email_status")
+    private String emailStatus;
+
 }

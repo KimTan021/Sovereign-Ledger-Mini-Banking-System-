@@ -32,7 +32,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 
                 // Public endpoints (no auth required)
-                .requestMatchers("/auth/login", "/pending-user/apply").permitAll()
+                .requestMatchers("/auth/login", "/pending-user/apply", "/pending-user/verify-otp", "/pending-user/resend-otp").permitAll()
                 .requestMatchers("/error/**").permitAll()
 
                 // Specific Customer Transaction endpoints

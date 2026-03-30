@@ -2,8 +2,10 @@ package com.sovereign_ledger.service.service_implementation;
 
 import com.sovereign_ledger.dto.response.UserResponseDTO;
 import com.sovereign_ledger.entity.User;
+import com.sovereign_ledger.exception.exception_classes.UserNotFoundException;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.UserService;
+import org.springframework.boot.webmvc.autoconfigure.WebMvcProperties;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +19,9 @@ public class UserServiceImplementation implements UserService {
     }
 
     private UserResponseDTO toUserResponseDTO(User user){
+        User userCheck = userRepository.findById(user.getUserId())
+                .orElseThrow(() -> new UserNotFoundException("User not found."));
+
         return new UserResponseDTO(
                 user.getUserId(),
                 user.getFirstName(),

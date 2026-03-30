@@ -26,6 +26,7 @@ public class PendingUserResponseDTO {
     private LocalDateTime requestTime;
     private String requestStatus;
     private LocalDateTime reviewedAt;
+    private String emailStatus;
 
     public static PendingUserResponseDTO fromEntity(PendingUser pendingUser) {
         PendingUserResponseDTO dto = new PendingUserResponseDTO();
@@ -40,6 +41,7 @@ public class PendingUserResponseDTO {
         dto.setRequestTime(pendingUser.getRequestTime());
         dto.setRequestStatus(pendingUser.getRequestStatus());
         dto.setReviewedAt(pendingUser.getReviewedAt());
+        dto.setEmailStatus(pendingUser.getEmailStatus());
         return dto;
     }
 }

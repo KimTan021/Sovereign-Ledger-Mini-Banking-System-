@@ -8,7 +8,9 @@ import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.entity.PendingUser;
 import com.sovereign_ledger.entity.Transaction;
 import com.sovereign_ledger.entity.User;
+import com.sovereign_ledger.exception.exception_classes.AccountNotFoundException;
 import com.sovereign_ledger.exception.exception_classes.InsufficientBalanceException;
+import com.sovereign_ledger.exception.exception_classes.UserNotFoundException;
 import com.sovereign_ledger.repository.AccountRepository;
 import com.sovereign_ledger.repository.PendingUserRepository;
 import com.sovereign_ledger.repository.TransactionRepository;
@@ -76,7 +78,7 @@ public class AdminServiceImplementation implements AdminService {
 
     @Override
     public PaginatedResponseDTO<PendingUserResponseDTO> findAllPendingUsers(Pageable pageable) {
-        Page<PendingUser> pendingPage = pendingUserRepository.findByRequestStatusIgnoreCaseOrderByRequestTimeDesc("Pending", pageable);
+        Page<PendingUser> pendingPage = pendingUserRepository.findByRequestStatusIgnoreCaseOrderByRequestTimeDesc("Pending_Approval", pageable);
         List<PendingUserResponseDTO> content = pendingPage.getContent().stream()
                 .map(PendingUserResponseDTO::fromEntity)
                 .collect(Collectors.toList());
@@ -88,7 +90,7 @@ public class AdminServiceImplementation implements AdminService {
     public UserApprovalResponseDTO approvePendingUser(Integer id) {
         PendingUser pendingUser = pendingUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pending user not found with id: " + id));
-        if (!"Pending".equalsIgnoreCase(pendingUser.getRequestStatus())) {
+        if (!"Pending_Approval".equalsIgnoreCase(pendingUser.getRequestStatus())) {
             throw new IllegalArgumentException("Only pending requests can be approved.");
         }
 
@@ -265,7 +267,7 @@ public class AdminServiceImplementation implements AdminService {
     @Override
     public AdminUserDetailDTO findUserDetail(Integer id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
         List<Account> accounts = accountRepository.findAllAccountsByUserId(id);
         BigDecimal totalBalance = accounts.stream()
                 .map(Account::getAccountBalance)
@@ -290,7 +292,7 @@ public class AdminServiceImplementation implements AdminService {
     public UserResponseDTO updateUserProfile(Integer id, AdminUserProfileUpdateRequestDTO request) {
         validateAdministrativeAction(id, "update profile of");
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
         user.setFirstName(request.getFirstName());
         user.setMiddleName(request.getMiddleName());
         user.setLastName(request.getLastName());
@@ -314,7 +316,7 @@ public class AdminServiceImplementation implements AdminService {
     public UserResponseDTO updateUserStatus(Integer id, String status) {
         validateAdministrativeAction(id, "suspend or reactivate");
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
         user.setUserStatus(normalizeUserStatus(status));
         User savedUser = userRepository.save(user);
         if ("SUSPENDED".equalsIgnoreCase(savedUser.getUserStatus())) {
@@ -346,7 +348,7 @@ public class AdminServiceImplementation implements AdminService {
     public UserResponseDTO updateUserRole(Integer id, String role) {
         validateAdministrativeAction(id, "change the role of");
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
 
         String newRole = normalizeRole(role);
         String currentRole = user.getRole().toLowerCase();
@@ -398,7 +400,7 @@ public class AdminServiceImplementation implements AdminService {
     public AdminPasswordResetResponseDTO resetUserPassword(Integer id, String newPassword) {
         validateAdministrativeAction(id, "reset the password of");
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
         String password = (newPassword == null || newPassword.isBlank())
                 ? UUID.randomUUID().toString().replace("-", "").substring(0, 12)
                 : newPassword;
@@ -420,7 +422,7 @@ public class AdminServiceImplementation implements AdminService {
     @Transactional
     public AdminAccountDTO updateAccountStatus(Integer accountId, String status) {
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + accountId));
         account.setAccountStatus(normalizeAccountStatus(status));
         AdminAccountDTO updatedAccount = toAdminAccountDTO(accountRepository.save(account));
         notificationService.createNotification(
@@ -439,7 +441,7 @@ public class AdminServiceImplementation implements AdminService {
     @Transactional
     public void postAccountAdjustment(Integer accountId, AdminAdjustmentRequestDTO request) {
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + accountId));
         BigDecimal amount = Optional.ofNullable(request.getAmount()).orElse(BigDecimal.ZERO);
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Adjustment amount must be greater than zero.");

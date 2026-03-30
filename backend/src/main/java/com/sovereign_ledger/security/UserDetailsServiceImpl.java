@@ -14,12 +14,13 @@ import java.util.Collections;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
-
-    @Autowired
     private UserRepository userRepository;
 
-    @Override
+    public UserDetailsServiceImpl(UserRepository userRepository){
+        this.userRepository = userRepository;
+    }
 
+    @Override
     // loadUserByUsername - Spring Security method DON'T CHANGE
     public UserDetails loadUserByUsername(String userEmail)
             throws UsernameNotFoundException {

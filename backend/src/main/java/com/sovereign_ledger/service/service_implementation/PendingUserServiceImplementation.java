@@ -2,13 +2,17 @@ package com.sovereign_ledger.service.service_implementation;
 
 import com.sovereign_ledger.dto.request.AdditionalAccountRequestDTO;
 import com.sovereign_ledger.dto.request.PendingUserRequestDTO;
+import com.sovereign_ledger.dto.response.OTPResponseDTO;
 import com.sovereign_ledger.dto.response.PendingUserResponseDTO;
 import com.sovereign_ledger.entity.PendingUser;
 import com.sovereign_ledger.entity.User;
+import com.sovereign_ledger.exception.exception_classes.UserNotFoundException;
 import com.sovereign_ledger.repository.PendingUserRepository;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.NotificationService;
+import com.sovereign_ledger.service.OTPVerificationService;
 import com.sovereign_ledger.service.PendingUserService;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,19 +29,27 @@ public class PendingUserServiceImplementation implements PendingUserService {
     private final PendingUserRepository pendingUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
+    private final OTPVerificationService otpVerificationService;
 
     public PendingUserServiceImplementation(UserRepository userRepository,
                                             PendingUserRepository pendingUserRepository,
                                             PasswordEncoder passwordEncoder,
-                                            NotificationService notificationService){
+                                            NotificationService notificationService,
+                                            OTPVerificationService otpVerificationService){
         this.userRepository=userRepository;
         this.pendingUserRepository=pendingUserRepository;
         this.passwordEncoder=passwordEncoder;
         this.notificationService = notificationService;
+        this.otpVerificationService = otpVerificationService;
     }
 
     @Override
+    @Transactional
     public PendingUserResponseDTO savePendingUser(PendingUserRequestDTO dto){
+
+        if (pendingUserRepository.existsByUserEmailAndRequestStatusIgnoreCase(dto.getUserEmail(), "Pending_OTP")) {
+            throw new RuntimeException("An unverified registration already exists for this email. Please verify your OTP or request a new one.");
+        }
 
         if (pendingUserRepository.existsByUserEmailAndRequestStatusIgnoreCase(dto.getUserEmail(), "Pending")) {
             throw new RuntimeException("Email already registered and pending approval");
@@ -78,23 +90,79 @@ public class PendingUserServiceImplementation implements PendingUserService {
         pendingUser.setUserEmail(dto.getUserEmail());
         pendingUser.setPassword(passwordEncoder.encode(dto.getPassword()));
         pendingUser.setRequestAccountType(dto.getRequestAccountType());
-        pendingUser.setRequestStatus("Pending");
+        pendingUser.setRequestStatus("Pending_OTP");
+        pendingUser.setEmailStatus("Unconfirmed");
         pendingUser.setReviewedAt(null);
         pendingUser.setPhone(dto.getPhone());
         pendingUser.setInitialDeposit(dto.getInitialDeposit());
         pendingUser.setRequestTime(LocalDateTime.now());
+        pendingUser.setEmailStatus("Unconfirmed");
 
-        PendingUserResponseDTO response = PendingUserResponseDTO.fromEntity(pendingUserRepository.save(pendingUser));
+        PendingUser savedPendingUser = pendingUserRepository.save(pendingUser);
+
+        otpVerificationService.generateAndSendOtp(
+                dto.getUserEmail(),
+                "EMAIL_VERIFICATION",
+                savedPendingUser,
+                null
+        );
+
+        notificationService.emitDataChange("pending-users", "admin");
+
+        return PendingUserResponseDTO.fromEntity(savedPendingUser);
+    }
+
+    // Verify OTP
+    @Override
+    @Transactional
+    public OTPResponseDTO verifyOtp(String email, String otpCode) {
+
+        // 1. Verify the OTP
+        OTPResponseDTO response = otpVerificationService.verifyOtp(
+                email,
+                otpCode,
+                "EMAIL_VERIFICATION"
+        );
+
+        // 2. Update pending user status to Pending_Admin_Approval
+        PendingUser pendingUser = pendingUserRepository
+                .findByUserEmailOrderByRequestTimeDesc(email)
+                .stream()
+                .filter(p -> p.getRequestStatus().equalsIgnoreCase("Pending_OTP"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No pending registration found for this email."));
+
+        pendingUser.setRequestStatus("Pending_Approval");
+        pendingUser.setEmailStatus("Confirmed");
+        pendingUserRepository.save(pendingUser);
+
         notificationService.emitDataChange("pending-users", "admin");
         return response;
     }
 
+    // Resend OTP
+    @Override
+    public OTPResponseDTO resendOtp(String email) {
+
+        // Check there is a Pending_OTP registration for this email
+        boolean hasPendingOtp = pendingUserRepository
+                .existsByUserEmailAndRequestStatusIgnoreCase(email, "Pending_OTP");
+
+        if (!hasPendingOtp) {
+            throw new RuntimeException("No pending registration found for this email.");
+        }
+
+        return otpVerificationService.resendOtp(email, "EMAIL_VERIFICATION");
+    }
+
+
+    // Request Additional Account
     @Override
     public PendingUserResponseDTO requestAdditionalAccount (AdditionalAccountRequestDTO dto, String userEmail) {
 
         // Fetch the currently logged in user
         User existingUser = userRepository.findByUserEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (pendingUserRepository.existsByUserEmailAndRequestStatusIgnoreCase(existingUser.getUserEmail(), "Pending")) {
             throw new RuntimeException("You already have a pending account request under review.");
@@ -113,6 +181,7 @@ public class PendingUserServiceImplementation implements PendingUserService {
         pendingUser.setInitialDeposit(dto.getInitialDeposit());
         pendingUser.setRequestTime(LocalDateTime.now());
         pendingUser.setExistingUser(existingUser); // sets the user_id foreign key
+        pendingUser.setEmailStatus("Confirmed");
 
         PendingUser saved = pendingUserRepository.save(pendingUser);
 
@@ -127,6 +196,7 @@ public class PendingUserServiceImplementation implements PendingUserService {
         response.setRequestTime(saved.getRequestTime());
         response.setRequestStatus(saved.getRequestStatus());
         response.setReviewedAt(saved.getReviewedAt());
+        response.setEmailStatus(saved.getEmailStatus());
         notificationService.emitDataChange("pending-users", "admin");
         return response;
     }

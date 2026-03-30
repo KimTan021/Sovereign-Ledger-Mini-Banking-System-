@@ -1,35 +1,44 @@
 package com.sovereign_ledger.service.service_implementation;
 
 import com.sovereign_ledger.dto.response.TransactionResponseDTO;
+import com.sovereign_ledger.dto.response.UserResponseDTO;
 import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.entity.Transaction;
+import com.sovereign_ledger.entity.User;
 import com.sovereign_ledger.exception.exception_classes.AccountNotVerifiedException;
 import com.sovereign_ledger.exception.exception_classes.InsufficientBalanceException;
 import com.sovereign_ledger.repository.TransactionRepository;
+import com.sovereign_ledger.repository.UserRepository;
+import com.sovereign_ledger.service.AccountService;
 import com.sovereign_ledger.service.NotificationService;
 import com.sovereign_ledger.service.TransactionService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TransactionServiceImplementation implements TransactionService {
     private final TransactionRepository transactionRepository;
-    private final AccountServiceImplementation accountServiceImplementation;
+    private final AccountService accountService;
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
     @org.springframework.beans.factory.annotation.Value("${aes.secret-key}")
     private String aesSecretKey;
 
     public TransactionServiceImplementation(
             TransactionRepository transactionRepository,
-            AccountServiceImplementation accountServiceImplementation,
-            NotificationService notificationService){
+            AccountService accountService,
+            NotificationService notificationService,
+            UserRepository userRepository){
         this.transactionRepository = transactionRepository;
-        this.accountServiceImplementation = accountServiceImplementation;
+        this.accountService = accountService;
         this.notificationService = notificationService;
+        this.userRepository=userRepository;
     }
 
     private TransactionResponseDTO toTransactionResponseDTO(Transaction transaction){
@@ -76,6 +85,14 @@ public class TransactionServiceImplementation implements TransactionService {
 
     @Override
     public List<TransactionResponseDTO> findAllUserTransactions(Integer id){
+        User userCheck = userRepository.findById(id).orElse(null);
+
+        String userCurrent = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        if(!userCheck.getUserEmail().equals(userCurrent)){
+            throw new IllegalArgumentException("You do not have permission to view this user's transactions.");
+        }
+
         return transactionRepository.findAllUserTransactions(id)
                 .stream()
                 .map(this::toTransactionResponseDTO)
@@ -167,8 +184,8 @@ public class TransactionServiceImplementation implements TransactionService {
             String logs,
             String transactionDescription
             ) {
-        Account managedSourceAccount = accountServiceImplementation.findAccountEntityById(sourceAccount.getAccountId());
-        Account managedReceivingAccount = accountServiceImplementation.findAccountEntityById(receivingAccount.getAccountId());
+        Account managedSourceAccount = accountService.findAccountEntityById(sourceAccount.getAccountId());
+        Account managedReceivingAccount = accountService.findAccountEntityById(receivingAccount.getAccountId());
         String sourceAccountType = managedSourceAccount.getAccountType();
         String sourceAccountNumber = managedSourceAccount.getAccountNumber();
         String receivingAccountType = managedReceivingAccount.getAccountType();
@@ -239,7 +256,13 @@ public class TransactionServiceImplementation implements TransactionService {
     @Override
     @Transactional
     public void depositToAccount(Integer accountId, BigDecimal transAmount, String transactionDescription) {
-        Account managedAccount = accountServiceImplementation.findAccountEntityById(accountId);
+        Account managedAccount = accountService.findAccountEntityById(accountId);
+
+        String callerEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        if(!managedAccount.getUser().getUserEmail().equals(callerEmail)){
+            throw new IllegalArgumentException("You do not have permission to to transfer funds from this account");
+        }
 
         if (!"Verified".equals(managedAccount.getAccountStatus())) {
             throw new AccountNotVerifiedException("This account is currently unverified. Deposit cannot proceed.");
@@ -268,7 +291,7 @@ public class TransactionServiceImplementation implements TransactionService {
     @Override
     @Transactional
     public void withdrawFromAccount(Integer accountId, BigDecimal transAmount, String transactionDescription) {
-        Account managedAccount = accountServiceImplementation.findAccountEntityById(accountId);
+        Account managedAccount = accountService.findAccountEntityById(accountId);
 
         if (!"Verified".equals(managedAccount.getAccountStatus())) {
             throw new AccountNotVerifiedException("This account is currently unverified. Withdrawal cannot proceed.");
