@@ -28,6 +28,8 @@ export class NotificationService {
   private readonly apiUrl = 'http://localhost:8080/notifications';
 
   private stream: EventSource | null = null;
+  private reconnectTimer: number | null = null;
+  private manualShutdown = false;
   private initialized = false;
   dataVersion = signal(0);
   private readonly dataVersion$ = toObservable(this.dataVersion);
@@ -40,6 +42,8 @@ export class NotificationService {
     if (this.initialized || !this.authService.isAuthenticated()) {
       return;
     }
+    this.manualShutdown = false;
+    this.clearReconnectTimer();
     this.initialized = true;
     if (this.authService.userRole() === 'customer') {
       this.loadNotifications();
@@ -75,6 +79,8 @@ export class NotificationService {
   }
 
   shutdown(): void {
+    this.manualShutdown = true;
+    this.clearReconnectTimer();
     this.stream?.close();
     this.stream = null;
     this.initialized = false;
@@ -86,9 +92,11 @@ export class NotificationService {
   private openStream(): void {
     const token = this.authService.getToken();
     if (!token) {
+      this.initialized = false;
       return;
     }
 
+    this.clearReconnectTimer();
     this.stream?.close();
     this.stream = new EventSource(`${this.apiUrl}/stream?token=${encodeURIComponent(token)}`);
     this.stream.addEventListener('notification', event => {
@@ -115,7 +123,20 @@ export class NotificationService {
       this.stream?.close();
       this.stream = null;
       this.initialized = false;
-      window.setTimeout(() => this.init(), 4000);
+      if (this.manualShutdown || !this.authService.isAuthenticated()) {
+        return;
+      }
+      this.reconnectTimer = window.setTimeout(() => {
+        this.reconnectTimer = null;
+        this.init();
+      }, 4000);
     };
+  }
+
+  private clearReconnectTimer(): void {
+    if (this.reconnectTimer !== null) {
+      window.clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
   }
 }

@@ -5,8 +5,10 @@ import com.sovereign_ledger.entity.User;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.security.JwtUtil;
 import com.sovereign_ledger.service.NotificationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -51,4 +53,12 @@ public class NotificationController {
         }
         return notificationService.registerEmitter(user.getUserId());
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleStreamError(IllegalArgumentException e) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
 }
+
