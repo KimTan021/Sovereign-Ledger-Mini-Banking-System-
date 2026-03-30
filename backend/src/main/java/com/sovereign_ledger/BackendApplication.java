@@ -33,8 +33,9 @@ public class BackendApplication {
 			// Ensure Super Admin exists (Alice)
 			userRepository.findByUserEmail("alice.santos@email.com").ifPresentOrElse(user -> {
 				user.setPassword(encoder.encode("admin123"));
+				user.setRole("super_admin");
 				userRepository.save(user);
-				System.out.println("====== SUPER ADMIN PASSWORD RESET TO 'admin123' ======");
+				System.out.println("====== SUPER ADMIN RESTORATION: alice.santos@email.com / admin123 / super_admin ======");
 			}, () -> {
 				com.sovereign_ledger.entity.User admin = new com.sovereign_ledger.entity.User();
 				admin.setFirstName("Alice");
