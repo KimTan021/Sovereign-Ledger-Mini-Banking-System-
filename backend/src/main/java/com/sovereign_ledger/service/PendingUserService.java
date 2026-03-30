@@ -2,6 +2,7 @@ package com.sovereign_ledger.service;
 
 import com.sovereign_ledger.dto.request.AdditionalAccountRequestDTO;
 import com.sovereign_ledger.dto.request.PendingUserRequestDTO;
+import com.sovereign_ledger.dto.response.OTPResponseDTO;
 import com.sovereign_ledger.dto.response.PendingUserResponseDTO;
 import com.sovereign_ledger.entity.PendingUser;
 
@@ -11,4 +12,7 @@ public interface PendingUserService {
     PendingUserResponseDTO savePendingUser(PendingUserRequestDTO dto);
     PendingUserResponseDTO requestAdditionalAccount (AdditionalAccountRequestDTO dto, String userEmail);
     List<PendingUserResponseDTO> findRequestsForUser(String userEmail);
+
+    OTPResponseDTO verifyOtp (String email, String otpCode);
+    OTPResponseDTO resendOtp (String email);
 }

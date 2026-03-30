@@ -1,7 +1,10 @@
 package com.sovereign_ledger.controller;
 
 import com.sovereign_ledger.dto.request.AdditionalAccountRequestDTO;
+import com.sovereign_ledger.dto.request.OTPResendRequestDTO;
+import com.sovereign_ledger.dto.request.OTPVerifyRequestDTO;
 import com.sovereign_ledger.dto.request.PendingUserRequestDTO;
+import com.sovereign_ledger.dto.response.OTPResponseDTO;
 import com.sovereign_ledger.dto.response.PendingUserResponseDTO;
 import com.sovereign_ledger.entity.PendingUser;
 import com.sovereign_ledger.service.PendingUserService;
@@ -39,6 +42,21 @@ public class PendingUserController {
     @GetMapping("/my-requests")
     public ResponseEntity<List<PendingUserResponseDTO>> findMyRequests(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(pendingUserService.findRequestsForUser(userDetails.getUsername()));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<OTPResponseDTO> verifyOtp(
+            @Valid @RequestBody OTPVerifyRequestDTO request) {
+        return ResponseEntity.ok(pendingUserService.verifyOtp(
+                request.getEmail(),
+                request.getOtpCode()
+        ));
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<OTPResponseDTO> resendOtp(
+            @Valid @RequestBody OTPResendRequestDTO request) {
+        return ResponseEntity.ok(pendingUserService.resendOtp(request.getEmail()));
     }
 
 }
