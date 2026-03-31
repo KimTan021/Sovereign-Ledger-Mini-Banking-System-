@@ -16,6 +16,7 @@ import com.sovereign_ledger.repository.PendingUserRepository;
 import com.sovereign_ledger.repository.TransactionRepository;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.service.AdminService;
+import com.sovereign_ledger.service.EmailService;
 import com.sovereign_ledger.service.NotificationService;
 import com.sovereign_ledger.util.AesEncryptionUtil;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,6 +50,7 @@ public class AdminServiceImplementation implements AdminService {
     private final TransactionRepository transactionRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
     @Value("${aes.secret-key}")
     private String aesSecretKey;
@@ -58,13 +60,15 @@ public class AdminServiceImplementation implements AdminService {
                                       AccountRepository accountRepository,
                                       TransactionRepository transactionRepository,
                                       BCryptPasswordEncoder passwordEncoder,
-                                      NotificationService notificationService) {
+                                      NotificationService notificationService,
+                                      EmailService emailService) {
         this.userRepository = userRepository;
         this.pendingUserRepository = pendingUserRepository;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.passwordEncoder = passwordEncoder;
         this.notificationService = notificationService;
+        this.emailService = emailService;
     }
 
     @Override
@@ -141,6 +145,14 @@ public class AdminServiceImplementation implements AdminService {
                 "Your " + account.getAccountType() + " account request has been approved and the account is ready to use."
         );
 
+        emailService.sendAccountEmail(
+                user.getUserEmail(),
+                user.getFirstName(),
+                account.getAccountType(),
+                rawAccountNumber,
+                "Approved"
+        );
+
         notificationService.emitDataChange("pending-users", "accounts", "users", "notifications", "admin");
 
         UserApprovalResponseDTO response = new UserApprovalResponseDTO();
@@ -184,6 +196,13 @@ public class AdminServiceImplementation implements AdminService {
                             + pendingUser.getRequestTime().toLocalDate() + " was rejected."
             );
         }
+        emailService.sendAccountEmail(
+                pendingUser.getUserEmail(),
+                pendingUser.getFirstName(),
+                pendingUser.getRequestAccountType(),
+                null,       // no account number for rejections
+                "Rejected"
+        );
 
         notificationService.emitDataChange("pending-users", "notifications", "admin");
     }
