@@ -102,19 +102,6 @@ public class TransactionController {
         }
     }
 
-    @PutMapping("/transfer-transaction")
-    public ResponseEntity<String> initiateTransaction(@Valid @RequestBody TransferRequestDTO request){
-
-        transactionService.initiateTransaction(
-                accountService.findAccountEntityById(request.getSourceAccountId()),
-                accountService.findAccountEntityById(request.getReceivingAccountId()),
-                request.getTransAmount(),
-                request.getLogs(),
-                request.getTransactionDescription()
-        );
-        return ResponseEntity.ok("Transaction successful!");
-    }
-
     @PostMapping("/transfer")
     public ResponseEntity<String> initiateTransactionByAccountNumber(@Valid @RequestBody TransferByAccountNumberRequestDTO request){
         logger.info("====== TRANSFER INITIATED ======");

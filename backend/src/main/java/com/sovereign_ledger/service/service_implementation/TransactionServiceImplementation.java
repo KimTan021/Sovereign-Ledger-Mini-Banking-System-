@@ -89,7 +89,11 @@ public class TransactionServiceImplementation implements TransactionService {
 
         String userCurrent = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        if(!userCheck.getUserEmail().equals(userCurrent)){
+        boolean roleCheck = SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+
+        if(!roleCheck && !userCheck.getUserEmail().equals(userCurrent)){
             throw new IllegalArgumentException("You do not have permission to view this user's transactions.");
         }
 
