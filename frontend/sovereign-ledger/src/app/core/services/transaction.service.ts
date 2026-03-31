@@ -93,8 +93,9 @@ export class TransactionService {
   /* Helper to format backend ISO dates neatly with categorization logic */
   private mapBackendToFrontend(beTx: BackendTransactionResponse): Transaction {
     let amt = beTx.transactionAmount;
-    // Map backend type withdrawal to negative amount for frontend logic
-    if (beTx.transactionType && beTx.transactionType.toLowerCase() === 'withdrawal' || beTx.transactionType.toLowerCase() === 'debit') {
+    const txType = (beTx.transactionType || '').toLowerCase();
+    const isOutflow = txType === 'withdrawal' || txType === 'withdraw' || txType === 'debit' || txType === 'internal' || txType === 'transfer';
+    if (isOutflow) {
       amt = -Math.abs(amt);
     }
     
@@ -248,19 +249,39 @@ export class TransactionService {
   }
 
   transferFunds(payload: TransferPayload): Observable<any> {
-    return this.http.post(`${this.apiUrl}/transfer`, payload, { responseType: 'text' });
+    return this.http.post(`${this.apiUrl}/transfer`, payload);
   }
 
   transferBetweenOwnAccounts(payload: InternalTransferPayload): Observable<any> {
-    return this.http.put(`${this.apiUrl}/transfer-transaction`, payload, { responseType: 'text' });
+    // Map frontend payload to TransferRequestDTO
+    const backendPayload = {
+      sourceAccountId: payload.sourceAccountId,
+      receivingAccountId: payload.receivingAccountId,
+      transAmount: payload.transAmount,
+      logs: payload.logs,
+      transactionDescription: payload.transactionDescription
+    };
+    return this.http.post(`${this.apiUrl}/transfer-internal/initiate`, backendPayload);
   }
 
   depositFunds(payload: CashTransactionPayload): Observable<any> {
-    return this.http.post(`${this.apiUrl}/deposit`, payload, { responseType: 'text' });
+    return this.http.post(`${this.apiUrl}/deposit/initiate`, payload);
   }
 
   withdrawFunds(payload: CashTransactionPayload): Observable<any> {
-    return this.http.post(`${this.apiUrl}/withdraw`, payload, { responseType: 'text' });
+    return this.http.post(`${this.apiUrl}/withdraw/initiate`, payload);
+  }
+
+  verifyTransactionOtp(email: string, otpCode: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/verify-otp`, { email, otpCode });
+  }
+
+  resendTransactionOtp(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/resend-otp`, { email });
+  }
+
+  cancelTransactionOtp(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/cancel-otp`, {});
   }
 
   getAdminAuditLog() {

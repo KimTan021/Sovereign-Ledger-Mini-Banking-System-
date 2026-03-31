@@ -6,14 +6,14 @@ import { AccountService, Account } from '../../../core/services/account.service'
 import { TransactionService } from '../../../core/services/transaction.service';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
-
 import { CardComponent } from '../../../shared/components/card/card.component';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
+import { OtpModalComponent } from '../../../shared/components/otp-modal/otp-modal.component';
 
 @Component({
   selector: 'app-transfer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NavbarComponent, FooterComponent, ReactiveFormsModule, CurrencyPipe, CardComponent, CommonModule, BadgeComponent],
+  imports: [NavbarComponent, FooterComponent, ReactiveFormsModule, CurrencyPipe, CardComponent, CommonModule, BadgeComponent, OtpModalComponent],
   templateUrl: './transfer.component.html',
 })
 export class TransferComponent {
@@ -34,6 +34,7 @@ export class TransferComponent {
 
   recipients = toSignal(this.transactionService.getUniqueRecipients(), { initialValue: [] });
   showSuccess = signal(false);
+  showOtpModal = signal(false);
   submitted = signal(false);
 
   @ViewChild('recipientAccountInput') recipientAccountInput!: ElementRef<HTMLInputElement>;
@@ -91,11 +92,7 @@ export class TransferComponent {
 
       this.transactionService.transferFunds(payload).subscribe({
         next: () => {
-          this.showSuccess.set(true);
-          this.transferForm.reset();
-          setTimeout(() => {
-             this.showSuccess.set(false);
-          }, 3000);
+          this.showOtpModal.set(true);
         },
         error: (err) => {
           console.error(err);
@@ -107,6 +104,20 @@ export class TransferComponent {
         }
       });
     }
+  }
+
+  onOtpVerified(): void {
+    this.showOtpModal.set(false);
+    this.showSuccess.set(true);
+    this.transferForm.reset();
+    this.submitted.set(false);
+    setTimeout(() => {
+       this.showSuccess.set(false);
+    }, 5000);
+  }
+
+  onOtpCancelled(): void {
+    this.showOtpModal.set(false);
   }
 
   private normalizeAccountNumber(accountNumber: string): string {

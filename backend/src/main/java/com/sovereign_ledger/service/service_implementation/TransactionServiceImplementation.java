@@ -2,7 +2,6 @@ package com.sovereign_ledger.service.service_implementation;
 
 import com.sovereign_ledger.dto.response.OTPResponseDTO;
 import com.sovereign_ledger.dto.response.TransactionResponseDTO;
-import com.sovereign_ledger.dto.response.UserResponseDTO;
 import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.entity.Transaction;
 import com.sovereign_ledger.entity.User;
@@ -24,7 +23,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class TransactionServiceImplementation implements TransactionService {
@@ -206,7 +204,7 @@ public class TransactionServiceImplementation implements TransactionService {
         Account managedSourceAccount = accountService.findAccountEntityById(sourceAccount.getAccountId());
         Account managedReceivingAccount = accountService.findAccountEntityById(receivingAccount.getAccountId());
 
-        if (managedSourceAccount.getAccountId() == managedReceivingAccount.getAccountId()){
+        if (managedSourceAccount.getAccountId().equals(managedReceivingAccount.getAccountId())) {
             throw new IllegalArgumentException("All accounts involved in this transaction must be unique");
         }
 
@@ -218,43 +216,18 @@ public class TransactionServiceImplementation implements TransactionService {
             throw new InsufficientBalanceException("Your account's balance is insufficient for this transaction.");
         }
 
-        transactionRepository
-                .findTopByAccount_User_UserEmailAndTransactionStatusOrderByTransactionTimeDesc(
-                        userEmail, "Pending_OTP")
-                .ifPresent(t -> {
-                    // Check if associated OTP is expired or locked
-                    otpVerificationRepository
-                            .findByEmailAndOtpPurpose(userEmail, "FUND_TRANSFER")
-                            .ifPresentOrElse(existingOtp -> {
-                                boolean isExpired = LocalDateTime.now().isAfter(existingOtp.getExpiresAt());
-                                boolean isLocked = existingOtp.getAttempts() >= otpMaxAttempts;
-
-                                if (isExpired || isLocked) {
-                                    // Auto-cancel the stale transaction and delete OTP
-                                    t.setTransactionStatus("Cancelled");
-                                    transactionRepository.save(t);
-                                    otpVerificationRepository.delete(existingOtp);
-                                } else {
-                                    throw new RuntimeException(
-                                            "You have a pending transfer awaiting OTP verification.");
-                                }
-                            }, () -> {
-                                // No OTP found but transaction is still Pending_OTP — auto cancel it
-                                t.setTransactionStatus("Cancelled");
-                                transactionRepository.save(t);
-                            });
-                });
+        cleanupPendingOtpTransactions(userEmail);
 
         // ── Create Pending_OTP transaction record ──
         Transaction transaction = new Transaction();
         transaction.setAccount(managedSourceAccount);
-        transaction.setTransactionType("debit");
+        transaction.setTransactionType("transfer");
         transaction.setTransactionAmount(transAmount);
         transaction.setAccountIdDestination(managedReceivingAccount.getAccountId());
-        transaction.setLogs(logs);
         transaction.setTransactionTime(LocalDateTime.now());
         transaction.setTransactionDescription(transactionDescription);
         transaction.setTransactionStatus("Pending_OTP");
+        transaction.setLogs(logs != null ? logs : transactionDescription);
         transaction.setTargetAccountNumber(managedReceivingAccount.getAccountNumber());
         transaction.setTargetAccountName(
                 managedReceivingAccount.getUser().getFirstName() + " " +
@@ -262,148 +235,222 @@ public class TransactionServiceImplementation implements TransactionService {
 
         Transaction savedTransaction = transactionRepository.save(transaction);
 
-        // ── Generate and send OTP ──
-        return otpVerificationService.generateAndSendOtp(
-                userEmail,
-                "FUND_TRANSFER",
-                null,
-                savedTransaction
-        );
+        return otpVerificationService.generateAndSendOtp(userEmail, "TRANSACTION_OTP", null, savedTransaction);
     }
-
-    // Verify Transfer OTP
 
     @Override
     @Transactional
-    public OTPResponseDTO verifyTransferOtp(String email, String otpCode) {
+    public OTPResponseDTO initiateDeposit(Integer accountId, BigDecimal transAmount, String transactionDescription, String userEmail) {
+        Account managedAccount = accountService.findAccountEntityById(accountId);
+        if (!"Verified".equals(managedAccount.getAccountStatus())) {
+            throw new AccountNotVerifiedException("This account is currently unverified. Deposit cannot proceed.");
+        }
 
+        cleanupPendingOtpTransactions(userEmail);
+
+        Transaction transaction = new Transaction();
+        transaction.setAccount(managedAccount);
+        transaction.setTransactionType("deposit");
+        transaction.setTransactionAmount(transAmount);
+        transaction.setTransactionTime(LocalDateTime.now());
+        transaction.setTransactionDescription(transactionDescription);
+        transaction.setTransactionStatus("Pending_OTP");
+        transaction.setLogs(transactionDescription != null ? transactionDescription : "Initiating deposit");
+        
+        Transaction savedTransaction = transactionRepository.save(transaction);
+        return otpVerificationService.generateAndSendOtp(userEmail, "TRANSACTION_OTP", null, savedTransaction);
+    }
+
+    @Override
+    @Transactional
+    public OTPResponseDTO initiateWithdrawal(Integer accountId, BigDecimal transAmount, String transactionDescription, String userEmail) {
+        Account managedAccount = accountService.findAccountEntityById(accountId);
+        if (!"Verified".equals(managedAccount.getAccountStatus())) {
+            throw new AccountNotVerifiedException("This account is currently unverified. Withdrawal cannot proceed.");
+        }
+        if (managedAccount.getAccountBalance().compareTo(transAmount) < 0) {
+            throw new InsufficientBalanceException("Your account's balance is insufficient for this withdrawal.");
+        }
+
+        cleanupPendingOtpTransactions(userEmail);
+
+        Transaction transaction = new Transaction();
+        transaction.setAccount(managedAccount);
+        transaction.setTransactionType("withdraw");
+        transaction.setTransactionAmount(transAmount);
+        transaction.setTransactionTime(LocalDateTime.now());
+        transaction.setTransactionDescription(transactionDescription);
+        transaction.setTransactionStatus("Pending_OTP");
+        transaction.setLogs(transactionDescription != null ? transactionDescription : "Initiating withdrawal");
+
+        Transaction savedTransaction = transactionRepository.save(transaction);
+        return otpVerificationService.generateAndSendOtp(userEmail, "TRANSACTION_OTP", null, savedTransaction);
+    }
+
+    @Override
+    @Transactional
+    public OTPResponseDTO initiateInternalTransfer(Integer sourceAccountId, Integer receivingAccountId, BigDecimal transAmount, String logs, String transactionDescription, String userEmail) {
+        Account managedSourceAccount = accountService.findAccountEntityById(sourceAccountId);
+        Account managedReceivingAccount = accountService.findAccountEntityById(receivingAccountId);
+
+        if (managedSourceAccount.getAccountId().equals(managedReceivingAccount.getAccountId())) {
+            throw new IllegalArgumentException("Internal transfers require two different accounts.");
+        }
+        if (!"Verified".equals(managedSourceAccount.getAccountStatus()) || !"Verified".equals(managedReceivingAccount.getAccountStatus())) {
+            throw new AccountNotVerifiedException("Both accounts must be verified for internal transfers.");
+        }
+        if (managedSourceAccount.getAccountBalance().compareTo(transAmount) < 0) {
+            throw new InsufficientBalanceException("Insufficient balance in the source account.");
+        }
+
+        cleanupPendingOtpTransactions(userEmail);
+
+        Transaction transaction = new Transaction();
+        transaction.setAccount(managedSourceAccount);
+        transaction.setTransactionType("internal");
+        transaction.setTransactionAmount(transAmount);
+        transaction.setAccountIdDestination(managedReceivingAccount.getAccountId());
+        transaction.setLogs(logs != null ? logs : transactionDescription);
+        transaction.setTransactionTime(LocalDateTime.now());
+        transaction.setTransactionDescription(transactionDescription);
+        transaction.setTransactionStatus("Pending_OTP");
+
+        Transaction savedTransaction = transactionRepository.save(transaction);
+        return otpVerificationService.generateAndSendOtp(userEmail, "TRANSACTION_OTP", null, savedTransaction);
+    }
+
+    private void cleanupPendingOtpTransactions(String userEmail) {
+        transactionRepository
+                .findTopByAccount_User_UserEmailAndTransactionStatusOrderByTransactionTimeDesc(
+                        userEmail, "Pending_OTP")
+                .ifPresent(t -> {
+                    otpVerificationRepository
+                            .findByEmailAndOtpPurpose(userEmail, "TRANSACTION_OTP")
+                            .ifPresentOrElse(existingOtp -> {
+                                boolean isExpired = LocalDateTime.now().isAfter(existingOtp.getExpiresAt());
+                                boolean isLocked = existingOtp.getAttempts() >= otpMaxAttempts;
+                                if (isExpired || isLocked) {
+                                    t.setTransactionStatus("Cancelled");
+                                    transactionRepository.save(t);
+                                    otpVerificationRepository.delete(existingOtp);
+                                } else {
+                                    throw new RuntimeException("You have a pending transaction awaiting OTP verification.");
+                                }
+                            }, () -> {
+                                t.setTransactionStatus("Cancelled");
+                                transactionRepository.save(t);
+                            });
+                });
+    }
+
+    @Override
+    @Transactional
+    public OTPResponseDTO verifyTransactionOtp(String email, String otpCode) {
         // 1. Verify OTP
-        OTPResponseDTO response = otpVerificationService.verifyOtp(
-                email, otpCode, "FUND_TRANSFER");
+        OTPResponseDTO response = otpVerificationService.verifyOtp(email, otpCode, "TRANSACTION_OTP");
 
-        // 2. Find the Pending_OTP transaction
+        // 2. Find Pending Transaction
         Transaction pendingTransaction = transactionRepository
                 .findTopByAccount_User_UserEmailAndTransactionStatusOrderByTransactionTimeDesc(
                         email, "Pending_OTP")
-                .orElseThrow(() -> new RuntimeException(
-                        "No pending transfer found."));
+                .orElseThrow(() -> new RuntimeException("No pending transaction found."));
 
-        Account managedSourceAccount = accountService.findAccountEntityById(
-                pendingTransaction.getAccount().getAccountId());
-        Account managedReceivingAccount = accountService.findAccountEntityById(
-                pendingTransaction.getAccountIdDestination());
-
-        String sourceAccountType = managedSourceAccount.getAccountType();
-        String receivingAccountType = managedReceivingAccount.getAccountType();
-        Integer receivingUserId = managedReceivingAccount.getUser().getUserId();
-        String sourceAccountOwnerName = managedSourceAccount.getUser().getFirstName() + " " +
-                managedSourceAccount.getUser().getLastName();
-        String receivingAccountName = managedReceivingAccount.getUser().getFirstName() + " " +
-                managedReceivingAccount.getUser().getLastName();
-        BigDecimal transAmount = pendingTransaction.getTransactionAmount();
-
-        // 3. Execute debit
-        int affectedAccounts = transactionRepository.debitAccount(
-                managedSourceAccount.getAccountId(), transAmount);
-        if (affectedAccounts == 0) {
-            throw new InsufficientBalanceException(
-                    "Your account's balance is insufficient for this transaction.");
+        // 3. Process based on type
+        String type = pendingTransaction.getTransactionType().toLowerCase();
+        switch (type) {
+            case "debit" -> processExternalTransfer(pendingTransaction);
+            case "deposit" -> {
+                depositToAccount(pendingTransaction.getAccount().getAccountId(),
+                        pendingTransaction.getTransactionAmount(),
+                        pendingTransaction.getTransactionDescription());
+                pendingTransaction.setTransactionStatus("Completed");
+                transactionRepository.save(pendingTransaction);
+            }
+            case "withdraw" -> {
+                withdrawFromAccount(pendingTransaction.getAccount().getAccountId(),
+                        pendingTransaction.getTransactionAmount(),
+                        pendingTransaction.getTransactionDescription());
+                pendingTransaction.setTransactionStatus("Completed");
+                transactionRepository.save(pendingTransaction);
+            }
+            case "internal" -> processInternalTransfer(pendingTransaction);
+            default -> throw new RuntimeException("Unsupported transaction type: " + type);
         }
-
-        // 4. Execute credit
-        transactionRepository.creditAccount(
-                managedReceivingAccount.getAccountId(), transAmount);
-
-        // 5. Decrypt account numbers for logs
-        String sourceAccRaw = managedSourceAccount.getAccountNumber();
-        String receivingAccRaw = managedReceivingAccount.getAccountNumber();
-        try {
-            sourceAccRaw = com.sovereign_ledger.util.AesEncryptionUtil.decrypt(
-                    sourceAccRaw, aesSecretKey);
-            receivingAccRaw = com.sovereign_ledger.util.AesEncryptionUtil.decrypt(
-                    receivingAccRaw, aesSecretKey);
-        } catch (Exception e) { }
-
-        // 6. Update Pending_OTP transaction to Completed (debit side)
-        pendingTransaction.setTransactionStatus("Completed");
-        pendingTransaction.setLogs("Transfer from " + sourceAccountType + " account " +
-                sourceAccRaw + " to " + receivingAccountType + " account " + receivingAccRaw);
-        transactionRepository.save(pendingTransaction);
-
-        // 7. Create credit transaction log for receiving account
-        transactionRepository.insertNewTransactionLog(
-                managedReceivingAccount.getAccountId(),
-                "credit",
-                transAmount,
-                null,
-                "Transfer received from " + sourceAccountType + " account " + sourceAccRaw,
-                pendingTransaction.getTransactionDescription(),
-                "Completed",
-                null,
-                null
-        );
-
-        // 8. Send notification
-        Transaction latestIncomingTransaction = transactionRepository
-                .findTopByAccount_AccountIdOrderByTransactionTimeDesc(
-                        managedReceivingAccount.getAccountId())
-                .orElse(null);
-
-        notificationService.createNotification(
-                receivingUserId,
-                managedReceivingAccount.getAccountId(),
-                latestIncomingTransaction == null ? null :
-                        latestIncomingTransaction.getTransactionId(),
-                "incoming-transfer",
-                "Incoming transfer received",
-                "You received PHP " + transAmount + " in your " + receivingAccountType +
-                        " account from " + sourceAccountOwnerName + "."
-        );
-
-        notificationService.emitDataChange("accounts", "transactions", "notifications", "admin");
 
         return response;
     }
 
-    // Resend Transfer OTP
+    private void processExternalTransfer(Transaction pendingTransaction) {
+        Account managedSourceAccount = accountService.findAccountEntityById(pendingTransaction.getAccount().getAccountId());
+        Account managedReceivingAccount = accountService.findAccountEntityById(pendingTransaction.getAccountIdDestination());
+        BigDecimal transAmount = pendingTransaction.getTransactionAmount();
+
+        if (transactionRepository.debitAccount(managedSourceAccount.getAccountId(), transAmount) == 0) {
+            throw new InsufficientBalanceException("Insufficient balance.");
+        }
+        transactionRepository.creditAccount(managedReceivingAccount.getAccountId(), transAmount);
+
+        pendingTransaction.setTransactionStatus("Completed");
+        transactionRepository.save(pendingTransaction);
+
+        // Credit log for destination
+        transactionRepository.insertNewTransactionLog(
+                managedReceivingAccount.getAccountId(), "credit", transAmount, null,
+                "Transfer received from " + managedSourceAccount.getAccountType() + " account",
+                pendingTransaction.getTransactionDescription(), "Completed", null, null
+        );
+
+        notificationService.createNotification(
+                managedReceivingAccount.getUser().getUserId(),
+                managedReceivingAccount.getAccountId(),
+                null, "incoming-transfer", "Incoming transfer received",
+                "You received PHP " + transAmount + " in your " + managedReceivingAccount.getAccountType() + " account."
+        );
+        notificationService.emitDataChange("accounts", "transactions", "notifications", "admin");
+    }
+
+    private void processInternalTransfer(Transaction pendingTransaction) {
+        Account managedSourceAccount = accountService.findAccountEntityById(pendingTransaction.getAccount().getAccountId());
+        Account managedReceivingAccount = accountService.findAccountEntityById(pendingTransaction.getAccountIdDestination());
+        BigDecimal transAmount = pendingTransaction.getTransactionAmount();
+
+        if (transactionRepository.debitAccount(managedSourceAccount.getAccountId(), transAmount) == 0) {
+            throw new InsufficientBalanceException("Insufficient balance.");
+        }
+        transactionRepository.creditAccount(managedReceivingAccount.getAccountId(), transAmount);
+
+        pendingTransaction.setTransactionStatus("Completed");
+        transactionRepository.save(pendingTransaction);
+
+        // Credit log for destination
+        transactionRepository.insertNewTransactionLog(
+                managedReceivingAccount.getAccountId(), "credit", transAmount, null,
+                "Internal transfer from your " + managedSourceAccount.getAccountType() + " account",
+                pendingTransaction.getTransactionDescription(), "Completed", null, null
+        );
+        notificationService.emitDataChange("accounts", "transactions", "admin");
+    }
 
     @Override
-    public OTPResponseDTO resendTransferOtp(String email) {
-
-        // Check there is a Pending_OTP transaction for this user
-        Transaction pendingTransaction = transactionRepository
-                .findTopByAccount_User_UserEmailAndTransactionStatusOrderByTransactionTimeDesc(
-                        email, "Pending_OTP")
-                .orElseThrow(() -> new RuntimeException(
-                        "No pending transfer found for this email."));
-
-        // Delegate to OTP service — reuses existing resend logic
-        return otpVerificationService.resendOtp(email, "FUND_TRANSFER");
+    public OTPResponseDTO resendTransactionOtp(String email) {
+        transactionRepository
+                .findTopByAccount_User_UserEmailAndTransactionStatusOrderByTransactionTimeDesc(email, "Pending_OTP")
+                .orElseThrow(() -> new RuntimeException("No pending transaction found for this email."));
+        return otpVerificationService.resendOtp(email, "TRANSACTION_OTP");
     }
 
     @Override
     @Transactional
-    public Map<String, String> cancelTransferOtp(String email) {
-
-        // 1. Find the Pending_OTP transaction
+    public Map<String, String> cancelTransactionOtp(String email) {
         Transaction pendingTransaction = transactionRepository
-                .findTopByAccount_User_UserEmailAndTransactionStatusOrderByTransactionTimeDesc(
-                        email, "Pending_OTP")
-                .orElseThrow(() -> new RuntimeException(
-                        "No pending transfer found for this email."));
+                .findTopByAccount_User_UserEmailAndTransactionStatusOrderByTransactionTimeDesc(email, "Pending_OTP")
+                .orElseThrow(() -> new RuntimeException("No pending transaction found for this email."));
 
-        // 2. Cancel the transaction
         pendingTransaction.setTransactionStatus("Cancelled");
         transactionRepository.save(pendingTransaction);
+        otpVerificationRepository.deleteByEmailAndOtpPurpose(email, "TRANSACTION_OTP");
 
-        // 3. Delete the OTP row
-        otpVerificationRepository.deleteByEmailAndOtpPurpose(email, "FUND_TRANSFER");
-
-        return Map.of(
-                "message", "Transaction cancelled successfully",
-                "status", "Cancelled"
-        );
-
+        return Map.of("message", "Transaction cancelled successfully", "status", "Cancelled");
     }
 
     @Override

@@ -10,6 +10,7 @@ export interface User {
   identifier: string;
   name: string;
   role: UserRole;
+  userEmail: string;
   token?: string;
   userId?: number;
 }
@@ -71,7 +72,8 @@ export class AuthService {
           name: response.userName,
           role: frontendRole,
           token: response.token,
-          userId: response.userId
+          userId: response.userId,
+          userEmail: response.userEmail
         };
         
         this.currentUser.set(user);

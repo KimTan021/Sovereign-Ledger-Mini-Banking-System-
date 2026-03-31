@@ -3,13 +3,10 @@ package com.sovereign_ledger.controller;
 import com.sovereign_ledger.dto.request.*;
 import com.sovereign_ledger.dto.response.OTPResponseDTO;
 import com.sovereign_ledger.dto.response.TransactionResponseDTO;
-import com.sovereign_ledger.entity.Account;
 import com.sovereign_ledger.entity.Transaction;
 import com.sovereign_ledger.service.AccountService;
 import com.sovereign_ledger.service.TransactionService;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,7 +20,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/transactions")
 public class TransactionController {
-    private static final Logger logger = LoggerFactory.getLogger(TransactionController.class);
     private final TransactionService transactionService;
     private final AccountService accountService;
 
@@ -104,15 +100,8 @@ public class TransactionController {
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<OTPResponseDTO> initiateTransactionByAccountNumber(@Valid @RequestBody TransferByAccountNumberRequestDTO request){
-        logger.info("====== TRANSFER INITIATED ======");
-        logger.info("Source Account ID in request: {}", request.getSourceAccountId());
-        logger.info("Target Account Number: {}", request.getTargetAccountNumber());
-        logger.info("Amount: {}", request.getTransAmount());
-
-        String userEmail = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-
+    public ResponseEntity<OTPResponseDTO> initiateExternalTransfer(@Valid @RequestBody TransferByAccountNumberRequestDTO request){
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(transactionService.initiateTransaction(
                 accountService.findAccountEntityById(request.getSourceAccountId()),
                 accountService.findAccountEntityByAccountNumberRaw(request.getTargetAccountNumber()),
@@ -123,45 +112,78 @@ public class TransactionController {
         ));
     }
 
-    @PostMapping("/verify-transfer-otp")
-    public ResponseEntity<OTPResponseDTO> verifyTransferOtp(
+    @PostMapping("/transfer-internal/initiate")
+    public ResponseEntity<OTPResponseDTO> initiateInternalTransfer(@Valid @RequestBody TransferRequestDTO request) {
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(transactionService.initiateInternalTransfer(
+                request.getSourceAccountId(),
+                request.getReceivingAccountId(),
+                request.getTransAmount(),
+                request.getLogs(),
+                request.getTransactionDescription(),
+                userEmail
+        ));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<OTPResponseDTO> verifyTransactionOtp(
             @Valid @RequestBody OTPVerifyRequestDTO request) {
-        return ResponseEntity.ok(transactionService.verifyTransferOtp(
+        return ResponseEntity.ok(transactionService.verifyTransactionOtp(
                 request.getEmail(),
                 request.getOtpCode()
         ));
     }
 
-    @PostMapping("/resend-transfer-otp")
-    public ResponseEntity<OTPResponseDTO> resendTransferOtp(
+    @PostMapping("/resend-otp")
+    public ResponseEntity<OTPResponseDTO> resendTransactionOtp(
             @Valid @RequestBody OTPResendRequestDTO request) {
-        return ResponseEntity.ok(transactionService.resendTransferOtp(request.getEmail()));
+        return ResponseEntity.ok(transactionService.resendTransactionOtp(request.getEmail()));
+    }
+
+    @PostMapping("/cancel-otp")
+    public ResponseEntity<Map<String, String>> cancelTransactionOtp(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(transactionService.cancelTransactionOtp(userDetails.getUsername()));
+    }
+
+    @PostMapping("/deposit/initiate")
+    public ResponseEntity<OTPResponseDTO> initiateDeposit(@Valid @RequestBody CashTransactionRequestDTO request) {
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(transactionService.initiateDeposit(
+                request.getAccountId(),
+                request.getTransAmount(),
+                request.getDescription(),
+                userEmail
+        ));
+    }
+
+    @PostMapping("/withdraw/initiate")
+    public ResponseEntity<OTPResponseDTO> initiateWithdrawal(@Valid @RequestBody CashTransactionRequestDTO request) {
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(transactionService.initiateWithdrawal(
+                request.getAccountId(),
+                request.getTransAmount(),
+                request.getDescription(),
+                userEmail
+        ));
+    }
+
+    // Keep legacy verify/resend/cancel for a short transition period but point to new methods
+    @PostMapping("/verify-transfer-otp")
+    @Deprecated
+    public ResponseEntity<OTPResponseDTO> verifyTransferOtp(@Valid @RequestBody OTPVerifyRequestDTO request) {
+        return verifyTransactionOtp(request);
+    }
+
+    @PostMapping("/resend-transfer-otp")
+    @Deprecated
+    public ResponseEntity<OTPResponseDTO> resendTransferOtp(@Valid @RequestBody OTPResendRequestDTO request) {
+        return resendTransactionOtp(request);
     }
 
     @PostMapping("/cancel-transfer-otp")
-    public ResponseEntity<Map<String, String>> cancelTransferOtp(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        Map<String, String> response = transactionService.cancelTransferOtp(userDetails.getUsername());
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/deposit")
-    public ResponseEntity<String> depositToAccount(@Valid @RequestBody CashTransactionRequestDTO request) {
-        transactionService.depositToAccount(
-                request.getAccountId(),
-                request.getTransAmount(),
-                request.getDescription()
-        );
-        return ResponseEntity.ok("Deposit posted successfully.");
-    }
-
-    @PostMapping("/withdraw")
-    public ResponseEntity<String> withdrawFromAccount(@Valid @RequestBody CashTransactionRequestDTO request) {
-        transactionService.withdrawFromAccount(
-                request.getAccountId(),
-                request.getTransAmount(),
-                request.getDescription()
-        );
-        return ResponseEntity.ok("Withdrawal posted successfully.");
+    @Deprecated
+    public ResponseEntity<Map<String, String>> cancelTransferOtp(@AuthenticationPrincipal UserDetails userDetails) {
+        return cancelTransactionOtp(userDetails);
     }
 }

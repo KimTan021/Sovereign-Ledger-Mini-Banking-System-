@@ -54,14 +54,34 @@ public interface TransactionService {
             String transactionDescription,
             String userEmail);
 
-    OTPResponseDTO verifyTransferOtp(
+    OTPResponseDTO initiateDeposit(
+            Integer accountId,
+            BigDecimal transAmount,
+            String transactionDescription,
+            String userEmail);
+
+    OTPResponseDTO initiateWithdrawal(
+            Integer accountId,
+            BigDecimal transAmount,
+            String transactionDescription,
+            String userEmail);
+
+    OTPResponseDTO initiateInternalTransfer(
+            Integer sourceAccountId,
+            Integer receivingAccountId,
+            BigDecimal transAmount,
+            String logs,
+            String transactionDescription,
+            String userEmail);
+
+    OTPResponseDTO verifyTransactionOtp(
             String email,
             String otpCode);
 
-    OTPResponseDTO resendTransferOtp(
+    OTPResponseDTO resendTransactionOtp(
             String email);
 
-    Map<String, String> cancelTransferOtp(
+    Map<String, String> cancelTransactionOtp(
             String email);
 
     void depositToAccount(

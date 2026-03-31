@@ -10,10 +10,11 @@ import { CardComponent } from '../../../shared/components/card/card.component';
 import { AccountService } from '../../../core/services/account.service';
 import { TransactionService } from '../../../core/services/transaction.service';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
+import { OtpModalComponent } from '../../../shared/components/otp-modal/otp-modal.component';
 
 @Component({
   selector: 'app-banking',  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, RouterLink, NavbarComponent, FooterComponent, CardComponent, BadgeComponent],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, RouterLink, NavbarComponent, FooterComponent, CardComponent, BadgeComponent, OtpModalComponent],
   templateUrl: './banking.component.html',
 })
 export class BankingComponent {
@@ -26,6 +27,8 @@ export class BankingComponent {
   actionError = signal<string | null>(null);
   actionSuccess = signal<string | null>(null);
   isSubmitting = signal(false);
+  showOtpModal = signal(false);
+  pendingSuccessMessage = signal<string | null>(null);
   depositSubmitted = signal(false);
   withdrawSubmitted = signal(false);
   internalSubmitted = signal(false);
@@ -218,7 +221,8 @@ export class BankingComponent {
     request.subscribe({
       next: () => {
         this.isSubmitting.set(false);
-        this.actionSuccess.set(successMessage);
+        this.pendingSuccessMessage.set(successMessage);
+        this.showOtpModal.set(true);
       },
       error: (err: any) => {
         this.isSubmitting.set(false);
@@ -229,6 +233,27 @@ export class BankingComponent {
         this.actionError.set(backendMessage);
       }
     });
+  }
+
+  onOtpVerified(): void {
+    this.showOtpModal.set(false);
+    this.actionSuccess.set(this.pendingSuccessMessage());
+    this.pendingSuccessMessage.set(null);
+    
+    // Reset forms
+    this.depositForm.reset({ amount: 1000, description: 'Branch cash deposit' });
+    this.withdrawForm.reset({ amount: 500, description: 'ATM cash withdrawal' });
+    this.internalTransferForm.reset({ amount: 1000, description: 'Internal portfolio rebalance' });
+    this.depositSubmitted.set(false);
+    this.withdrawSubmitted.set(false);
+    this.internalSubmitted.set(false);
+
+    setTimeout(() => this.actionSuccess.set(null), 5000);
+  }
+
+  onOtpCancelled(): void {
+    this.showOtpModal.set(false);
+    this.pendingSuccessMessage.set(null);
   }
 
   isEligibleAccount(accountId: string | null): boolean {
