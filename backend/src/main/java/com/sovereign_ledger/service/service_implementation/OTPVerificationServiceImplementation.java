@@ -71,6 +71,15 @@ public class OTPVerificationServiceImplementation implements OTPVerificationServ
     public OTPResponseDTO generateAndSendOtp(String email, String purpose,
                                              PendingUser pendingUser, Transaction transaction) {
 
+        otpVerificationRepository.findByEmailAndOtpPurpose(email, purpose)
+                .ifPresent(existingOtp -> {
+                    LocalDateTime cooldownExpiry = existingOtp.getCreatedAt()
+                            .plusMinutes(otpResendCooldownMinutes);
+                    if (LocalDateTime.now().isBefore(cooldownExpiry)) {
+                        throw new RuntimeException(
+                                "Please wait before requesting a new OTP");
+                    }
+                });
         // Delete any existing OTP for this email + purpose
         otpVerificationRepository.deleteByEmailAndOtpPurpose(email, purpose);
 
@@ -166,7 +175,7 @@ public class OTPVerificationServiceImplementation implements OTPVerificationServ
         LocalDateTime cooldownExpiry = existingOtp.getCreatedAt()
                 .plusMinutes(otpResendCooldownMinutes);
         if (LocalDateTime.now().isBefore(cooldownExpiry)) {
-            throw new RuntimeException("Please wait before requesting a new OTP");
+            throw new RuntimeException("Please wait 1 minute before requesting a new OTP");
         }
 
         // Reuse same pendingUser/transaction reference
@@ -175,13 +184,6 @@ public class OTPVerificationServiceImplementation implements OTPVerificationServ
 
         // Generate and send fresh OTP
         return generateAndSendOtp(email, purpose, pendingUser, transaction);
-    }
-
-    // OTP table cleanup
-
-    @Transactional
-    public void cleanUpExpiredOtps() {
-        otpVerificationRepository.deleteByExpiresAtBefore(LocalDateTime.now());
     }
 
     // Generate 6-digit OTP

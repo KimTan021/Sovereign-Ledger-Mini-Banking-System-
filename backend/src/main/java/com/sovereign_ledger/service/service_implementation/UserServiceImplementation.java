@@ -50,6 +50,11 @@ public class UserServiceImplementation implements UserService {
         return toUserResponseDTO(user);
     }
 
+    public User findUserByEmail(String userEmail) {
+        return userRepository.findByUserEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
     @Override
     public UserResponseDTO saveUser(User user){
 

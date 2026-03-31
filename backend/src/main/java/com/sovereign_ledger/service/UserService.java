@@ -9,6 +9,7 @@ import java.util.List;
 public interface UserService {
     List<UserResponseDTO> findAllUsers();
     UserResponseDTO findUserById(Integer id);
+    User findUserByEmail(String userEmail);
     UserResponseDTO saveUser(User user);
     void deleteUser(Integer id);
 }

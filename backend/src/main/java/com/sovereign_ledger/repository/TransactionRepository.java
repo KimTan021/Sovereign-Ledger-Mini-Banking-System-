@@ -151,4 +151,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
     List<Transaction> findAllByOrderByTransactionTimeDesc();
 
     Optional<Transaction> findTopByAccount_AccountIdOrderByTransactionTimeDesc(Integer accountId);
+
+    // Find recent Pending_OTP for logged in user
+    Optional<Transaction> findTopByAccount_User_UserEmailAndTransactionStatusOrderByTransactionTimeDesc(
+            String userEmail, String transactionStatus);
 }
