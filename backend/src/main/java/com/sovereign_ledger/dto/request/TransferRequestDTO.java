@@ -1,7 +1,8 @@
 package com.sovereign_ledger.dto.request;
 
-import com.sovereign_ledger.entity.Account;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -25,6 +26,8 @@ public class TransferRequestDTO {
 
     @NotNull(message = "Transfer amount is required.")
     @DecimalMin(value = "0.01", inclusive = true, message = "Transfer amount must be greater than zero.")
+    @DecimalMax(value = "99999999999999.99", message = "Transfer amount exceeds institutional limit.")
+    @Digits(integer = 14, fraction = 2, message = "Transfer amount format is invalid.")
     private BigDecimal transAmount;
 
     @NotBlank(message = "Transfer log is required.")

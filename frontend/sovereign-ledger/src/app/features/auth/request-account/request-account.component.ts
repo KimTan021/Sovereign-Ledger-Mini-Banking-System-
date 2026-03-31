@@ -7,6 +7,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { CustomerService } from '../../../core/services/customer.service';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 
 @Component({
@@ -20,17 +21,28 @@ export class RequestAccountComponent {
   private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
   private readonly customerService = inject(CustomerService);
+  private readonly route = inject(ActivatedRoute);
   
   isLoggedIn = this.authService.isAuthenticated;
   pendingRequests = toSignal(this.isLoggedIn() ? this.customerService.getPendingRequests() : of([]), { initialValue: [] });
   activePendingRequestCount = computed(() =>
     this.pendingRequests().filter(request => request.requestStatus?.toLowerCase() === 'pending').length
   );
+  isLimitReached = computed(() => (this.requestForm.get('initialDeposit')?.value ?? 0) >= 99999999999999.99);
 
   showSuccess = signal(false);
   isSubmitting = signal(false);
   errorMessage = signal<string | null>(null);
+  isUnverifiedExists = signal(false);
   submitted = signal(false);
+
+  // OTP State
+  isVerifyingOtp = signal(false);
+  otpCode = signal('');
+  registrationEmail = signal('');
+  isOtpVerifying = signal(false);
+  otpErrorMessage = signal<string | null>(null);
+  otpSuccessMessage = signal<string | null>(null);
 
   private readonly apiUrl = 'http://localhost:8080/pending-user';
 
@@ -42,7 +54,7 @@ export class RequestAccountComponent {
     password: [''],
     phone: [''],
     requestAccountType: ['savings', Validators.required],
-    initialDeposit: [1000, [Validators.required, Validators.min(1000)]],
+    initialDeposit: [1000, [Validators.required, Validators.min(1000), Validators.max(99999999999999.99)]],
     terms: [false, Validators.requiredTrue]
   });
 
@@ -61,6 +73,13 @@ export class RequestAccountComponent {
       this.requestForm.get('userEmail')?.updateValueAndValidity();
       this.requestForm.get('password')?.updateValueAndValidity();
       this.requestForm.get('phone')?.updateValueAndValidity();
+    }
+
+    // Check for email in query params to resume verification
+    const emailParam = this.route.snapshot.queryParamMap.get('email');
+    if (emailParam) {
+      this.registrationEmail.set(emailParam);
+      this.isVerifyingOtp.set(true);
     }
   }
 
@@ -87,24 +106,111 @@ export class RequestAccountComponent {
       .subscribe({
         next: () => {
           this.isSubmitting.set(false);
-          this.showSuccess.set(true);
+          if (!this.isLoggedIn()) {
+            this.registrationEmail.set(this.requestForm.getRawValue().userEmail);
+            this.isVerifyingOtp.set(true);
+          } else {
+            this.showSuccess.set(true);
+          }
         },
         error: (err) => {
           this.isSubmitting.set(false);
+          const rawMessage = err.error?.message || 'Submission failed. Please check your data.';
           this.applyServerFieldErrors(err.error?.fieldErrors);
-          this.errorMessage.set(err.error?.message || 'Submission failed. Please check your data.');
+          
+          const isUnverified = rawMessage.toLowerCase().includes('unverified registration already exists');
+          this.isUnverifiedExists.set(isUnverified);
+          
+          this.errorMessage.set(rawMessage);
         }
       });
   }
 
   resetForm(): void {
     this.showSuccess.set(false);
+    this.isVerifyingOtp.set(false);
+    this.otpCode.set('');
     this.submitted.set(false);
     this.requestForm.reset({
       requestAccountType: 'savings',
       initialDeposit: 1000,
       terms: false
     });
+  }
+
+  onVerifyOtp(): void {
+    const code = this.otpCode().trim();
+    if (!code || this.isOtpVerifying()) {
+      this.otpErrorMessage.set('Electronic authorization code is required.');
+      return;
+    }
+    
+    this.isOtpVerifying.set(true);
+    this.otpErrorMessage.set(null);
+    
+    this.http.post(`${this.apiUrl}/verify-otp`, {
+      email: this.registrationEmail(),
+      otpCode: code
+    }).subscribe({
+      next: () => {
+        this.isOtpVerifying.set(false);
+        this.isVerifyingOtp.set(false);
+        this.showSuccess.set(true);
+      },
+      error: (err) => {
+        this.isOtpVerifying.set(false);
+        this.otpErrorMessage.set(err.error?.message || 'Authorization failed. Please check the institutional code.');
+      }
+    });
+  }
+
+  onResendOtp(): void {
+    if (this.isSubmitting()) return;
+    
+    this.isSubmitting.set(true);
+    this.otpErrorMessage.set(null);
+    this.http.post(`${this.apiUrl}/resend-otp`, {
+      email: this.registrationEmail()
+    }).subscribe({
+      next: () => {
+        this.isSubmitting.set(false);
+        this.otpSuccessMessage.set('A new institutional authorization code has been dispatched to your email.');
+        setTimeout(() => this.otpSuccessMessage.set(null), 5000);
+      },
+      error: (err) => {
+        this.isSubmitting.set(false);
+        this.otpErrorMessage.set(err.error?.message || 'Failed to dispatch new code. Contact support.');
+      }
+    });
+  }
+
+  onAmountInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let val = input.value;
+    let modified = false;
+
+    // Physical capping for institutional limits
+    if (parseFloat(val) > 99999999999999.99) {
+      val = '99999999999999.99';
+      modified = true;
+    }
+
+    // Limit decimal precision to 2 (string truncation to preserve cursor)
+    const parts = val.split('.');
+    if (parts.length > 1 && parts[1].length > 2) {
+      val = parts[0] + '.' + parts[1].substring(0, 2);
+      modified = true;
+    }
+
+    if (modified) {
+      input.value = val;
+      this.requestForm.patchValue({ initialDeposit: parseFloat(val) || 0 });
+    }
+  }
+
+  onOtpInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.otpCode.set(input.value);
   }
 
   badgeStatus(value: string): string {
@@ -168,6 +274,7 @@ export class RequestAccountComponent {
       return patternMessages[controlName] || 'Invalid format.';
     }
     if (control.hasError('min')) return 'Initial deposit must be at least PHP 1,000.00.';
+    if (control.hasError('max')) return 'Initial deposit exceeds institutional limit (Maximum PHP 99 Trillion).';
 
     return null;
   }

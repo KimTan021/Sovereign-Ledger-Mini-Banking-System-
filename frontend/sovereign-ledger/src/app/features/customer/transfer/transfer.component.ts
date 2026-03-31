@@ -41,7 +41,7 @@ export class TransferComponent {
   transferForm = this.fb.nonNullable.group({
     recipientAccount: ['', [Validators.required, Validators.pattern(/^[0-9 ]{10,24}$/)]],
     recipientName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(80), Validators.pattern(/^[A-Za-z][A-Za-z\s.'-]*$/)]],
-    amount: [0, [Validators.required, Validators.min(0.01)]],
+    amount: [0, [Validators.required, Validators.min(0.01), Validators.max(99999999999999.99)]],
     purpose: ['', Validators.required],
   });
 
@@ -52,6 +52,9 @@ export class TransferComponent {
 
   totalDebit = computed(() => this.formValue().amount ?? 0);
   fee = computed(() => 0); // Fixed fee for now
+  isLimitReached = computed(() => (this.formValue().amount ?? 0) >= 99999999999999.99);
+  availableBalance = computed(() => this.activeSourceAccount()?.balance ?? 0);
+  isInsufficientFunds = computed(() => (this.formValue().amount ?? 0) > this.availableBalance());
   activeError = signal<string | null>(null);
   transferBlockedMessage = computed(() => {
     const account = this.activeSourceAccount();
@@ -108,6 +111,30 @@ export class TransferComponent {
 
   private normalizeAccountNumber(accountNumber: string): string {
     return accountNumber.replace(/[^a-zA-Z0-9]/g, '');
+  }
+
+  onAmountInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let val = input.value;
+    let modified = false;
+
+    // Physical capping for institutional limits
+    if (parseFloat(val) > 99999999999999.99) {
+      val = '99999999999999.99';
+      modified = true;
+    }
+
+    // Limit decimal precision to 2 (string truncation to preserve cursor)
+    const parts = val.split('.');
+    if (parts.length > 1 && parts[1].length > 2) {
+      val = parts[0] + '.' + parts[1].substring(0, 2);
+      modified = true;
+    }
+
+    if (modified) {
+      input.value = val;
+      this.transferForm.patchValue({ amount: parseFloat(val) || 0 });
+    }
   }
 
   selectRecipient(recipient: any): void {
@@ -175,6 +202,9 @@ export class TransferComponent {
     }
     if (control.hasError('min')) {
       return 'Transfer amount must be greater than zero.';
+    }
+    if (control.hasError('max')) {
+      return 'Transfer amount exceeds institutional limit (Maximum PHP 99 Trillion).';
     }
 
     return null;

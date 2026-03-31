@@ -271,7 +271,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 
                     <form [formGroup]="adjustmentForm" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start" (ngSubmit)="submitAdjustment(account)">
                       <div class="md:col-span-2 space-y-1">
-                        <input formControlName="amount" type="number" class="w-full rounded-2xl bg-white px-4 py-4 border-none shadow-sm focus:ring-2 focus:ring-primary/20 transition-all font-bold text-primary" placeholder="Amount" />
+                        <input formControlName="amount" type="number" max="99999999999999.99" (input)="onAdjustmentInput($event)" class="w-full rounded-2xl bg-white px-4 py-4 border-none shadow-sm focus:ring-2 focus:ring-primary/20 transition-all font-bold text-primary" placeholder="Amount" />
+                        @if (isAdjustmentLimitReached()) {
+                          <div class="flex items-center gap-1 mt-1 px-1 text-amber-600 animate-in fade-in slide-in-from-top-1">
+                            <span class="material-symbols-outlined text-[14px]">lock</span>
+                            <span class="text-[9px] font-black uppercase tracking-widest leading-none">Institutional Limit Reached</span>
+                          </div>
+                        }
                         @if (getAdjustmentError('amount')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest px-2 animate-in fade-in slide-in-from-top-1">{{ getAdjustmentError('amount') }}</p> }
                       </div>
                       <select formControlName="adjustmentType" class="md:col-span-2 rounded-2xl bg-white px-4 py-4 border-none shadow-sm focus:ring-2 focus:ring-primary/20 transition-all font-bold cursor-pointer">
@@ -430,6 +436,7 @@ export class UsersComponent implements OnInit {
   profileSubmitted = signal(false);
   adjustmentSubmitted = signal(false);
   adminSubmitted = signal(false);
+  isAdjustmentLimitReached = computed(() => (this.adjustmentForm.get('amount')?.value ?? 0) >= 99999999999999.99);
 
   currentPage = signal(0);
   pageSize = signal(10);
@@ -447,7 +454,7 @@ export class UsersComponent implements OnInit {
   });
 
   adjustmentForm = this.fb.nonNullable.group({
-    amount: [0, [Validators.required, Validators.min(0.01)]],
+    amount: [0, [Validators.required, Validators.min(0.01), Validators.max(99999999999999.99)]],
     adjustmentType: ['credit' as 'credit' | 'debit', Validators.required],
     description: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(150)]],
   });
@@ -746,6 +753,30 @@ export class UsersComponent implements OnInit {
     });
   }
 
+  onAdjustmentInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let val = input.value;
+    let modified = false;
+
+    // Physical capping for institutional limits
+    if (parseFloat(val) > 99999999999999.99) {
+      val = '99999999999999.99';
+      modified = true;
+    }
+
+    // Limit decimal precision to 2 (string truncation to preserve cursor)
+    const parts = val.split('.');
+    if (parts.length > 1 && parts[1].length > 2) {
+      val = parts[0] + '.' + parts[1].substring(0, 2);
+      modified = true;
+    }
+
+    if (modified) {
+      input.value = val;
+      this.adjustmentForm.patchValue({ amount: parseFloat(val) || 0 });
+    }
+  }
+
   mapAccountStatus(status: string): 'verified' | 'completed' | 'declined' {
     switch (status) {
       case 'Verified':
@@ -816,6 +847,7 @@ export class UsersComponent implements OnInit {
 
     if (control.hasError('required')) return controlName === 'description' ? 'Adjustment reason is required.' : 'This field is required.';
     if (control.hasError('min')) return 'Adjustment amount must be greater than zero.';
+    if (control.hasError('max')) return 'Adjustment amount exceeds institutional limit (Maximum PHP 99 Trillion).';
     if (control.hasError('minlength')) return 'Adjustment reason must be at least 5 characters.';
     if (control.hasError('maxlength')) return 'Adjustment reason must not exceed 150 characters.';
     return null;

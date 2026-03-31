@@ -62,4 +62,7 @@ public class PendingUser {
     @Column(name = "email_status")
     private String emailStatus;
 
+    @OneToMany(mappedBy = "pendingUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OTPVerification> otpVerifications;
+
 }

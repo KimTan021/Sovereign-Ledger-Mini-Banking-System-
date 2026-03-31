@@ -48,27 +48,6 @@
         <p class="text-on-surface-variant text-sm">Access your secure financial dashboard</p>
       </header>
 
-      <!-- Role Selection Toggle -->
-      <div class="mb-8 p-1 bg-surface-container-low rounded-xl flex" role="radiogroup" aria-label="Select login role">
-        <button
-          (click)="selectRole('customer')"
-          [class]="selectedRole() === 'customer'
-            ? 'flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all bg-surface-container-lowest text-primary shadow-sm'
-            : 'flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all text-on-surface-variant hover:text-on-surface'"
-          role="radio"
-          [attr.aria-checked]="selectedRole() === 'customer'">
-          Customer
-        </button>
-        <button
-          (click)="selectRole('admin')"
-          [class]="selectedRole() === 'admin'
-            ? 'flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all bg-surface-container-lowest text-primary shadow-sm'
-            : 'flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all text-on-surface-variant hover:text-on-surface'"
-          role="radio"
-          [attr.aria-checked]="selectedRole() === 'admin'">
-          Admin
-        </button>
-      </div>
 
       <!-- Login Form -->
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
@@ -81,9 +60,22 @@
 
         <!-- Error Message -->
         @if (loginError()) {
-          <div class="p-3 bg-error-container rounded-lg text-on-error-container text-sm font-medium flex items-center gap-2" role="alert">
-            <span class="material-symbols-outlined text-lg">error</span>
-            {{ loginError() }}
+          <div class="p-4 bg-error-container rounded-2xl text-on-error-container text-sm font-medium flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 border border-error/10 shadow-sm shadow-error/5" role="alert">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full bg-error/10 flex items-center justify-center text-error">
+                <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">error</span>
+              </div>
+              <span class="font-bold uppercase tracking-tighter text-xs">{{ isUnverified() ? 'Identity Verification Required' : 'Authorization Error' }}</span>
+            </div>
+            <p class="text-[11px] leading-relaxed opacity-90 px-0.5">{{ loginError() }}</p>
+            
+            @if (isUnverified()) {
+              <a [routerLink]="['/request-account']" [queryParams]="{ email: loginForm.get('identifier')?.value }"
+                 class="inline-flex items-center justify-center gap-2 bg-error text-on-error px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] hover:bg-error/90 hover:shadow-lg hover:shadow-error/20 transition-all shadow-ambient w-fit group">
+                <span class="material-symbols-outlined text-sm group-hover:scale-110 transition-transform">verified</span>
+                Complete Verification Now
+              </a>
+            }
           </div>
         }
 

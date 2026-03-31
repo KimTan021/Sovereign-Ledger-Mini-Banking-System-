@@ -22,10 +22,10 @@ export class LoginComponent {
   readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
-  selectedRole = signal<UserRole>('customer');
   showPassword = signal(false);
   loginError = signal<string | null>(null);
   submitted = signal(false);
+  isUnverified = signal(false);
 
   loginForm = this.fb.nonNullable.group({
     identifier: ['', Validators.required],
@@ -33,10 +33,6 @@ export class LoginComponent {
     remember: [false],
   });
 
-  selectRole(role: UserRole): void {
-    this.selectedRole.set(role);
-    this.loginError.set(null);
-  }
 
   togglePasswordVisibility(): void {
     this.showPassword.update(v => !v);
@@ -68,8 +64,13 @@ export class LoginComponent {
         const rawMessage = typeof err.error === 'string'
           ? err.error
           : (err.error?.message || 'Invalid credentials. Please try again.');
+        
+        const isSuspended = rawMessage.toLowerCase().includes('suspend');
+        const isUnverified = rawMessage.toLowerCase().includes('authorization incomplete');
+        
+        this.isUnverified.set(isUnverified);
         this.loginError.set(
-          rawMessage.toLowerCase().includes('suspend')
+          isSuspended
             ? 'This profile is suspended. Contact an administrator to restore access.'
             : rawMessage
         );

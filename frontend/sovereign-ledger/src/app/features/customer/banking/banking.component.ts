@@ -29,6 +29,7 @@ export class BankingComponent {
   depositSubmitted = signal(false);
   withdrawSubmitted = signal(false);
   internalSubmitted = signal(false);
+ 
 
   depositForm = this.fb.nonNullable.group({
     accountId: ['', Validators.required],
@@ -48,6 +49,24 @@ export class BankingComponent {
     amount: [1000, [Validators.required, Validators.min(0.01)]],
     description: ['Internal portfolio rebalance', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
   });
+
+  // Real-time form value tracking
+  private depositValue = toSignal(this.depositForm.valueChanges, { initialValue: this.depositForm.getRawValue() });
+  private withdrawValue = toSignal(this.withdrawForm.valueChanges, { initialValue: this.withdrawForm.getRawValue() });
+  private internalValue = toSignal(this.internalTransferForm.valueChanges, { initialValue: this.internalTransferForm.getRawValue() });
+
+  // Real-time constraints & balances
+  isDepositLimitReached = computed(() => (this.depositValue().amount ?? 0) >= 99999999999999.99);
+
+  selectedWithdrawAccount = computed(() => this.accounts().find(acc => acc.id === this.withdrawValue().accountId));
+  withdrawBalance = computed(() => this.selectedWithdrawAccount()?.balance ?? 0);
+  isWithdrawLimitReached = computed(() => (this.withdrawValue().amount ?? 0) >= 99999999999999.99);
+  isWithdrawInsufficient = computed(() => (this.withdrawValue().amount ?? 0) > this.withdrawBalance());
+
+  selectedInternalSource = computed(() => this.accounts().find(acc => acc.id === this.internalValue().sourceAccountId));
+  internalSourceBalance = computed(() => this.selectedInternalSource()?.balance ?? 0);
+  isInternalLimitReached = computed(() => (this.internalValue().amount ?? 0) >= 99999999999999.99);
+  isInternalInsufficient = computed(() => (this.internalValue().amount ?? 0) > this.internalSourceBalance());
 
   private setDefaults = effect(() => {
     const accounts = this.accounts();
@@ -159,6 +178,36 @@ export class BankingComponent {
       }),
       'Internal transfer completed.'
     );
+  }
+
+  onAmountInput(event: Event, type: 'deposit' | 'withdraw' | 'internal'): void {
+    const input = event.target as HTMLInputElement;
+    let val = input.value;
+    const maxVal = 99999999999999.99;
+    let modified = false;
+
+    // Physical capping
+    if (parseFloat(val) > maxVal) {
+      val = maxVal.toString();
+      modified = true;
+    }
+
+    // Decimal precision cleanup (string-based to avoid cursor jumping)
+    const parts = val.split('.');
+    if (parts.length > 1 && parts[1].length > 2) {
+      val = parts[0] + '.' + parts[1].substring(0, 2);
+      modified = true;
+    }
+
+    if (modified) {
+      input.value = val;
+      const finalValue = parseFloat(val) || 0;
+      const targetForm =
+        type === 'deposit' ? this.depositForm :
+        type === 'withdraw' ? this.withdrawForm :
+        this.internalTransferForm;
+      targetForm.patchValue({ amount: finalValue } as any);
+    }
   }
 
   private runAction(request: Observable<unknown>, successMessage: string): void {

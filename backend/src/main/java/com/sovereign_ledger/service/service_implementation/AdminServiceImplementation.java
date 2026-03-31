@@ -78,7 +78,7 @@ public class AdminServiceImplementation implements AdminService {
 
     @Override
     public PaginatedResponseDTO<PendingUserResponseDTO> findAllPendingUsers(Pageable pageable) {
-        Page<PendingUser> pendingPage = pendingUserRepository.findByRequestStatusIgnoreCaseOrderByRequestTimeDesc("Pending_Approval", pageable);
+        Page<PendingUser> pendingPage = pendingUserRepository.findByRequestStatusIgnoreCaseOrderByRequestTimeDesc("Pending", pageable);
         List<PendingUserResponseDTO> content = pendingPage.getContent().stream()
                 .map(PendingUserResponseDTO::fromEntity)
                 .collect(Collectors.toList());
@@ -90,7 +90,7 @@ public class AdminServiceImplementation implements AdminService {
     public UserApprovalResponseDTO approvePendingUser(Integer id) {
         PendingUser pendingUser = pendingUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pending user not found with id: " + id));
-        if (!"Pending_Approval".equalsIgnoreCase(pendingUser.getRequestStatus())) {
+        if (!"Pending".equalsIgnoreCase(pendingUser.getRequestStatus())) {
             throw new IllegalArgumentException("Only pending requests can be approved.");
         }
 

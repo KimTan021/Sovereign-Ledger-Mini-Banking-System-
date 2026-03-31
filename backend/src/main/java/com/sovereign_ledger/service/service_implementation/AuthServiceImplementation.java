@@ -4,6 +4,7 @@ import com.sovereign_ledger.dto.request.LoginRequestDTO;
 import com.sovereign_ledger.dto.response.LoginResponseDTO;
 import com.sovereign_ledger.entity.User;
 import com.sovereign_ledger.exception.exception_classes.UserNotFoundException;
+import com.sovereign_ledger.repository.PendingUserRepository;
 import com.sovereign_ledger.repository.UserRepository;
 import com.sovereign_ledger.security.JwtUtil;
 import com.sovereign_ledger.service.AuthService;
@@ -14,11 +15,16 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImplementation implements AuthService {
 
     private final UserRepository userRepository;
+    private final PendingUserRepository pendingUserRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    public AuthServiceImplementation(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public AuthServiceImplementation(UserRepository userRepository,
+                                     PendingUserRepository pendingUserRepository,
+                                     BCryptPasswordEncoder passwordEncoder,
+                                     JwtUtil jwtUtil) {
         this.userRepository = userRepository;
+        this.pendingUserRepository = pendingUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
@@ -34,14 +40,17 @@ public class AuthServiceImplementation implements AuthService {
             throw new IllegalArgumentException("Password required");
         }
 
-      User existingUser = userRepository.findByUserEmail(request.getUserEmail())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        User existingUser = userRepository.findByUserEmail(request.getUserEmail()).orElse(null);
 
-      if (!"ACTIVE".equalsIgnoreCase(existingUser.getUserStatus())) {
+        if (existingUser == null) {
+            handleMissingUser(request.getUserEmail());
+        }
+
+        if (!"ACTIVE".equalsIgnoreCase(existingUser.getUserStatus())) {
             throw new IllegalArgumentException("User access is currently suspended");
         }
 
-      if(!passwordEncoder.matches(request.getPassword(), existingUser.getPassword())) {
+        if(!passwordEncoder.matches(request.getPassword(), existingUser.getPassword())) {
             throw new IllegalArgumentException("Password Incorrect");
         }
 
@@ -54,5 +63,31 @@ public class AuthServiceImplementation implements AuthService {
                 existingUser.getUserEmail(), 
                 existingUser.getRole().toLowerCase()
         );
+    }
+
+    private void handleMissingUser(String email) {
+        var pendingRequests = pendingUserRepository.findByUserEmailOrderByRequestTimeDesc(email);
+
+        if (pendingRequests.isEmpty()) {
+            throw new UserNotFoundException("User not found");
+        }
+
+        var latestRequest = pendingRequests.get(0);
+        String status = latestRequest.getRequestStatus();
+
+        if ("Pending_OTP".equalsIgnoreCase(status)) {
+            throw new IllegalArgumentException("Institutional authorization incomplete. Please verify your identity using the code dispatched to your email.");
+        }
+
+        if ("Pending".equalsIgnoreCase(status)) {
+            throw new IllegalArgumentException("Your application is currently undergoing mandatory institutional review. Access is restricted until authorized.");
+        }
+
+        if ("Rejected".equalsIgnoreCase(status)) {
+            throw new IllegalArgumentException("The application associated with this identity was declined after official review.");
+        }
+
+        // Default fallback if some other status exists
+        throw new UserNotFoundException("User not found");
     }
 }

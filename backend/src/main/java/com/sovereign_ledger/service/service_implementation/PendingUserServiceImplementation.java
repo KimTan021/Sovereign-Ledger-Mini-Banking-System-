@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Service
@@ -55,8 +56,13 @@ public class PendingUserServiceImplementation implements PendingUserService {
             throw new RuntimeException("Email already registered and pending approval");
         }
 
-        if (userRepository.existsByUserEmail(dto.getUserEmail())){
-            throw new RuntimeException("Email already used");
+        Optional<User> existingUserByEmail = userRepository.findByUserEmail(dto.getUserEmail());
+        if (existingUserByEmail.isPresent()) {
+            if (isAdministrativeRole(existingUserByEmail.get().getRole())) {
+                throw new RuntimeException("This email is already associated with an institutional administrative profile. Please use a personal email to request a Sovereign Ledger bank account.");
+            } else {
+                throw new RuntimeException("Email already used");
+            }
         }
 
         // Normalize inputs to ensure robust matching
@@ -69,7 +75,8 @@ public class PendingUserServiceImplementation implements PendingUserService {
         if (pendingUserRepository.existsByPhoneAndRequestStatusIgnoreCase(phone, "Pending")) {
             throw new RuntimeException("This phone number is already associated with an active registration request.");
         }
-        if (userRepository.existsByPhone(phone)) {
+        List<User> existingByPhone = userRepository.findByPhone(phone);
+        if (existingByPhone.stream().anyMatch(u -> !isAdministrativeRole(u.getRole()))) {
             throw new RuntimeException("This phone number is already linked to an existing profile. Please sign in to request additional ledger accounts.");
         }
 
@@ -78,8 +85,9 @@ public class PendingUserServiceImplementation implements PendingUserService {
                 firstName, middleName, lastName, "Pending")) {
             throw new RuntimeException("An identity with this legal name is already undergoing mandatory review. Multiple identity files are prohibited.");
         }
-        if (userRepository.existsByFirstNameIgnoreCaseAndMiddleNameIgnoreCaseAndLastNameIgnoreCase(
-                firstName, middleName, lastName)) {
+        List<User> existingByName = userRepository.findByFirstNameIgnoreCaseAndMiddleNameIgnoreCaseAndLastNameIgnoreCase(
+                firstName, middleName, lastName);
+        if (existingByName.stream().anyMatch(u -> !isAdministrativeRole(u.getRole()))) {
             throw new RuntimeException("A verified legal identity with this name already exists in our network. To prevent profile duplication, please sign in to your existing account.");
         }
 
@@ -124,7 +132,7 @@ public class PendingUserServiceImplementation implements PendingUserService {
                 "EMAIL_VERIFICATION"
         );
 
-        // 2. Update pending user status to Pending_Admin_Approval
+        // 2. Update pending user status to Pending
         PendingUser pendingUser = pendingUserRepository
                 .findByUserEmailOrderByRequestTimeDesc(email)
                 .stream()
@@ -132,7 +140,7 @@ public class PendingUserServiceImplementation implements PendingUserService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No pending registration found for this email."));
 
-        pendingUser.setRequestStatus("Pending_Approval");
+        pendingUser.setRequestStatus("Pending");
         pendingUser.setEmailStatus("Confirmed");
         pendingUserRepository.save(pendingUser);
 
@@ -216,5 +224,11 @@ public class PendingUserServiceImplementation implements PendingUserService {
         return deduped.values().stream()
                 .map(PendingUserResponseDTO::fromEntity)
                 .toList();
+    }
+
+    private boolean isAdministrativeRole(String role) {
+        if (role == null) return false;
+        String normalized = role.trim().toLowerCase();
+        return normalized.equals("admin") || normalized.equals("super_admin");
     }
 }
