@@ -156,6 +156,8 @@ public class OTPVerificationServiceImplementation implements OTPVerificationServ
         otp.setVerified(true);
         otpVerificationRepository.save(otp);
 
+        otpVerificationRepository.deleteByEmailAndOtpPurpose(email, purpose);
+
         return new OTPResponseDTO(
                 "OTP verified successfully",
                 email,
