@@ -1,19 +1,20 @@
 <app-navbar />
 
-<main class="max-w-screen-2xl mx-auto px-6 py-12">
+<main #historyTop class="max-w-screen-2xl mx-auto px-6 py-16 lg:py-24 space-y-24">
   <!-- Header Section -->
   <header class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
     <div>
       <p class="text-on-surface-variant font-medium text-sm mb-1 uppercase tracking-widest">Global Ledger</p>
       <h1 class="font-headline text-4xl font-extrabold text-primary tracking-tight">Transaction History</h1>
     </div>
-    <div class="flex flex-wrap gap-3">
-      <button class="flex items-center gap-2 px-5 py-2.5 bg-surface-container-highest text-on-surface font-semibold text-sm rounded-xl hover:bg-surface-container-high transition-all">
+    <div class="flex flex-wrap gap-4">
+      <button (click)="exportCSV()"
+              class="flex items-center gap-2 px-6 py-3 bg-surface-container-low text-primary font-bold text-sm rounded-2xl hover:bg-surface-container-high transition-all cursor-pointer">
         <span class="material-symbols-outlined text-lg">download</span>
-        Export CSV
+        Export Ledger
       </button>
       <a routerLink="/customer/transfer"
-         class="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-xl hover:opacity-90 transition-all shadow-md shadow-primary/10">
+         class="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold text-sm rounded-2xl hover:scale-[1.02] transition-all shadow-ambient">
         <span class="material-symbols-outlined text-lg">add</span>
         New Transfer
       </a>
@@ -21,120 +22,190 @@
   </header>
 
   <!-- Bento Filter Grid -->
-  <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-8">
-    <div class="lg:col-span-2 bg-surface-container-low p-6 rounded-xl flex flex-col justify-center">
-      <label class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter mb-2" for="search-history">Keyword Search</label>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-surface-container-low/50 p-6 rounded-2xl flex flex-col justify-center shadow-sm">
+      <label class="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-2" for="search-history">Keyword Search</label>
       <div class="relative">
-        <span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+        <span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg opacity-40">search</span>
         <input
           id="search-history"
           type="text"
           (input)="onSearch($event)"
-          class="w-full bg-transparent border-none focus:ring-0 p-0 pl-8 text-on-surface placeholder:text-outline/50 font-medium"
-          placeholder="Search by description, ID, or recipient..." />
+          class="w-full bg-transparent border-none focus:ring-0 p-0 pl-8 text-sm font-bold text-primary placeholder:text-outline/40"
+          placeholder="Filter by description..." />
       </div>
     </div>
-    <div class="bg-surface-container-low p-6 rounded-xl flex flex-col justify-center">
-      <label class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter mb-2">Date Range</label>
-      <div class="flex items-center justify-between text-sm font-semibold text-on-surface">
-        <span>Last 30 Days</span>
-        <span class="material-symbols-outlined text-outline">calendar_today</span>
-      </div>
+    <div class="bg-surface-container-low/50 p-6 rounded-2xl flex flex-col justify-center shadow-sm">
+      <label class="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-2">Target Account</label>
+      <select 
+        [value]="accountIdFilter()" 
+        (change)="setAccountIdFilter($any($event.target).value)"
+        class="bg-transparent border-none focus:ring-0 p-0 text-sm font-bold text-primary cursor-pointer">
+        <option value="all">Global Ledger</option>
+        @for (acc of accounts(); track acc.id) {
+          <option [value]="acc.id">Sovereign {{ acc.type }} (**** {{ acc.lastFour }})</option>
+        }
+      </select>
     </div>
-    <div class="bg-surface-container-low p-6 rounded-xl flex flex-col justify-center">
-      <label class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter mb-2">Type &amp; Status</label>
-      <div class="flex items-center justify-between text-sm font-semibold text-on-surface">
-        <span>All Transactions</span>
-        <span class="material-symbols-outlined text-outline">filter_list</span>
-      </div>
+    <div class="bg-surface-container-low/50 p-6 rounded-2xl flex flex-col justify-center shadow-sm">
+      <label class="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-2">Date Range</label>
+      <select 
+        [value]="dateFilter()" 
+        (change)="setDateFilter($any($event.target).value)"
+        class="bg-transparent border-none focus:ring-0 p-0 text-sm font-bold text-primary cursor-pointer">
+        <option value="all">Lifetime History</option>
+        <option value="30">Last 30 Days</option>
+        <option value="90">Last 90 Days</option>
+        <option value="180">Last 6 Months</option>
+      </select>
+    </div>
+    <div class="bg-surface-container-low/50 p-6 rounded-2xl flex flex-col justify-center shadow-sm">
+      <label class="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.15em] mb-2">Transaction Type</label>
+      <select 
+        [value]="typeFilter()" 
+        (change)="setTypeFilter($any($event.target).value)"
+        class="bg-transparent border-none focus:ring-0 p-0 text-sm font-bold text-primary cursor-pointer">
+        <option value="all">All Types</option>
+        <option value="credit">Credits Only</option>
+        <option value="debit">Debits Only</option>
+      </select>
     </div>
   </div>
 
-  <!-- Data Table Container -->
-  <div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-outline-variant/10">
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
+  <!-- Transaction List Container -->
+  <div class="bg-white rounded-3xl shadow-sm shadow-primary/5 p-2 overflow-hidden">
+    <!-- Desktop Table View (Hidden on Mobile) -->
+    <div class="hidden md:block overflow-x-auto">
+      <table class="w-full text-left border-separate" style="border-spacing: 0 4px;">
         <thead>
-          <tr class="bg-surface-container-low/50">
-            <th class="px-6 py-5 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Date</th>
-            <th class="px-6 py-5 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Description</th>
-            <th class="px-6 py-5 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Type</th>
-            <th class="px-6 py-5 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Status</th>
-            <th class="px-6 py-5 text-xs font-bold text-on-surface-variant uppercase tracking-widest text-right">Amount</th>
-            <th class="px-6 py-5"><span class="sr-only">Actions</span></th>
+          <tr class="bg-surface-container text-on-surface-variant font-bold text-xs uppercase tracking-widest rounded-xl">
+            <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Date</th>
+            <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Description</th>
+            <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Type</th>
+            <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Status</th>
+            <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest text-right">Amount</th>
+            <th class="px-6 py-4"></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-surface-container-low">
+        <tbody class="space-y-1">
           @for (tx of paginatedTransactions(); track tx.id) {
-            <tr class="hover:bg-surface-container-low/30 transition-colors">
-              <td class="px-6 py-6">
-                <p class="text-sm font-bold text-on-surface">{{ tx.date }}</p>
-                <p class="text-xs text-on-surface-variant">{{ tx.time }}</p>
+            <tr (click)="selectedTransaction.set(tx)"
+                class="bg-surface hover:bg-surface-container transition-colors group cursor-pointer">
+              <td class="px-6 py-4 font-mono">
+                <p class="text-[11px] font-bold text-on-surface uppercase">{{ tx.date }}</p>
+                <p class="text-[9px] text-on-surface-variant">{{ tx.time }}</p>
               </td>
-              <td class="px-6 py-6">
+              <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
-                    <span class="material-symbols-outlined">{{ tx.icon }}</span>
+                  <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-lg">{{ tx.icon }}</span>
                   </div>
                   <div>
                     <p class="text-sm font-bold text-on-surface">{{ tx.description }}</p>
-                    <p class="text-xs text-on-surface-variant">ID: {{ tx.id }}</p>
+                    <div class="flex items-center gap-2">
+                       <span class="text-[9px] text-on-surface-variant uppercase font-bold">{{ tx.category }}</span>
+                       <span class="text-[9px] text-outline/40 font-mono">ID: {{ tx.id }}</span>
+                    </div>
                   </div>
                 </div>
               </td>
-              <td class="px-6 py-6">
+              <td class="px-6 py-4">
                 <span [class]="tx.type === 'credit'
-                  ? 'text-xs font-semibold px-2.5 py-1 bg-secondary-container/50 rounded-full text-on-secondary-container'
-                  : 'text-xs font-semibold px-2.5 py-1 bg-surface-container-high rounded-full text-on-surface-variant'">
-                  {{ tx.type === 'credit' ? 'Credit' : 'Debit' }}
+                  ? 'text-[10px] font-bold px-2.5 py-1 bg-tertiary-container/30 rounded-full text-on-tertiary-fixed-variant uppercase tracking-wider'
+                  : 'text-[10px] font-bold px-2.5 py-1 bg-surface-container-high rounded-full text-on-surface-variant uppercase tracking-wider'">
+                  {{ tx.type }}
                 </span>
               </td>
-              <td class="px-6 py-6">
-                <div [class]="'flex items-center gap-1.5 px-3 py-1 rounded-full w-fit ' + getStatusClasses(tx.status)">
-                  <span [class]="'w-1.5 h-1.5 rounded-full ' + getStatusDotClass(tx.status)"></span>
-                  <span [class]="'text-xs font-bold ' + getStatusTextClass(tx.status)">
-                    {{ tx.status === 'completed' ? 'Completed' : tx.status === 'pending' ? 'Pending' : 'Declined' }}
-                  </span>
-                </div>
+              <td class="px-6 py-4">
+                <app-badge [status]="badgeStatus(tx.status)">
+                  {{ tx.status }}
+                </app-badge>
               </td>
-              <td class="px-6 py-6 text-right">
-                <p [class]="'font-headline text-sm font-extrabold ' + getAmountClass(tx)">{{ formatAmount(tx) }}</p>
+              <td class="px-6 py-4 text-right">
+                <p [class]="'text-sm font-extrabold ' + (tx.status === 'declined' ? 'text-outline line-through' : (tx.type === 'credit' ? 'text-on-tertiary-fixed-variant' : 'text-on-surface'))">
+                  {{ tx.type === 'credit' ? '+' : '-' }} {{ tx.amount | currency:'PHP':'symbol':'1.2-2' }}
+                </p>
               </td>
-              <td class="px-6 py-6 text-right">
-                <button class="text-outline hover:text-primary" aria-label="More options">
+              <td class="px-6 py-4 text-right">
+                <button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
                   <span class="material-symbols-outlined">more_vert</span>
                 </button>
               </td>
             </tr>
           }
+          @if (paginatedTransactions().length === 0) {
+            <tr>
+              <td colspan="6" class="px-6 py-20 text-center text-on-surface-variant italic">No transactions match your current filters.</td>
+            </tr>
+          }
         </tbody>
       </table>
     </div>
+
+    <!-- Mobile Card View (Hidden on Desktop) -->
+    <div class="md:hidden space-y-2 p-2">
+      @for (tx of paginatedTransactions(); track tx.id) {
+        <div (click)="selectedTransaction.set(tx)"
+             class="bg-surface rounded-xl p-4 space-y-3 cursor-pointer hover:bg-surface-container transition-colors shadow-ambient">
+          <div class="flex justify-between items-start">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined">{{ tx.icon }}</span>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-on-surface leading-tight">{{ tx.description }}</p>
+                <p class="text-[10px] text-on-surface-variant">{{ tx.date }} • {{ tx.time }}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p [class]="'text-sm font-extrabold ' + (tx.status === 'declined' ? 'text-outline line-through' : (tx.type === 'credit' ? 'text-on-tertiary-fixed-variant' : 'text-on-surface'))">
+                {{ tx.type === 'credit' ? '+' : '-' }} {{ tx.amount | currency:'PHP':'symbol':'1.2-2' }}
+              </p>
+              <span class="text-[9px] text-on-surface-variant font-mono">ID: {{ tx.id }}</span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <span [class]="tx.type === 'credit'
+              ? 'text-[9px] font-bold px-2 py-0.5 bg-tertiary-container/30 rounded-full text-on-tertiary-fixed-variant uppercase tracking-wider'
+              : 'text-[9px] font-bold px-2 py-0.5 bg-surface-container-high rounded-full text-on-surface-variant uppercase tracking-wider'">
+              {{ tx.type }}
+            </span>
+            <app-badge [status]="badgeStatus(tx.status)" size="xs">
+              {{ tx.status }}
+            </app-badge>
+          </div>
+        </div>
+      }
+    </div>
+
     <!-- Pagination -->
-    <div class="px-6 py-5 bg-surface-container-low/20 flex items-center justify-between border-t border-surface-container-low">
-      <span class="text-xs font-medium text-on-surface-variant">
-        Showing {{ (currentPage() - 1) * pageSize + 1 }} to {{ currentPage() * pageSize > filteredTransactions().length ? filteredTransactions().length : currentPage() * pageSize }} of {{ filteredTransactions().length }} results
+    <div class="px-6 py-6 bg-surface-container-low/20 flex flex-col md:flex-row items-center justify-between gap-4 mt-2">
+      <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
+        Showing {{ filteredTransactions().length > 0 ? (currentPage() - 1) * pageSize + 1 : 0 }} to {{ currentPage() * pageSize > filteredTransactions().length ? filteredTransactions().length : currentPage() * pageSize }} of {{ filteredTransactions().length }} results
       </span>
       <div class="flex gap-2">
         <button
+          type="button"
           (click)="goToPage(currentPage() - 1)"
           [disabled]="currentPage() === 1"
-          class="p-2 border border-outline-variant/30 rounded-lg hover:bg-surface-container-high transition-all disabled:opacity-40">
+          class="p-2 border border-outline-variant/20 rounded-lg hover:bg-surface-container-high transition-all disabled:opacity-40 cursor-pointer">
           <span class="material-symbols-outlined text-sm">chevron_left</span>
         </button>
-        @for (page of [].constructor(totalPages()); track $index) {
+        @for (page of pageNumbers(); track page) {
           <button
-            (click)="goToPage($index + 1)"
-            [class]="currentPage() === $index + 1
-              ? 'p-2 border border-outline-variant/30 rounded-lg bg-primary text-on-primary'
-              : 'p-2 border border-outline-variant/30 rounded-lg hover:bg-surface-container-high transition-all'">
-            <span [class]="currentPage() === $index + 1 ? 'text-xs font-bold px-1' : 'text-xs font-bold px-1 text-on-surface-variant'">{{ $index + 1 }}</span>
+            type="button"
+            (click)="goToPage(page)"
+            [class]="currentPage() === page
+              ? 'px-3 py-1 border border-primary bg-primary text-on-primary rounded-lg text-xs font-bold cursor-default'
+              : 'px-3 py-1 border border-outline-variant/20 rounded-lg text-xs font-bold text-on-surface-variant hover:bg-surface-container-high transition-all cursor-pointer'">
+            {{ page }}
           </button>
         }
         <button
+          type="button"
           (click)="goToPage(currentPage() + 1)"
-          [disabled]="currentPage() === totalPages()"
-          class="p-2 border border-outline-variant/30 rounded-lg hover:bg-surface-container-high transition-all disabled:opacity-40">
+          [disabled]="currentPage() === totalPages() || totalPages() === 0"
+          class="p-2 border border-outline-variant/20 rounded-lg hover:bg-surface-container-high transition-all disabled:opacity-40 cursor-pointer">
           <span class="material-symbols-outlined text-sm">chevron_right</span>
         </button>
       </div>
@@ -143,30 +214,84 @@
 
   <!-- Quick Stats -->
   <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="bg-primary p-8 rounded-2xl relative overflow-hidden shadow-xl">
+    <app-card variant="primary" class="relative overflow-hidden shadow-xl">
       <div class="absolute top-0 right-0 p-4 opacity-10">
-        <span class="material-symbols-outlined text-7xl" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+        <span class="material-symbols-outlined text-7xl" style="font-variation-settings: 'FILL' 1;">trending_up</span>
       </div>
-      <p class="text-on-primary-container font-headline font-bold text-xs uppercase tracking-widest mb-4">Current Balance</p>
-      <h3 class="text-on-primary font-headline text-3xl font-extrabold tracking-tight">$42,910.45</h3>
-      <div class="mt-6 flex items-center gap-2">
-        <span class="text-on-tertiary-container bg-tertiary-container/40 px-2 py-0.5 rounded text-[10px] font-bold">+2.4%</span>
-        <span class="text-on-primary-container/70 text-[10px] font-medium">From last month</span>
-      </div>
-    </div>
-    <div class="bg-surface-container-low p-8 rounded-2xl border border-outline-variant/10">
-      <p class="text-on-surface-variant font-headline font-bold text-xs uppercase tracking-widest mb-4">Total Expenses (Oct)</p>
-      <h3 class="text-on-surface font-headline text-3xl font-extrabold tracking-tight">$8,211.70</h3>
-      <div class="mt-6 w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
-        <div class="bg-primary w-2/3 h-full"></div>
-      </div>
-    </div>
-    <div class="bg-surface-container-low p-8 rounded-2xl border border-outline-variant/10">
+      <p class="text-on-primary-container font-headline font-bold text-xs uppercase tracking-widest mb-4">Total Inflow (Filtered)</p>
+      <h3 class="text-on-primary font-headline text-3xl font-extrabold tracking-tight">{{ aggregates().totalInflow | currency:'PHP':'symbol':'1.2-2' }}</h3>
+    </app-card>
+    <app-card variant="low" class="h-full">
+      <p class="text-on-surface-variant font-headline font-bold text-xs uppercase tracking-widest mb-4">Total Outflow (Filtered)</p>
+      <h3 class="text-on-surface font-headline text-3xl font-extrabold tracking-tight">{{ aggregates().totalOutflow | currency:'PHP':'symbol':'1.2-2' }}</h3>
+    </app-card>
+    <app-card variant="low" class="h-full">
       <p class="text-on-surface-variant font-headline font-bold text-xs uppercase tracking-widest mb-4">Top Spending Category</p>
-      <h3 class="text-on-surface font-headline text-3xl font-extrabold tracking-tight">Luxury Travel</h3>
-      <p class="mt-2 text-xs text-on-surface-variant font-medium">32% of monthly outflow</p>
-    </div>
+      <h3 class="text-on-surface font-headline text-3xl font-extrabold tracking-tight">
+        {{ aggregates().categories[0]?.name || 'N/A' }}
+      </h3>
+      <p class="mt-2 text-xs text-on-surface-variant font-medium">
+        {{ aggregates().categories[0]?.percentage || 0 | number:'1.0-1' }}% of selected outflow
+      </p>
+    </app-card>
   </div>
+
+  <!-- Transaction Detail Modal -->
+  @if (selectedTransaction(); as tx) {
+    <app-modal title="Transaction Details" (close)="selectedTransaction.set(null)">
+      <div class="space-y-8">
+        <div class="flex flex-col items-center text-center p-6 bg-surface-container-lowest rounded-2xl shadow-ambient">
+          <div class="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center text-primary mb-4">
+            <span class="material-symbols-outlined text-3xl">{{ tx.icon }}</span>
+          </div>
+          <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">{{ tx.category }}</p>
+          <h4 class="text-xl font-headline font-extrabold text-primary">{{ tx.description }}</h4>
+          <p class="mt-4 text-3xl font-headline font-black" [class]="tx.type === 'credit' ? 'text-on-tertiary-fixed-variant' : 'text-on-surface'">
+            {{ tx.type === 'credit' ? '+' : '-' }} {{ tx.amount | currency:'PHP':'symbol':'1.2-2' }}
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-y-6 text-sm">
+          <div>
+            <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Status</p>
+            <app-badge [status]="badgeStatus(tx.status)">{{ tx.status }}</app-badge>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Reference ID</p>
+            <p class="font-mono text-xs font-bold text-primary">{{ tx.id }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Date</p>
+            <p class="font-bold text-on-surface">{{ tx.date }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Time</p>
+            <p class="font-bold text-on-surface">{{ tx.time }}</p>
+          </div>
+          @if (tx.targetAccountNumber || tx.targetAccountName) {
+            <div>
+              <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Recipient</p>
+              <p class="font-bold text-on-surface">{{ tx.targetAccountName || 'Unknown recipient' }}</p>
+              <p class="font-mono text-[11px] text-on-surface-variant">{{ tx.targetAccountNumber || 'Account hidden' }}</p>
+            </div>
+          }
+          @if (tx.reviewNote) {
+            <div>
+              <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-1">Review Note</p>
+              <p class="font-bold text-on-surface">{{ tx.reviewNote }}</p>
+            </div>
+          }
+          <div class="col-span-2 pt-4 mt-2">
+             <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter mb-2">Institutional Verification</p>
+             <div class="flex items-center gap-2 text-on-tertiary-fixed-variant bg-tertiary-fixed/10 px-3 py-2 rounded-lg">
+               <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+               <span class="text-[10px] font-bold">Ledger Entry Validated & Cryptographically Signed</span>
+             </div>
+          </div>
+        </div>
+      </div>
+    </app-modal>
+  }
 </main>
 
 <app-footer />

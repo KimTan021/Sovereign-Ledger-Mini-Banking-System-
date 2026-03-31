@@ -1,49 +1,224 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, ViewChild, ElementRef, effect } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
-import { AccountService } from '../../../core/services/account.service';
-import { CurrencyPipe } from '@angular/common';
+import { AccountService, Account } from '../../../core/services/account.service';
+import { TransactionService } from '../../../core/services/transaction.service';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { CardComponent } from '../../../shared/components/card/card.component';
+import { BadgeComponent } from '../../../shared/components/badge/badge.component';
+import { OtpModalComponent } from '../../../shared/components/otp-modal/otp-modal.component';
+import { TrimInputDirective } from '../../../shared/directives/trim-input.directive';
 
 @Component({
   selector: 'app-transfer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NavbarComponent, FooterComponent, ReactiveFormsModule, CurrencyPipe],
+  imports: [NavbarComponent, FooterComponent, ReactiveFormsModule, CurrencyPipe, CardComponent, CommonModule, BadgeComponent, OtpModalComponent, TrimInputDirective],
   templateUrl: './transfer.component.html',
 })
 export class TransferComponent {
   private readonly fb = inject(FormBuilder);
   private readonly accountService = inject(AccountService);
+  private readonly transactionService = inject(TransactionService);
 
-  account = this.accountService.getCustomerAccount();
-  recipients = this.accountService.getRecipients();
+  accounts = toSignal(this.accountService.getCustomerAccounts(), { initialValue: [] });
+  activeSourceAccount = signal<Account | null>(null);
+
+  // Set initial source account
+  private setInitialSource = effect(() => {
+    const accs = this.accounts();
+    if (accs.length > 0 && !this.activeSourceAccount()) {
+      this.activeSourceAccount.set(accs[0]);
+    }
+  });
+
+  recipients = toSignal(this.transactionService.getUniqueRecipients(), { initialValue: [] });
   showSuccess = signal(false);
+  showOtpModal = signal(false);
+  submitted = signal(false);
+
+  @ViewChild('recipientAccountInput') recipientAccountInput!: ElementRef<HTMLInputElement>;
 
   transferForm = this.fb.nonNullable.group({
-    recipientAccount: ['', Validators.required],
-    recipientName: ['', Validators.required],
-    amount: [0, [Validators.required, Validators.min(0.01)]],
+    recipientAccount: ['', [Validators.required, Validators.pattern(/^[0-9 ]{10,24}$/)]],
+    recipientName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(80), Validators.pattern(/^[A-Za-z][A-Za-z\s.'-]*$/)]],
+    amount: [0, [Validators.required, Validators.min(0.01), Validators.max(99999999999999.99)]],
     purpose: ['', Validators.required],
   });
 
-  get totalDebit(): number {
-    const amount = this.transferForm.get('amount')?.value ?? 0;
-    return amount;
-  }
+  // Convert form value to a signal for reactive dependencies
+  private formValue = toSignal(this.transferForm.valueChanges, {
+    initialValue: this.transferForm.getRawValue()
+  });
 
-  get fee(): number {
-    return 0;
+  totalDebit = computed(() => this.formValue().amount ?? 0);
+  fee = computed(() => 0); // Fixed fee for now
+  isLimitReached = computed(() => (this.formValue().amount ?? 0) >= 99999999999999.99);
+  availableBalance = computed(() => this.activeSourceAccount()?.balance ?? 0);
+  isInsufficientFunds = computed(() => (this.formValue().amount ?? 0) > this.availableBalance());
+  activeError = signal<string | null>(null);
+  transferBlockedMessage = computed(() => {
+    const account = this.activeSourceAccount();
+    if (!account) return 'Select a source account to continue.';
+    if (account.status !== 'verified') {
+      return `This ${account.type.toLowerCase()} account is currently ${account.status}. External transfers are blocked until it is verified again.`;
+    }
+    return null;
+  });
+
+  setActiveSource(acc: Account): void {
+    this.activeSourceAccount.set(acc);
   }
 
   onSubmit(): void {
+    this.submitted.set(true);
+    this.transferForm.markAllAsTouched();
     if (this.transferForm.valid) {
-      this.showSuccess.set(true);
-      this.transferForm.reset();
-      setTimeout(() => this.showSuccess.set(false), 4000);
+      const source = this.activeSourceAccount();
+      if (!source) return;
+      if (source.status !== 'verified') {
+        this.activeError.set(this.transferBlockedMessage());
+        return;
+      }
+
+      this.activeError.set(null);
+
+      const payload = {
+        sourceAccountId: parseInt(source.id),
+        targetAccountNumber: this.normalizeAccountNumber(this.transferForm.getRawValue().recipientAccount),
+        transAmount: this.transferForm.getRawValue().amount,
+        description: this.transferForm.getRawValue().purpose
+      };
+
+      this.transactionService.transferFunds(payload).subscribe({
+        next: () => {
+          this.showOtpModal.set(true);
+        },
+        error: (err) => {
+          console.error(err);
+          const backendMessage =
+            typeof err.error === 'string'
+              ? err.error
+              : (err.error?.message || 'Verify the account number.');
+          this.activeError.set('Transfer failed: ' + backendMessage);
+        }
+      });
     }
+  }
+
+  onOtpVerified(): void {
+    this.showOtpModal.set(false);
+    this.showSuccess.set(true);
+    this.transferForm.reset();
+    this.submitted.set(false);
+    setTimeout(() => {
+       this.showSuccess.set(false);
+    }, 5000);
+  }
+
+  onOtpCancelled(): void {
+    this.showOtpModal.set(false);
+  }
+
+  private normalizeAccountNumber(accountNumber: string): string {
+    return accountNumber.replace(/[^a-zA-Z0-9]/g, '');
+  }
+
+  onAmountInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let val = input.value;
+    let modified = false;
+
+    // Physical capping for institutional limits
+    if (parseFloat(val) > 99999999999999.99) {
+      val = '99999999999999.99';
+      modified = true;
+    }
+
+    // Limit decimal precision to 2 (string truncation to preserve cursor)
+    const parts = val.split('.');
+    if (parts.length > 1 && parts[1].length > 2) {
+      val = parts[0] + '.' + parts[1].substring(0, 2);
+      modified = true;
+    }
+
+    if (modified) {
+      input.value = val;
+      this.transferForm.patchValue({ amount: parseFloat(val) || 0 });
+    }
+  }
+
+  selectRecipient(recipient: any): void {
+    this.transferForm.patchValue({
+      recipientAccount: recipient.accountNumber || '',
+      recipientName: recipient.name || ''
+    });
   }
 
   onCancel(): void {
     this.transferForm.reset();
+    this.submitted.set(false);
+  }
+
+  onAddNew(): void {
+    this.transferForm.reset();
+    this.submitted.set(false);
+    setTimeout(() => {
+      this.recipientAccountInput?.nativeElement?.focus();
+    }, 0);
+  }
+
+  getInitials(name: string): string {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  }
+
+  badgeStatus(value: string): string {
+    return (value || 'neutral').toLowerCase();
+  }
+
+  hasError(controlName: 'recipientAccount' | 'recipientName' | 'amount' | 'purpose'): boolean {
+    const control = this.transferForm.get(controlName);
+    return !!control && control.invalid && (control.touched || this.submitted());
+  }
+
+  getErrorMessage(controlName: 'recipientAccount' | 'recipientName' | 'amount' | 'purpose'): string | null {
+    const control = this.transferForm.get(controlName);
+    if (!control || !this.hasError(controlName)) {
+      return null;
+    }
+
+    if (control.hasError('required')) {
+      return {
+        recipientAccount: 'Recipient account number is required.',
+        recipientName: 'Recipient name is required.',
+        amount: 'Transfer amount is required.',
+        purpose: 'Select a transfer purpose.'
+      }[controlName];
+    }
+    if (control.hasError('pattern')) {
+      return controlName === 'recipientAccount'
+        ? 'Recipient account number must contain 10 to 18 digits.'
+        : 'Recipient name may only contain letters, spaces, apostrophes, periods, and hyphens.';
+    }
+    if (control.hasError('minlength')) {
+      return 'Recipient name must be at least 3 characters.';
+    }
+    if (control.hasError('maxlength')) {
+      return 'Recipient name must not exceed 80 characters.';
+    }
+    if (control.hasError('min')) {
+      return 'Transfer amount must be greater than zero.';
+    }
+    if (control.hasError('max')) {
+      return 'Transfer amount exceeds institutional limit (Maximum PHP 99 Trillion).';
+    }
+
+    return null;
   }
 }

@@ -1,0 +1,404 @@
+<div class="bg-surface min-h-screen flex flex-col md:flex-row overflow-hidden">
+  <!-- Left Side: Branding & Trust -->
+  <section class="hidden lg:flex lg:w-1/3 primary-gradient p-12 flex-col justify-between relative overflow-hidden">
+    <div class="relative z-10">
+      <div class="flex items-center gap-3 mb-6">
+        <h1 class="font-headline text-3xl font-black text-white tracking-tighter">Sovereign Ledger</h1>
+      </div>
+      <h2 class="text-4xl font-headline font-extrabold text-white leading-tight mb-8">Begin Your Financial Sovereignty</h2>
+
+      <div class="space-y-8">
+        <div class="flex gap-4">
+          <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
+            <span class="material-symbols-outlined">verified_user</span>
+          </div>
+          <div>
+            <p class="font-bold text-white text-lg">Institutional Grade</p>
+            <p class="text-on-primary-container/80 text-sm">Security protocols trusted by global financial leaders.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
+            <span class="material-symbols-outlined">speed</span>
+          </div>
+          <div>
+            <p class="font-bold text-white text-lg">Instant Settlement</p>
+            <p class="text-on-primary-container/80 text-sm">Experience the speed of next-generation ledger tech.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
+            <span class="material-symbols-outlined">insights</span>
+          </div>
+          <div>
+            <p class="font-bold text-white text-lg">Deep Analytics</p>
+            <p class="text-on-primary-container/80 text-sm">Every transaction is indexed for sovereign oversight.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative z-10">
+      <p class="text-on-primary-container/60 text-xs font-mono tracking-widest uppercase">Protocol: SL-GLOBAL-V4</p>
+    </div>
+
+    <!-- Abstract Shapes -->
+    <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-tertiary-container/20 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/2 left-0 w-40 h-40 bg-on-primary-container/10 rounded-full blur-2xl"></div>
+  </section>
+
+  <!-- Right Side: Application Canvas -->
+  <main class="w-full lg:w-2/3 flex items-center justify-center p-6 md:p-12 lg:p-20 overflow-y-auto">
+    <div class="w-full max-w-2xl">
+      @if (!showSuccess()) {
+        <header class="mb-10">
+          <a [routerLink]="isLoggedIn() ? '/customer/dashboard' : '/login'"
+             class="inline-flex items-center gap-2 text-primary font-bold text-sm mb-6 hover:translate-x-[-4px] transition-transform">
+            <span class="material-symbols-outlined text-base">arrow_back</span>
+            Back to {{ isLoggedIn() ? 'Dashboard' : 'Login' }}
+          </a>
+          <h1 class="text-4xl font-headline font-extrabold text-primary tracking-tight">
+            {{ isVerifyingOtp() ? 'Verify Your Identity' : (isLoggedIn() ? 'Request Additional Account' : 'Request an Account') }}
+          </h1>
+          <p class="text-on-surface-variant mt-2 text-lg">
+            {{ isVerifyingOtp() ? 'An institutional authorization code has been dispatched to ' + registrationEmail() : (isLoggedIn() ? 'Expand your financial portfolio with a new sovereign ledger.' : 'Complete the formal application for the Sovereign Ledger.') }}
+          </p>
+        </header>
+
+        <!-- Error Feedback -->
+        @if (errorMessage() && !isVerifyingOtp()) {
+          <div class="mb-8 p-5 bg-error-container text-on-error-container rounded-3xl border-2 border-error/15 flex flex-col gap-4 animate-in fade-in slide-in-from-top-4 duration-500 shadow-xl shadow-error/5">
+            <div class="flex items-center gap-3.5">
+              <div class="w-10 h-10 rounded-2xl bg-error/10 flex items-center justify-center text-error border border-error/20">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">error</span>
+              </div>
+              <p class="text-sm font-black uppercase tracking-widest text-on-error-container">{{ isUnverifiedExists() ? 'Identity Request Active' : 'Institutional Error' }}</p>
+            </div>
+            <p class="text-xs leading-relaxed opacity-80 pl-1">{{ errorMessage() }}</p>
+            
+            @if (isUnverifiedExists()) {
+              <button 
+                type="button"
+                (click)="registrationEmail.set(requestForm.get('userEmail')?.value || ''); isVerifyingOtp.set(true)"
+                class="inline-flex items-center justify-center gap-2 bg-error text-on-error px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] hover:bg-error/90 hover:shadow-lg hover:shadow-error/25 transition-all shadow-ambient w-fit cursor-pointer group">
+                <span class="material-symbols-outlined text-sm group-hover:scale-110 transition-transform">verified_user</span>
+                Resume Identity Authorization
+              </button>
+            }
+          </div>
+        }
+
+        @if (!isVerifyingOtp()) {
+          <form [formGroup]="requestForm" (ngSubmit)="onSubmit()" novalidate class="space-y-8">
+
+            @if (isLoggedIn()) {
+              <div class="p-6 bg-primary/5 rounded-2xl border-2 border-primary/20 flex items-center gap-6 animate-in fade-in slide-in-from-left-4 duration-500">
+                <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0 shadow-sm">
+                  <span class="material-symbols-outlined text-3xl">verified_user</span>
+                </div>
+                <div class="space-y-1">
+                  <p class="text-base font-black text-primary tracking-tight">Identity Protection Active</p>
+                  <p class="text-xs text-on-surface-variant leading-relaxed">
+                    Your legal identity is already authenticated and secured within our network.
+                    This request will append a new sovereign ledger to your <strong>existing profile</strong>.
+                  </p>
+                </div>
+              </div>
+
+              @if (pendingRequests().length > 0) {
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between gap-3 border-b border-outline-variant/10 pb-2">
+                    <h3 class="text-sm font-bold text-primary uppercase tracking-widest">Request Status</h3>
+                    <app-card variant="low" customClass="!p-0 !bg-transparent !shadow-none">
+                      <span class="inline-flex items-center rounded-full bg-surface-container-high px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                        {{ activePendingRequestCount() > 0 ? activePendingRequestCount() + ' pending' : 'latest updates' }}
+                      </span>
+                    </app-card>
+                  </div>
+                  @for (request of pendingRequests(); track request.userId + request.requestTime) {
+                    <div class="rounded-2xl border border-outline-variant/10 bg-surface-container-low px-5 py-4">
+                      <div class="flex items-center justify-between gap-3">
+                        <div>
+                          <p class="font-bold text-on-surface">{{ request.requestAccountType | titlecase }} Account</p>
+                          <p class="text-xs text-on-surface-variant mt-1">
+                            {{ request.requestStatus === 'Pending' ? 'Submitted' : 'Reviewed' }}
+                            {{ (request.reviewedAt || request.requestTime) | date:'medium' }}
+                          </p>
+                        </div>
+                        <app-card variant="low" customClass="!p-0 !bg-transparent !shadow-none">
+                          <span
+                            class="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider"
+                            [class]="request.requestStatus === 'Pending'
+                              ? 'bg-secondary-container text-on-secondary-fixed'
+                              : request.requestStatus === 'Approved'
+                                ? 'bg-tertiary-container text-tertiary-fixed'
+                                : 'bg-error-container text-error-fixed'"
+                          >
+                            {{ request.requestStatus }}
+                          </span>
+                        </app-card>
+                      </div>
+                      <p class="mt-3 text-xs text-on-surface-variant">Initial deposit: {{ request.initialDeposit | currency:'PHP':'symbol':'1.2-2' }}</p>
+                    </div>
+                  }
+                </div>
+              }
+            } @else {
+              <!-- Personal Information Section -->
+              <div class="space-y-6">
+                <h3 class="text-sm font-bold text-primary uppercase tracking-widest border-b border-outline-variant/10 pb-2">Personal Identity</h3>
+
+                <!-- Name Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1" for="firstName">First Name</label>
+                    <input id="firstName" formControlName="firstName" type="text" appTrimInput placeholder="Alexander"
+                      class="block w-full px-5 py-4 bg-surface-container-low border-none focus:bg-white transition-all rounded-2xl text-on-surface placeholder:text-outline-variant font-bold text-sm shadow-sm" />
+                    @if (getErrorMessage('firstName')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest ml-1">{{ getErrorMessage('firstName') }}</p> }
+                  </div>
+                  <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1" for="middleName">Middle Name (Optional)</label>
+                    <input id="middleName" formControlName="middleName" type="text" appTrimInput placeholder="Maria"
+                      class="block w-full px-5 py-4 bg-surface-container-low border-none focus:bg-white transition-all rounded-2xl text-on-surface placeholder:text-outline-variant font-bold text-sm shadow-sm" />
+                    @if (getErrorMessage('middleName')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest ml-1">{{ getErrorMessage('middleName') }}</p> }
+                  </div>
+                  <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1" for="lastName">Last Name</label>
+                    <input id="lastName" formControlName="lastName" type="text" appTrimInput placeholder="Hamilton"
+                      class="block w-full px-5 py-4 bg-surface-container-low border-none focus:bg-white transition-all rounded-2xl text-on-surface placeholder:text-outline-variant font-bold text-sm shadow-sm" />
+                    @if (getErrorMessage('lastName')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest ml-1">{{ getErrorMessage('lastName') }}</p> }
+                  </div>
+                </div>
+
+                <!-- Contact/Auth Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="userEmail">Email Address</label>
+                    <input id="userEmail" formControlName="userEmail" type="email" appTrimInput placeholder="alex.hamilton@example.com"
+                      class="block w-full px-4 py-3 bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-xl text-on-surface placeholder:text-outline-variant font-medium shadow-sm" />
+                    @if (getErrorMessage('userEmail')) { <p class="text-xs font-semibold text-error ml-1">{{ getErrorMessage('userEmail') }}</p> }
+                  </div>
+                  <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="password">Security Password</label>
+                    <input id="password" formControlName="password" type="password" placeholder="Minimum 8 characters"
+                      class="block w-full px-4 py-3 bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-xl text-on-surface placeholder:text-outline-variant font-medium shadow-sm" />
+                    @if (getErrorMessage('password')) { <p class="text-xs font-semibold text-error ml-1">{{ getErrorMessage('password') }}</p> }
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="phone">Phone Number</label>
+                    <input id="phone" formControlName="phone" type="tel" appTrimInput placeholder="+63 917 123 4567"
+                      class="block w-full px-4 py-3 bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-xl text-on-surface placeholder:text-outline-variant font-medium shadow-sm" />
+                    @if (getErrorMessage('phone')) { <p class="text-xs font-semibold text-error ml-1">{{ getErrorMessage('phone') }}</p> }
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- Account Configuration Section -->
+            <div class="space-y-6">
+              <h3 class="text-sm font-bold text-primary uppercase tracking-widest border-b border-outline-variant/10 pb-2">Account Configuration</h3>
+
+              <div class="space-y-1.5 max-w-sm">
+                <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="initialDeposit">Initial Capitalization (PHP)</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-primary">₱</span>
+                  <input id="initialDeposit" formControlName="initialDeposit" type="number" placeholder="1000"
+                    max="99999999999999.99"
+                    (input)="onAmountInput($event)"
+                    class="block w-full pl-9 pr-4 py-3 bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 transition-all rounded-xl text-on-surface font-medium shadow-sm" />
+                </div>
+                @if (isLimitReached()) {
+                  <div class="flex items-center gap-1.5 mt-2 px-1 text-amber-600 animate-in fade-in slide-in-from-top-1">
+                    <span class="material-symbols-outlined text-sm">lock</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Institutional Limit Reached</span>
+                  </div>
+                }
+                @if (getErrorMessage('initialDeposit')) { <p class="text-xs font-semibold text-error ml-1">{{ getErrorMessage('initialDeposit') }}</p> }
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Savings -->
+                <div class="relative">
+                  <input type="radio" id="savings" formControlName="requestAccountType" value="savings" class="peer sr-only">
+                  <label for="savings"
+                    class="block p-5 rounded-2xl border-2 cursor-pointer transition-all bg-surface-container-lowest border-outline-variant/20 hover:border-primary/50 peer-checked:border-primary peer-checked:bg-primary/5">
+                    <div class="flex items-center gap-4">
+                      <span class="material-symbols-outlined text-3xl text-on-surface-variant peer-checked:text-primary">savings</span>
+                      <div>
+                        <p class="font-bold text-on-surface">Savings Account</p>
+                        <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">High Tier Storage</p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <!-- Checking -->
+                <div class="relative">
+                  <input type="radio" id="checking" formControlName="requestAccountType" value="checking" class="peer sr-only">
+                  <label for="checking"
+                    class="block p-5 rounded-2xl border-2 cursor-pointer transition-all bg-surface-container-lowest border-outline-variant/20 hover:border-primary/50 peer-checked:border-primary peer-checked:bg-primary/5">
+                    <div class="flex items-center gap-4">
+                      <span class="material-symbols-outlined text-3xl text-on-surface-variant peer-checked:text-primary">account_balance_wallet</span>
+                      <div>
+                        <p class="font-bold text-on-surface">Checking Account</p>
+                        <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Active Tier Ledger</p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              @if (getErrorMessage('requestAccountType')) {
+                <p class="text-xs font-semibold text-error ml-1">{{ getErrorMessage('requestAccountType') }}</p>
+              }
+            </div>
+
+            <!-- Terms -->
+            <div
+              class="p-5 bg-surface-container-low rounded-2xl flex items-start gap-4 border-2 transition-colors"
+              [class.border-error]="hasError('terms')"
+              [class.border-transparent]="!hasError('terms')"
+            >
+              <input id="terms" formControlName="terms" type="checkbox"
+                class="w-5 h-5 mt-0.5 rounded border-outline-variant text-primary focus:ring-primary/20 bg-white" />
+              <label for="terms" class="text-xs text-on-surface-variant font-medium leading-relaxed">
+                I formally request the opening of a Sovereign Ledger account and agree to the
+                <span class="text-primary font-bold hover:underline cursor-pointer">Institutional Terms</span>.
+                I acknowledge that all deposits stay within the sovereign network.
+              </label>
+            </div>
+            @if (getErrorMessage('terms')) { <p class="text-xs font-semibold text-error ml-1 -mt-4">{{ getErrorMessage('terms') }}</p> }
+
+            <!-- Submit Button -->
+            <button type="submit" [disabled]="requestForm.invalid || isSubmitting()"
+              class="w-full primary-gradient text-on-primary py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-ambient hover:scale-[1.02] active:scale-[0.98] transition-all flex justify-center items-center gap-3 disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer">
+              @if (isSubmitting()) {
+                <span class="material-symbols-outlined animate-spin text-lg">sync</span>
+                Authenticating...
+              } @else {
+                Formalize Request
+                <span class="material-symbols-outlined text-lg">assignment_turned_in</span>
+              }
+            </button>
+          </form>
+        } @else {
+          <!-- OTP Verification Flow -->
+          <div class="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div class="p-8 bg-surface-container-low rounded-3xl border border-outline-variant/10 shadow-sm">
+              <div class="space-y-6">
+                <!-- Status Feedback -->
+                @if (otpErrorMessage()) {
+                  <div class="p-4 bg-error-container text-on-error-container rounded-2xl border border-error/10 flex items-center gap-3 animate-in fade-in duration-300">
+                    <span class="material-symbols-outlined text-error text-base">warning</span>
+                    <p class="text-xs font-bold uppercase tracking-wide">{{ otpErrorMessage() }}</p>
+                  </div>
+                }
+                @if (otpSuccessMessage()) {
+                  <div class="p-4 bg-tertiary-container text-tertiary-fixed-dim rounded-2xl border border-tertiary/10 flex items-center gap-3 animate-in fade-in duration-300">
+                    <span class="material-symbols-outlined text-tertiary text-base">check_circle</span>
+                    <p class="text-xs font-bold uppercase tracking-wide">{{ otpSuccessMessage() }}</p>
+                  </div>
+                }
+
+                <div class="space-y-3">
+                  <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-[0.25em] ml-1">Identity Authorization Code</label>
+                  <div class="relative">
+                    <input
+                      #otpInput
+                      type="text"
+                      maxlength="6"
+                      placeholder="000000"
+                      (input)="onOtpInput($event)"
+                      class="block w-full px-6 py-5 bg-white border-2 border-outline-variant/20 focus:border-primary transition-all rounded-2xl text-center text-4xl font-mono font-black tracking-[0.5em] text-primary placeholder:text-outline-variant/30 shadow-inner"
+                    />
+                  </div>
+                  <p class="text-[10px] text-on-surface-variant/60 font-bold uppercase tracking-widest text-center mt-4">
+                    Required for mandatory cryptographic sovereign linkage.
+                  </p>
+                </div>
+
+                <div class="pt-4 flex flex-col gap-4">
+                  <button
+                    (click)="onVerifyOtp()"
+                    [disabled]="otpCode().length !== 6 || isOtpVerifying()"
+                    class="w-full primary-gradient text-on-primary py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-ambient hover:scale-[1.02] active:scale-[0.98] transition-all flex justify-center items-center gap-3 disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer"
+                  >
+                    @if (isOtpVerifying()) {
+                      <span class="material-symbols-outlined animate-spin text-lg">sync</span>
+                      Authorizing...
+                    } @else {
+                      Verify Identity
+                      <span class="material-symbols-outlined text-lg">verified</span>
+                    }
+                  </button>
+
+                  <div class="flex items-center justify-between px-2">
+                    <button
+                      (click)="isVerifyingOtp.set(false)"
+                      class="text-[10px] font-black text-on-surface-variant/60 uppercase tracking-widest hover:text-primary transition-colors">
+                      Back to details
+                    </button>
+                    <button
+                      (click)="onResendOtp()"
+                      [disabled]="isSubmitting() || isOtpVerifying()"
+                      class="text-[10px] font-black text-primary uppercase tracking-widest hover:opacity-70 transition-all disabled:opacity-30">
+                      Resend Code
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4 px-6 opacity-40">
+              <span class="h-px flex-1 bg-outline-variant/30"></span>
+              <span class="text-[8px] font-mono font-bold uppercase tracking-[0.3em]">Institutional Security Protocol</span>
+              <span class="h-px flex-1 bg-outline-variant/30"></span>
+            </div>
+          </div>
+        }
+      } @else {
+        <!-- Success State -->
+        <div class="text-center space-y-8 animate-in zoom-in duration-500">
+          <div class="w-24 h-24 bg-tertiary-container text-tertiary-fixed-dim rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-tertiary/10 rotate-12">
+            <span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+          </div>
+          <div class="space-y-3">
+            <h2 class="text-4xl font-headline font-extrabold text-primary tracking-tight">Identity Verified</h2>
+            <p class="text-on-surface-variant text-lg max-w-md mx-auto">
+              {{ isLoggedIn() ? 'Your request for a new Sovereign ledger has been recorded and queued for executive review.' : 'Your legal identity has been authenticated. Your formal application is now undergoing institutional oversight.' }}
+            </p>
+          </div>
+
+          <app-card variant="low" [padding]="true" class="max-w-md mx-auto text-left border border-outline-variant/10 shadow-sm">
+            <div class="flex flex-col gap-4">
+              <div class="flex justify-between items-center pb-4 border-b border-outline-variant/10">
+                <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Protocol ID</span>
+                <span class="font-mono font-bold text-primary tracking-tighter">REQ-77294-SL</span>
+              </div>
+              <p class="text-sm text-on-surface leading-relaxed">
+                An executive banker will review your credentials within <span class="font-bold text-primary">24 business hours</span>.
+                You will be notified via institutional email once your ledger is ready for capitalization.
+              </p>
+            </div>
+          </app-card>
+
+          <div class="flex flex-col gap-4">
+            <button
+              (click)="resetForm()"
+              class="inline-flex items-center justify-center gap-2 text-on-surface-variant font-bold text-sm bg-surface-container-low border border-outline-variant/10 px-8 py-4 rounded-xl hover:bg-surface-container transition-all">
+              Submit Another Request
+            </button>
+            <a [routerLink]="isLoggedIn() ? '/customer/dashboard' : '/login'"
+               class="text-primary font-bold hover:underline tracking-tight">
+              Return to {{ isLoggedIn() ? 'Secure Dashboard' : 'Secure Login' }}
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+  </main>
+</div>

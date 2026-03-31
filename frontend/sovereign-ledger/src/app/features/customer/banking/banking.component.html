@@ -1,0 +1,274 @@
+<app-navbar />
+
+@if (showOtpModal()) {
+  <app-otp-modal 
+    (verified)="onOtpVerified()" 
+    (cancelled)="onOtpCancelled()" />
+}
+
+<main class="max-w-screen-2xl mx-auto px-6 py-16 lg:py-24 space-y-24">
+  <header class="flex flex-col lg:flex-row lg:items-end justify-between gap-12">
+    <div class="space-y-4">
+      <span class="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] opacity-60">Customer Operations</span>
+      <h1 class="text-4xl lg:text-6xl font-extrabold font-headline tracking-tighter text-primary">Banking Actions</h1>
+      <p class="text-on-surface-variant max-w-2xl text-lg leading-relaxed font-medium">Handle deposits, withdrawals, and internal movements across your sovereign portfolio.</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 min-w-full lg:min-w-[540px]">
+      <button type="button"
+              (click)="selectTab('deposit')"
+              class="px-6 py-5 rounded-2xl text-left transition-all cursor-pointer {{ activeTab() === 'deposit' ? 'bg-primary text-on-primary shadow-ambient scale-105 z-10' : 'bg-surface-container-low text-primary hover:bg-surface-container-high' }}">
+        <p class="text-[10px] font-black uppercase tracking-widest {{ activeTab() === 'deposit' ? 'text-on-primary-container' : 'text-on-surface-variant' }}">Deposit</p>
+        <p class="text-[13px] mt-1 font-bold">Add Funds</p>
+      </button>
+      <button type="button"
+              (click)="selectTab('withdraw')"
+              class="px-6 py-5 rounded-2xl text-left transition-all cursor-pointer {{ activeTab() === 'withdraw' ? 'bg-primary text-on-primary shadow-ambient scale-105 z-10' : 'bg-surface-container-low text-primary hover:bg-surface-container-high' }}">
+        <p class="text-[10px] font-black uppercase tracking-widest {{ activeTab() === 'withdraw' ? 'text-on-primary-container' : 'text-on-surface-variant' }}">Withdraw</p>
+        <p class="text-[13px] mt-1 font-bold">Record Cash</p>
+      </button>
+      <button type="button"
+              (click)="selectTab('internal')"
+              (click)="selectTab('internal')"
+              class="px-6 py-5 rounded-2xl text-left transition-all cursor-pointer {{ activeTab() === 'internal' ? 'bg-primary text-on-primary shadow-ambient scale-105 z-10' : 'bg-surface-container-low text-primary hover:bg-surface-container-high' }}">
+        <p class="text-[10px] font-black uppercase tracking-widest {{ activeTab() === 'internal' ? 'text-on-primary-container' : 'text-on-surface-variant' }}">Internal</p>
+        <p class="text-[13px] mt-1 font-bold">Shift Wealth</p>
+      </button>
+    </div>
+  </header>
+
+  @if (actionSuccess()) {
+    <div class="mb-6 p-4 rounded-xl border border-tertiary-fixed/20 bg-tertiary-fixed/10 text-on-tertiary-fixed-variant">
+      <p class="font-semibold text-sm">{{ actionSuccess() }}</p>
+    </div>
+  }
+
+  @if (actionError()) {
+    <div class="mb-6 p-4 rounded-xl border border-error/20 bg-error-container/20 text-on-error-container">
+      <p class="font-semibold text-sm">{{ actionError() }}</p>
+    </div>
+  }
+
+  @if (blockedAccounts().length > 0) {
+    <div class="mb-6 rounded-xl border border-secondary/20 bg-secondary-container/20 px-4 py-4 text-sm text-on-surface">
+      <p class="font-semibold">Some accounts are restricted.</p>
+      <p class="mt-1 text-on-surface-variant">Deposits, withdrawals, and internal transfers only work on verified accounts.</p>
+    </div>
+  }
+
+  <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+    <section class="xl:col-span-8">
+      <app-card variant="lowest" [padding]="false" class="overflow-hidden">
+        <div class="p-8 lg:p-10">
+          <div class="flex items-center gap-3 mb-8">
+            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <span class="material-symbols-outlined">
+                {{ activeTab() === 'deposit' ? 'south_west' : activeTab() === 'withdraw' ? 'north_east' : 'swap_horiz' }}
+              </span>
+            </div>
+            <div>
+              <h2 class="text-2xl font-headline font-bold text-primary">{{ activeTabTitle() }}</h2>
+              <p class="text-sm text-on-surface-variant">All actions create a ledger entry and update balances immediately.</p>
+            </div>
+          </div>
+
+          @if (activeTab() === 'deposit') {
+            <form [formGroup]="depositForm" (ngSubmit)="submitDeposit()" class="space-y-8">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-3">
+                  <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1" for="depositAccountId">Destination Account</label>
+                  <select id="depositAccountId" formControlName="accountId"
+                          class="w-full bg-surface-container-low rounded-2xl px-5 py-4 border-none focus:bg-white transition-colors font-bold text-primary shadow-sm">
+                    @for (account of accounts(); track account.id) {
+                      <option [value]="account.id">Sovereign {{ account.type }} (**** {{ account.lastFour }})</option>
+                    }
+                  </select>
+                  @if (getFormError('deposit', 'accountId')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest ml-1">{{ getFormError('deposit', 'accountId') }}</p> }
+                </div>
+                <div class="space-y-3">
+                  <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1" for="depositAmount">Amount (PHP)</label>
+                  <input id="depositAmount" formControlName="amount" type="number"
+                         max="99999999999999.99"
+                         (input)="onAmountInput($event, 'deposit')"
+                         class="w-full bg-surface-container-low rounded-2xl px-5 py-4 border-none focus:bg-white transition-colors font-bold text-primary shadow-sm" />
+                  @if (isDepositLimitReached()) {
+                    <div class="flex items-center gap-1.5 mt-2 px-1 text-amber-600 animate-in fade-in slide-in-from-top-1">
+                      <span class="material-symbols-outlined text-[14px]">lock</span>
+                      <span class="text-[9px] font-black uppercase tracking-widest leading-none">Institutional Limit Reached</span>
+                    </div>
+                  }
+                  @if (getFormError('deposit', 'amount')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest ml-1">{{ getFormError('deposit', 'amount') }}</p> }
+                </div>
+              </div>
+              <div class="space-y-3">
+                <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1" for="depositDescription">Description</label>
+                <input id="depositDescription" formControlName="description" type="text" appTrimInput
+                       class="w-full bg-surface-container-low rounded-2xl px-5 py-4 border-none focus:bg-white transition-colors shadow-sm" placeholder="Purpose of this deposit" />
+                @if (getFormError('deposit', 'description')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest ml-1">{{ getFormError('deposit', 'description') }}</p> }
+              </div>
+              <button type="submit"
+                      class="w-full md:w-auto px-10 py-5 bg-primary text-on-primary rounded-2xl font-black text-sm uppercase tracking-[0.15em] shadow-ambient hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                      [disabled]="isSubmitting() || !isEligibleAccount(depositForm.getRawValue().accountId)">
+                Confirm Deposit
+              </button>
+            </form>
+          }
+
+          @if (activeTab() === 'withdraw') {
+            <form [formGroup]="withdrawForm" (ngSubmit)="submitWithdrawal()" class="space-y-8">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="withdrawAccountId">Source Account</label>
+                  <select id="withdrawAccountId" formControlName="accountId"
+                          class="w-full bg-surface-container-highest rounded-lg px-4 py-3 border-b-2 border-transparent focus:border-primary">
+                    @for (account of accounts(); track account.id) {
+                      <option [value]="account.id">Sovereign {{ account.type }} (**** {{ account.lastFour }})</option>
+                    }
+                  </select>
+                  @if (getFormError('withdraw', 'accountId')) { <p class="text-xs font-semibold text-error ml-1">{{ getFormError('withdraw', 'accountId') }}</p> }
+                </div>
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="withdrawAmount">Amount (PHP)</label>
+                  <input id="withdrawAmount" formControlName="amount" type="number"
+                         max="99999999999999.99"
+                         (input)="onAmountInput($event, 'withdraw')"
+                         class="w-full bg-surface-container-highest rounded-lg px-4 py-3 border-b-2 border-transparent focus:border-primary" />
+                  <div class="flex items-center justify-between mt-2 px-1">
+                    <div class="text-[10px] font-mono text-on-surface-variant opacity-60 uppercase tracking-widest">
+                      Available: {{ withdrawBalance() | currency:'PHP':'symbol':'1.2-2' }}
+                    </div>
+                    @if (isWithdrawInsufficient()) {
+                      <div class="flex items-center gap-1.5 text-error animate-in fade-in slide-in-from-right-1">
+                        <span class="material-symbols-outlined text-[14px]">warning</span>
+                        <span class="text-[9px] font-black uppercase tracking-widest leading-none">Insufficient Funds</span>
+                      </div>
+                    } @else if (isWithdrawLimitReached()) {
+                      <div class="flex items-center gap-1.5 text-amber-600 animate-in fade-in slide-in-from-right-1">
+                        <span class="material-symbols-outlined text-[14px]">lock</span>
+                        <span class="text-[9px] font-black uppercase tracking-widest leading-none">Institutional Limit Reached</span>
+                      </div>
+                    }
+                  </div>
+                  @if (getFormError('withdraw', 'amount')) { <p class="text-xs font-semibold text-error ml-1 mt-1">{{ getFormError('withdraw', 'amount') }}</p> }
+                </div>
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="withdrawDescription">Description</label>
+                <input id="withdrawDescription" formControlName="description" type="text" appTrimInput
+                       class="w-full bg-surface-container-highest rounded-lg px-4 py-3 border-b-2 border-transparent focus:border-primary" />
+                @if (getFormError('withdraw', 'description')) { <p class="text-xs font-semibold text-error ml-1">{{ getFormError('withdraw', 'description') }}</p> }
+              </div>
+              <button type="submit"
+                      class="w-full md:w-auto px-8 py-4 bg-primary text-on-primary rounded-xl font-headline font-bold cursor-pointer disabled:opacity-50"
+                      [disabled]="isSubmitting() || !isEligibleAccount(withdrawForm.getRawValue().accountId)">
+                Confirm Withdrawal
+              </button>
+            </form>
+          }
+
+          @if (activeTab() === 'internal') {
+            <form [formGroup]="internalTransferForm" (ngSubmit)="submitInternalTransfer()" class="space-y-8">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="sourceAccountId">From Account</label>
+                  <select id="sourceAccountId" formControlName="sourceAccountId"
+                          class="w-full bg-surface-container-highest rounded-lg px-4 py-3 border-b-2 border-transparent focus:border-primary">
+                    @for (account of accounts(); track account.id) {
+                      <option [value]="account.id">Sovereign {{ account.type }} (**** {{ account.lastFour }})</option>
+                    }
+                  </select>
+                  @if (getFormError('internal', 'sourceAccountId')) { <p class="text-xs font-semibold text-error ml-1">{{ getFormError('internal', 'sourceAccountId') }}</p> }
+                </div>
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="receivingAccountId">To Account</label>
+                  <select id="receivingAccountId" formControlName="receivingAccountId"
+                          class="w-full bg-surface-container-highest rounded-lg px-4 py-3 border-b-2 border-transparent focus:border-primary">
+                    @for (account of accounts(); track account.id) {
+                      <option [value]="account.id">Sovereign {{ account.type }} (**** {{ account.lastFour }})</option>
+                    }
+                  </select>
+                  @if (getFormError('internal', 'receivingAccountId')) { <p class="text-xs font-semibold text-error ml-1">{{ getFormError('internal', 'receivingAccountId') }}</p> }
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="internalAmount">Amount (PHP)</label>
+                  <input id="internalAmount" formControlName="amount" type="number"
+                         max="99999999999999.99"
+                         (input)="onAmountInput($event, 'internal')"
+                         class="w-full bg-surface-container-highest rounded-lg px-4 py-3 border-b-2 border-transparent focus:border-primary" />
+                  <div class="flex items-center justify-between mt-2 px-1">
+                    <div class="text-[10px] font-mono text-on-surface-variant opacity-60 uppercase tracking-widest">
+                      Available: {{ internalSourceBalance() | currency:'PHP':'symbol':'1.2-2' }}
+                    </div>
+                    @if (isInternalInsufficient()) {
+                      <div class="flex items-center gap-1.5 text-error animate-in fade-in slide-in-from-right-1">
+                        <span class="material-symbols-outlined text-[14px]">warning</span>
+                        <span class="text-[9px] font-black uppercase tracking-widest leading-none">Insufficient Funds</span>
+                      </div>
+                    } @else if (isInternalLimitReached()) {
+                      <div class="flex items-center gap-1.5 text-amber-600 animate-in fade-in slide-in-from-right-1">
+                        <span class="material-symbols-outlined text-[14px]">lock</span>
+                        <span class="text-[9px] font-black uppercase tracking-widest leading-none">Institutional Limit Reached</span>
+                      </div>
+                    }
+                  </div>
+                  @if (getFormError('internal', 'amount')) { <p class="text-xs font-semibold text-error ml-1 mt-1">{{ getFormError('internal', 'amount') }}</p> }
+                </div>
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="internalDescription">Description</label>
+                  <input id="internalDescription" formControlName="description" type="text" appTrimInput
+                         class="w-full bg-surface-container-highest rounded-lg px-4 py-3 border-b-2 border-transparent focus:border-primary" />
+                  @if (getFormError('internal', 'description')) { <p class="text-xs font-semibold text-error ml-1">{{ getFormError('internal', 'description') }}</p> }
+                </div>
+              </div>
+              <button type="submit"
+                      class="w-full md:w-auto px-8 py-4 bg-primary text-on-primary rounded-xl font-headline font-bold cursor-pointer disabled:opacity-50"
+                      [disabled]="isSubmitting() || !isEligibleAccount(internalTransferForm.getRawValue().sourceAccountId) || !isEligibleAccount(internalTransferForm.getRawValue().receivingAccountId)">
+                Confirm Internal Transfer
+              </button>
+            </form>
+          }
+        </div>
+      </app-card>
+    </section>
+
+    <aside class="xl:col-span-4 space-y-6">
+      <app-card class="space-y-6">
+        <div>
+          <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">Portfolio Snapshot</p>
+          <h3 class="text-2xl font-headline font-bold text-primary mt-2">{{ accounts().length }} Active Accounts</h3>
+        </div>
+        <div class="space-y-1">
+          @for (account of accounts(); track account.id; let even = $even) {
+            <div class="p-5 rounded-2xl transition-colors {{ even ? 'bg-surface-container-low/40' : 'bg-white' }}">
+              <div class="flex items-center justify-between">
+                <p class="font-bold text-primary text-sm">Sovereign {{ account.type }}</p>
+                <app-badge [status]="badgeStatus(account.status)" size="xs">{{ account.status }}</app-badge>
+              </div>
+              <p class="mt-2 text-xl font-headline font-bold text-on-surface tracking-tighter">{{ account.balance | currency:'PHP':'symbol':'1.0-0' }}</p>
+              <p class="mt-1 text-[10px] font-mono text-on-surface-variant opacity-60 lowercase tracking-widest">**** {{ account.lastFour }}</p>
+            </div>
+          }
+        </div>
+      </app-card>
+
+      <app-card class="space-y-6">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0">
+            <span class="material-symbols-outlined text-base">shield_lock</span>
+          </div>
+          <div>
+            <h4 class="font-headline font-bold text-sm text-primary uppercase tracking-widest">Protocol</h4>
+            <p class="text-on-surface-variant text-xs leading-relaxed mt-2 italic">Institutional movements are logged. Ensure both accounts are owned by the legal entity for internal shifts.</p>
+          </div>
+        </div>
+        <a routerLink="/customer/transfer"
+           class="block w-full text-center px-6 py-5 rounded-2xl bg-surface-container-low text-primary font-black text-[10px] uppercase tracking-widest hover:bg-surface-container-high transition-all cursor-pointer">
+          Inter-bank Transfer
+        </a>
+      </app-card>
+    </aside>
+  </div>
+</main>
+
+<app-footer />

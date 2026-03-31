@@ -6,12 +6,20 @@ export const customerRoutes: Routes = [
     loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
   },
   {
+    path: 'banking',
+    loadComponent: () => import('./banking/banking.component').then(m => m.BankingComponent),
+  },
+  {
     path: 'transfer',
     loadComponent: () => import('./transfer/transfer.component').then(m => m.TransferComponent),
   },
   {
     path: 'history',
     loadComponent: () => import('./history/history.component').then(m => m.HistoryComponent),
+  },
+  {
+    path: 'settings',
+    loadComponent: () => import('./settings/settings.component').then(m => m.SettingsComponent),
   },
   {
     path: '',
