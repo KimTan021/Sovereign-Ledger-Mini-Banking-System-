@@ -9,10 +9,11 @@ import { CustomerService } from '../../../core/services/customer.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
+import { TrimInputDirective } from '../../../shared/directives/trim-input.directive';
 
 @Component({
   selector: 'app-request-account',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, CardComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, CardComponent, TrimInputDirective],
   templateUrl: './request-account.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

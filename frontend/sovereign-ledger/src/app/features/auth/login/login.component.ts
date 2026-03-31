@@ -5,11 +5,12 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angu
 import { AuthService, UserRole } from '../../../core/services/auth.service';
 import { AnimationOptions } from 'ngx-lottie';
 import { AbstractControl } from '@angular/forms';
+import { TrimInputDirective } from '../../../shared/directives/trim-input.directive';
 
 @Component({
   selector: 'app-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, ReactiveFormsModule, RouterLink, NgOptimizedImage],
+  imports: [FormsModule, ReactiveFormsModule, RouterLink, NgOptimizedImage, TrimInputDirective],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })

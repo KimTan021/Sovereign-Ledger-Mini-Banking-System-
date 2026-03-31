@@ -9,11 +9,12 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { CardComponent } from '../../../shared/components/card/card.component';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { OtpModalComponent } from '../../../shared/components/otp-modal/otp-modal.component';
+import { TrimInputDirective } from '../../../shared/directives/trim-input.directive';
 
 @Component({
   selector: 'app-transfer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NavbarComponent, FooterComponent, ReactiveFormsModule, CurrencyPipe, CardComponent, CommonModule, BadgeComponent, OtpModalComponent],
+  imports: [NavbarComponent, FooterComponent, ReactiveFormsModule, CurrencyPipe, CardComponent, CommonModule, BadgeComponent, OtpModalComponent, TrimInputDirective],
   templateUrl: './transfer.component.html',
 })
 export class TransferComponent {

@@ -29,24 +29,24 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-2">
             <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1">First Name</label>
-            <input formControlName="firstName" type="text" class="w-full rounded-2xl bg-surface-container-low px-5 py-4 border-none focus:bg-white transition-all shadow-sm font-bold text-primary" />
+            <input formControlName="firstName" type="text" appTrimInput class="w-full rounded-2xl bg-surface-container-low px-5 py-4 border-none focus:bg-white transition-all shadow-sm font-bold text-primary" />
             @if (getProfileError('firstName')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest ml-1">{{ getProfileError('firstName') }}</p> }
           </div>
           <div class="space-y-2">
             <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1">Middle Name</label>
-            <input formControlName="middleName" type="text" class="w-full rounded-2xl bg-surface-container-low px-5 py-4 border-none focus:bg-white transition-all shadow-sm font-bold text-primary" />
+            <input formControlName="middleName" type="text" appTrimInput class="w-full rounded-2xl bg-surface-container-low px-5 py-4 border-none focus:bg-white transition-all shadow-sm font-bold text-primary" />
             @if (getProfileError('middleName')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest ml-1">{{ getProfileError('middleName') }}</p> }
           </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-2">
             <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1">Last Name</label>
-            <input formControlName="lastName" type="text" class="w-full rounded-2xl bg-surface-container-low px-5 py-4 border-none focus:bg-white transition-all shadow-sm font-bold text-primary" />
+            <input formControlName="lastName" type="text" appTrimInput class="w-full rounded-2xl bg-surface-container-low px-5 py-4 border-none focus:bg-white transition-all shadow-sm font-bold text-primary" />
             @if (getProfileError('lastName')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest ml-1">{{ getProfileError('lastName') }}</p> }
           </div>
           <div class="space-y-2">
             <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1">Phone</label>
-            <input formControlName="phone" type="text" class="w-full rounded-2xl bg-surface-container-low px-5 py-4 border-none focus:bg-white transition-all shadow-sm font-bold text-primary" />
+            <input formControlName="phone" type="text" appTrimInput class="w-full rounded-2xl bg-surface-container-low px-5 py-4 border-none focus:bg-white transition-all shadow-sm font-bold text-primary" />
             @if (getProfileError('phone')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest ml-1">{{ getProfileError('phone') }}</p> }
           </div>
         </div>

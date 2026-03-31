@@ -7,11 +7,12 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 import { CardComponent } from '../../../shared/components/card/card.component';
 import { CustomerService } from '../../../core/services/customer.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { TrimInputDirective } from '../../../shared/directives/trim-input.directive';
 
 @Component({
   selector: 'app-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, NavbarComponent, FooterComponent, CardComponent],
+  imports: [CommonModule, ReactiveFormsModule, NavbarComponent, FooterComponent, CardComponent, TrimInputDirective],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent {

@@ -231,8 +231,8 @@
                     {{ entry.type }} Failed
                   </div>
                 } @else {
-                  <p [class]="'text-sm font-bold tracking-tight ' + (entry.type === 'deposit' || entry.type === 'refund' || entry.amount > 0 ? 'text-on-tertiary-fixed-variant' : 'text-secondary')">
-                    {{ (entry.type === 'deposit' || entry.type === 'refund' || entry.amount > 0) ? '+' : '-' }}{{ (entry.amount < 0 ? entry.amount * -1 : entry.amount) | currency:'PHP':'symbol':'1.2-2' }}
+                  <p [class]="'text-sm font-bold tracking-tight ' + (entry.direction === 'CREDIT' ? 'text-on-tertiary-fixed-variant' : 'text-secondary')">
+                    {{ entry.direction === 'CREDIT' ? '+' : '-' }}{{ entry.amount | currency:'PHP':'symbol':'1.2-2' }}
                   </p>
                 }
               </div>

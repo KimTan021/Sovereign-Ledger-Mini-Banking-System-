@@ -8,11 +8,12 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
 import { NotificationService } from '../../../core/services/notification.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TrimInputDirective } from '../../../shared/directives/trim-input.directive';
 
 @Component({
   selector: 'app-admin-users',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, BadgeComponent, PaginationComponent, ModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, BadgeComponent, PaginationComponent, ModalComponent, TrimInputDirective],
   template: `
     <div #pageTop class="p-12 lg:p-16 space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-screen-2xl mx-auto">
       <div class="flex items-center justify-between">
@@ -170,15 +171,15 @@ import { ActivatedRoute, Router } from '@angular/router';
             </div>
 
             <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input formControlName="firstName" type="text" class="rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="First name" />
+              <input formControlName="firstName" type="text" appTrimInput class="rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="First name" />
               @if (getProfileError('firstName')) { <p class="md:col-span-1 text-xs font-semibold text-error">{{ getProfileError('firstName') }}</p> }
-              <input formControlName="middleName" type="text" class="rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Middle name" />
+              <input formControlName="middleName" type="text" appTrimInput class="rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Middle name" />
               @if (getProfileError('middleName')) { <p class="md:col-span-1 text-xs font-semibold text-error">{{ getProfileError('middleName') }}</p> }
-              <input formControlName="lastName" type="text" class="rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Last name" />
+              <input formControlName="lastName" type="text" appTrimInput class="rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Last name" />
               @if (getProfileError('lastName')) { <p class="md:col-span-1 text-xs font-semibold text-error">{{ getProfileError('lastName') }}</p> }
-              <input formControlName="phone" type="text" class="rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Phone" />
+              <input formControlName="phone" type="text" appTrimInput class="rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Phone" />
               @if (getProfileError('phone')) { <p class="md:col-span-1 text-xs font-semibold text-error">{{ getProfileError('phone') }}</p> }
-              <input formControlName="userEmail" type="email" class="md:col-span-2 rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Email" />
+              <input formControlName="userEmail" type="email" appTrimInput class="md:col-span-2 rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Email" />
               @if (getProfileError('userEmail')) { <p class="md:col-span-2 text-xs font-semibold text-error">{{ getProfileError('userEmail') }}</p> }
               <div class="md:col-span-2 flex flex-wrap gap-3">
                 @if (canManageDetail()) {
@@ -285,7 +286,7 @@ import { ActivatedRoute, Router } from '@angular/router';
                         <option value="debit">Debit / Withdrawal</option>
                       </select>
                       <div class="md:col-span-4 space-y-1">
-                        <input formControlName="description" type="text" class="w-full rounded-2xl bg-white px-4 py-4 border-none shadow-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Adjustment reason / compliance note" />
+                        <input formControlName="description" type="text" appTrimInput class="w-full rounded-2xl bg-white px-4 py-4 border-none shadow-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Adjustment reason / compliance note" />
                         @if (getAdjustmentError('description')) { <p class="text-[10px] font-bold text-error uppercase tracking-widest px-2 animate-in fade-in slide-in-from-top-1">{{ getAdjustmentError('description') }}</p> }
                       </div>
                       <div class="md:col-span-4 mt-2">
@@ -327,19 +328,19 @@ import { ActivatedRoute, Router } from '@angular/router';
           <form [formGroup]="adminForm" (ngSubmit)="createAdminAccount()" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="space-y-1">
-                <input formControlName="firstName" type="text" class="w-full rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="First name" />
+                <input formControlName="firstName" type="text" appTrimInput class="w-full rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="First name" />
                 @if (getAdminError('firstName')) { <p class="text-xs font-semibold text-error">{{ getAdminError('firstName') }}</p> }
               </div>
               <div class="space-y-1">
-                <input formControlName="middleName" type="text" class="w-full rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Middle name (Optional)" />
+                <input formControlName="middleName" type="text" appTrimInput class="w-full rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Middle name (Optional)" />
                 @if (getAdminError('middleName')) { <p class="text-xs font-semibold text-error">{{ getAdminError('middleName') }}</p> }
               </div>
               <div class="space-y-1 md:col-span-2">
-                <input formControlName="lastName" type="text" class="w-full rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Last name" />
+                <input formControlName="lastName" type="text" appTrimInput class="w-full rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Last name" />
                 @if (getAdminError('lastName')) { <p class="text-xs font-semibold text-error">{{ getAdminError('lastName') }}</p> }
               </div>
               <div class="space-y-1 md:col-span-2">
-                <input formControlName="userEmail" type="email" class="w-full rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Administrative Email" />
+                <input formControlName="userEmail" type="email" appTrimInput class="w-full rounded-2xl bg-surface-container-highest/50 px-4 py-4 focus:bg-white transition-colors" placeholder="Administrative Email" />
                 @if (getAdminError('userEmail')) { <p class="text-xs font-semibold text-error">{{ getAdminError('userEmail') }}</p> }
               </div>
               <div class="space-y-1 md:col-span-2">

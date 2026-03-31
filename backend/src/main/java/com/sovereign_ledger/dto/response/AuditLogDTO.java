@@ -21,7 +21,8 @@ public class AuditLogDTO {
     private String title;
     private String detail;
     private BigDecimal amount;
-    private String type; // e.g. "debit", "credit"
+    private String type; // e.g. "withdrawal", "deposit"
+    private String direction; // "CREDIT" or "DEBIT"
     private String status;
     private String reviewNote;
     private boolean error;

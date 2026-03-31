@@ -126,13 +126,14 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="space-y-3">
                 <label class="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1" for="recipientAccount">Recipient Account Number</label>
-                <input
-                  #recipientAccountInput
-                  id="recipientAccount"
-                  formControlName="recipientAccount"
-                  type="text"
-                  placeholder="e.g. 0098 7762 1120"
-                  class="w-full bg-surface-container-low border-none rounded-2xl px-5 py-4 text-on-surface placeholder:text-outline/50 focus:bg-white transition-all shadow-sm font-bold text-primary" />
+                  <input
+                    #recipientAccountInput
+                    id="recipientAccount"
+                    formControlName="recipientAccount"
+                    type="text"
+                    appTrimInput
+                    placeholder="e.g. 0098 7762 1120"
+                    class="w-full bg-surface-container-low border-none rounded-2xl px-5 py-4 text-on-surface placeholder:text-outline/50 focus:bg-white transition-all shadow-sm font-bold text-primary" />
                 @if (getErrorMessage('recipientAccount')) {
                   <p class="text-[10px] font-bold text-error uppercase tracking-widest ml-1">{{ getErrorMessage('recipientAccount') }}</p>
                 }
@@ -143,6 +144,7 @@
                   id="recipientName"
                   formControlName="recipientName"
                   type="text"
+                  appTrimInput
                   placeholder="Full legal name"
                   class="w-full bg-surface-container-low border-none rounded-2xl px-5 py-4 text-on-surface placeholder:text-outline/50 focus:bg-white transition-all shadow-sm" />
                 @if (getErrorMessage('recipientName')) {

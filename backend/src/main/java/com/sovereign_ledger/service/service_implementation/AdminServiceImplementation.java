@@ -648,6 +648,7 @@ public class AdminServiceImplementation implements AdminService {
         dto.setDetail(resolveAuditDetail(transaction));
         dto.setAmount(transaction.getTransactionAmount());
         dto.setType(transaction.getTransactionType());
+        dto.setDirection(determineDirection(transaction.getTransactionType()));
         dto.setStatus(Optional.ofNullable(transaction.getTransactionStatus()).orElse("Completed"));
         dto.setReviewNote(transaction.getReviewNote());
         String txStatus = dto.getStatus().toLowerCase();
@@ -659,6 +660,15 @@ public class AdminServiceImplementation implements AdminService {
         );
         dto.setTimestamp(transaction.getTransactionTime());
         return dto;
+    }
+
+    private String determineDirection(String type) {
+        if (type == null) return "DEBIT";
+        String lower = type.toLowerCase();
+        return switch (lower) {
+            case "deposit", "credit", "refund" -> "CREDIT";
+            default -> "DEBIT"; // withdrawal, withdraw, transfer, internal, etc.
+        };
     }
 
     private String resolveAuditDetail(Transaction transaction) {

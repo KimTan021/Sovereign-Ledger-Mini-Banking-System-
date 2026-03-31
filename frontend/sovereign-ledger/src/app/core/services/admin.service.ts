@@ -87,6 +87,7 @@ export interface AuditLogEntry {
   detail: string;
   amount: number;
   type: string;
+  direction: string;
   status: string;
   reviewNote?: string | null;
   error: boolean;

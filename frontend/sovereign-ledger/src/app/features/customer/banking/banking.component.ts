@@ -11,10 +11,11 @@ import { AccountService } from '../../../core/services/account.service';
 import { TransactionService } from '../../../core/services/transaction.service';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { OtpModalComponent } from '../../../shared/components/otp-modal/otp-modal.component';
+import { TrimInputDirective } from '../../../shared/directives/trim-input.directive';
 
 @Component({
   selector: 'app-banking',  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, RouterLink, NavbarComponent, FooterComponent, CardComponent, BadgeComponent, OtpModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, RouterLink, NavbarComponent, FooterComponent, CardComponent, BadgeComponent, OtpModalComponent, TrimInputDirective],
   templateUrl: './banking.component.html',
 })
 export class BankingComponent {

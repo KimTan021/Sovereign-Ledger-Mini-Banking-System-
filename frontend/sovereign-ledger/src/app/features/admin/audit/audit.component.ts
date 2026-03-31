@@ -89,8 +89,8 @@ import { NotificationService } from '../../../core/services/notification.service
                       {{ log.status }}
                     </span>
                   </td>
-                  <td class="px-6 py-5 text-right font-headline font-bold text-lg tracking-tighter whitespace-nowrap" [class.text-error]="log.type === 'debit'" [class.text-on-tertiary-fixed-variant]="log.type === 'credit'">
-                    {{ (log.type === 'credit' ? '+' : '-') }}{{ log.amount | currency:'PHP':'symbol':'1.0-0' }}
+                  <td class="px-6 py-5 text-right font-headline font-bold text-lg tracking-tighter whitespace-nowrap" [class.text-error]="log.direction === 'DEBIT'" [class.text-on-tertiary-fixed-variant]="log.direction === 'CREDIT'">
+                    {{ (log.direction === 'CREDIT' ? '+' : '-') }}{{ log.amount | currency:'PHP':'symbol':'1.0-0' }}
                   </td>
                   <td class="px-6 py-5 min-w-[320px] last:rounded-r-2xl">
                     @if (canReview(log)) {
