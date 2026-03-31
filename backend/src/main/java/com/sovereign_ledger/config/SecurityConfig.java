@@ -37,7 +37,10 @@ public class SecurityConfig {
 
                 // Specific Customer Transaction endpoints
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/transactions/transfer").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/transactions/verify-transfer-otp").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(org.springframework.http.HttpMethod.PUT, "/transactions/transfer-transaction").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/transactions/resend-transfer-otp").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/transactions/cancel-transfer-otp").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/transactions/deposit").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/transactions/withdraw").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/transactions/*/transactions").hasAnyRole("USER", "ADMIN")
