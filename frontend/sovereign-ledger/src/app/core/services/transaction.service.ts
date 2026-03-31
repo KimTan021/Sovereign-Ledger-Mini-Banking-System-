@@ -252,7 +252,7 @@ export class TransactionService {
     return this.http.post(`${this.apiUrl}/transfer`, payload);
   }
 
-  transferBetweenOwnAccounts(payload: InternalTransferPayload): Observable<any> {
+  transferBetweenOwnAccounts(payload: InternalTransferPayload): Observable<Transaction> {
     // Map frontend payload to TransferRequestDTO
     const backendPayload = {
       sourceAccountId: payload.sourceAccountId,
@@ -261,15 +261,21 @@ export class TransactionService {
       logs: payload.logs,
       transactionDescription: payload.transactionDescription
     };
-    return this.http.post(`${this.apiUrl}/transfer-internal/initiate`, backendPayload);
+    return this.http.post<BackendTransactionResponse>(`${this.apiUrl}/transfer-internal/initiate`, backendPayload).pipe(
+      map(tx => this.mapBackendToFrontend(tx))
+    );
   }
 
-  depositFunds(payload: CashTransactionPayload): Observable<any> {
-    return this.http.post(`${this.apiUrl}/deposit/initiate`, payload);
+  depositFunds(payload: CashTransactionPayload): Observable<Transaction> {
+    return this.http.post<BackendTransactionResponse>(`${this.apiUrl}/deposit/initiate`, payload).pipe(
+      map(tx => this.mapBackendToFrontend(tx))
+    );
   }
 
-  withdrawFunds(payload: CashTransactionPayload): Observable<any> {
-    return this.http.post(`${this.apiUrl}/withdraw/initiate`, payload);
+  withdrawFunds(payload: CashTransactionPayload): Observable<Transaction> {
+    return this.http.post<BackendTransactionResponse>(`${this.apiUrl}/withdraw/initiate`, payload).pipe(
+      map(tx => this.mapBackendToFrontend(tx))
+    );
   }
 
   verifyTransactionOtp(email: string, otpCode: string): Observable<any> {

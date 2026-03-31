@@ -240,13 +240,20 @@ public class TransactionServiceImplementation implements TransactionService {
 
     @Override
     @Transactional
-    public OTPResponseDTO initiateDeposit(Integer accountId, BigDecimal transAmount, String transactionDescription, String userEmail) {
+    public TransactionResponseDTO initiateDeposit(Integer accountId, BigDecimal transAmount, String transactionDescription, String userEmail) {
         Account managedAccount = accountService.findAccountEntityById(accountId);
         if (!"Verified".equals(managedAccount.getAccountStatus())) {
             throw new AccountNotVerifiedException("This account is currently unverified. Deposit cannot proceed.");
         }
 
-        cleanupPendingOtpTransactions(userEmail);
+        String accNumRaw = managedAccount.getAccountNumber();
+        try {
+            accNumRaw = com.sovereign_ledger.util.AesEncryptionUtil.decrypt(accNumRaw, aesSecretKey);
+        } catch (Exception e) {
+            // Log or fallback
+        }
+
+        transactionRepository.creditAccount(managedAccount.getAccountId(), transAmount);
 
         Transaction transaction = new Transaction();
         transaction.setAccount(managedAccount);
@@ -254,25 +261,34 @@ public class TransactionServiceImplementation implements TransactionService {
         transaction.setTransactionAmount(transAmount);
         transaction.setTransactionTime(LocalDateTime.now());
         transaction.setTransactionDescription(transactionDescription);
-        transaction.setTransactionStatus("Pending_OTP");
-        transaction.setLogs(transactionDescription != null ? transactionDescription : "Initiating deposit");
+        transaction.setTransactionStatus("Completed");
+        transaction.setLogs("Deposit posted to " + managedAccount.getAccountType() + " account " + accNumRaw);
         
         Transaction savedTransaction = transactionRepository.save(transaction);
-        return otpVerificationService.generateAndSendOtp(userEmail, "TRANSACTION_OTP", null, savedTransaction);
+        notificationService.emitDataChange("accounts", "transactions", "admin");
+
+        return toTransactionResponseDTO(savedTransaction);
     }
 
     @Override
     @Transactional
-    public OTPResponseDTO initiateWithdrawal(Integer accountId, BigDecimal transAmount, String transactionDescription, String userEmail) {
+    public TransactionResponseDTO initiateWithdrawal(Integer accountId, BigDecimal transAmount, String transactionDescription, String userEmail) {
         Account managedAccount = accountService.findAccountEntityById(accountId);
         if (!"Verified".equals(managedAccount.getAccountStatus())) {
             throw new AccountNotVerifiedException("This account is currently unverified. Withdrawal cannot proceed.");
         }
-        if (managedAccount.getAccountBalance().compareTo(transAmount) < 0) {
+        
+        int affected = transactionRepository.debitAccount(managedAccount.getAccountId(), transAmount);
+        if (affected == 0) {
             throw new InsufficientBalanceException("Your account's balance is insufficient for this withdrawal.");
         }
 
-        cleanupPendingOtpTransactions(userEmail);
+        String accNumRaw = managedAccount.getAccountNumber();
+        try {
+            accNumRaw = com.sovereign_ledger.util.AesEncryptionUtil.decrypt(accNumRaw, aesSecretKey);
+        } catch (Exception e) {
+            // Fallback
+        }
 
         Transaction transaction = new Transaction();
         transaction.setAccount(managedAccount);
@@ -280,16 +296,18 @@ public class TransactionServiceImplementation implements TransactionService {
         transaction.setTransactionAmount(transAmount);
         transaction.setTransactionTime(LocalDateTime.now());
         transaction.setTransactionDescription(transactionDescription);
-        transaction.setTransactionStatus("Pending_OTP");
-        transaction.setLogs(transactionDescription != null ? transactionDescription : "Initiating withdrawal");
+        transaction.setTransactionStatus("Completed");
+        transaction.setLogs("Withdrawal from " + managedAccount.getAccountType() + " account " + accNumRaw);
 
         Transaction savedTransaction = transactionRepository.save(transaction);
-        return otpVerificationService.generateAndSendOtp(userEmail, "TRANSACTION_OTP", null, savedTransaction);
+        notificationService.emitDataChange("accounts", "transactions", "admin");
+
+        return toTransactionResponseDTO(savedTransaction);
     }
 
     @Override
     @Transactional
-    public OTPResponseDTO initiateInternalTransfer(Integer sourceAccountId, Integer receivingAccountId, BigDecimal transAmount, String logs, String transactionDescription, String userEmail) {
+    public TransactionResponseDTO initiateInternalTransfer(Integer sourceAccountId, Integer receivingAccountId, BigDecimal transAmount, String logs, String transactionDescription, String userEmail) {
         Account managedSourceAccount = accountService.findAccountEntityById(sourceAccountId);
         Account managedReceivingAccount = accountService.findAccountEntityById(receivingAccountId);
 
@@ -299,11 +317,11 @@ public class TransactionServiceImplementation implements TransactionService {
         if (!"Verified".equals(managedSourceAccount.getAccountStatus()) || !"Verified".equals(managedReceivingAccount.getAccountStatus())) {
             throw new AccountNotVerifiedException("Both accounts must be verified for internal transfers.");
         }
-        if (managedSourceAccount.getAccountBalance().compareTo(transAmount) < 0) {
+        
+        if (transactionRepository.debitAccount(managedSourceAccount.getAccountId(), transAmount) == 0) {
             throw new InsufficientBalanceException("Insufficient balance in the source account.");
         }
-
-        cleanupPendingOtpTransactions(userEmail);
+        transactionRepository.creditAccount(managedReceivingAccount.getAccountId(), transAmount);
 
         Transaction transaction = new Transaction();
         transaction.setAccount(managedSourceAccount);
@@ -313,10 +331,21 @@ public class TransactionServiceImplementation implements TransactionService {
         transaction.setLogs(logs != null ? logs : transactionDescription);
         transaction.setTransactionTime(LocalDateTime.now());
         transaction.setTransactionDescription(transactionDescription);
-        transaction.setTransactionStatus("Pending_OTP");
+        transaction.setTransactionStatus("Completed");
 
         Transaction savedTransaction = transactionRepository.save(transaction);
-        return otpVerificationService.generateAndSendOtp(userEmail, "TRANSACTION_OTP", null, savedTransaction);
+
+        // Notify Receiver
+        notificationService.createNotification(
+                managedReceivingAccount.getUser().getUserId(),
+                managedReceivingAccount.getAccountId(),
+                null, "incoming-transfer", "Incoming transfer received",
+                "You received PHP " + transAmount + " in your " + managedReceivingAccount.getAccountType() + " account."
+        );
+        
+        notificationService.emitDataChange("accounts", "transactions", "notifications", "admin");
+
+        return toTransactionResponseDTO(savedTransaction);
     }
 
     private void cleanupPendingOtpTransactions(String userEmail) {
@@ -358,7 +387,7 @@ public class TransactionServiceImplementation implements TransactionService {
         // 3. Process based on type
         String type = pendingTransaction.getTransactionType().toLowerCase();
         switch (type) {
-            case "debit" -> processExternalTransfer(pendingTransaction);
+            case "debit", "transfer" -> processExternalTransfer(pendingTransaction);
             case "deposit" -> {
                 depositToAccount(pendingTransaction.getAccount().getAccountId(),
                         pendingTransaction.getTransactionAmount(),

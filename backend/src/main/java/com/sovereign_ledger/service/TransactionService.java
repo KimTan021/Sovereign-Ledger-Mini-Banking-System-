@@ -54,19 +54,19 @@ public interface TransactionService {
             String transactionDescription,
             String userEmail);
 
-    OTPResponseDTO initiateDeposit(
+    TransactionResponseDTO initiateDeposit(
             Integer accountId,
             BigDecimal transAmount,
             String transactionDescription,
             String userEmail);
 
-    OTPResponseDTO initiateWithdrawal(
+    TransactionResponseDTO initiateWithdrawal(
             Integer accountId,
             BigDecimal transAmount,
             String transactionDescription,
             String userEmail);
 
-    OTPResponseDTO initiateInternalTransfer(
+    TransactionResponseDTO initiateInternalTransfer(
             Integer sourceAccountId,
             Integer receivingAccountId,
             BigDecimal transAmount,

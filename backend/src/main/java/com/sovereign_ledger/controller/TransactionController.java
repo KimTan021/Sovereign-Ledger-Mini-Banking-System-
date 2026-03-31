@@ -113,7 +113,7 @@ public class TransactionController {
     }
 
     @PostMapping("/transfer-internal/initiate")
-    public ResponseEntity<OTPResponseDTO> initiateInternalTransfer(@Valid @RequestBody TransferRequestDTO request) {
+    public ResponseEntity<TransactionResponseDTO> initiateInternalTransfer(@Valid @RequestBody TransferRequestDTO request) {
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(transactionService.initiateInternalTransfer(
                 request.getSourceAccountId(),
@@ -147,7 +147,7 @@ public class TransactionController {
     }
 
     @PostMapping("/deposit/initiate")
-    public ResponseEntity<OTPResponseDTO> initiateDeposit(@Valid @RequestBody CashTransactionRequestDTO request) {
+    public ResponseEntity<TransactionResponseDTO> initiateDeposit(@Valid @RequestBody CashTransactionRequestDTO request) {
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(transactionService.initiateDeposit(
                 request.getAccountId(),
@@ -158,7 +158,7 @@ public class TransactionController {
     }
 
     @PostMapping("/withdraw/initiate")
-    public ResponseEntity<OTPResponseDTO> initiateWithdrawal(@Valid @RequestBody CashTransactionRequestDTO request) {
+    public ResponseEntity<TransactionResponseDTO> initiateWithdrawal(@Valid @RequestBody CashTransactionRequestDTO request) {
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(transactionService.initiateWithdrawal(
                 request.getAccountId(),

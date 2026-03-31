@@ -131,7 +131,8 @@ export class BankingComponent {
         transAmount: value.amount,
         description: value.description,
       }),
-      'Deposit posted successfully.'
+      'Deposit posted successfully.',
+      true
     );
   }
 
@@ -152,7 +153,8 @@ export class BankingComponent {
         transAmount: value.amount,
         description: value.description,
       }),
-      'Withdrawal posted successfully.'
+      'Withdrawal posted successfully.',
+      true
     );
   }
 
@@ -179,7 +181,8 @@ export class BankingComponent {
         logs: `Internal transfer from account ${value.sourceAccountId} to account ${value.receivingAccountId}`,
         transactionDescription: value.description,
       }),
-      'Internal transfer completed.'
+      'Internal transfer completed.',
+      true
     );
   }
 
@@ -213,7 +216,7 @@ export class BankingComponent {
     }
   }
 
-  private runAction(request: Observable<unknown>, successMessage: string): void {
+  private runAction(request: Observable<unknown>, successMessage: string, isImmediate: boolean = false): void {
     this.isSubmitting.set(true);
     this.actionError.set(null);
     this.actionSuccess.set(null);
@@ -221,8 +224,14 @@ export class BankingComponent {
     request.subscribe({
       next: () => {
         this.isSubmitting.set(false);
-        this.pendingSuccessMessage.set(successMessage);
-        this.showOtpModal.set(true);
+        if (isImmediate) {
+          this.actionSuccess.set(successMessage);
+          this.resetForms();
+          setTimeout(() => this.actionSuccess.set(null), 5000);
+        } else {
+          this.pendingSuccessMessage.set(successMessage);
+          this.showOtpModal.set(true);
+        }
       },
       error: (err: any) => {
         this.isSubmitting.set(false);
@@ -235,11 +244,7 @@ export class BankingComponent {
     });
   }
 
-  onOtpVerified(): void {
-    this.showOtpModal.set(false);
-    this.actionSuccess.set(this.pendingSuccessMessage());
-    this.pendingSuccessMessage.set(null);
-    
+  private resetForms(): void {
     // Reset forms
     this.depositForm.reset({ amount: 1000, description: 'Branch cash deposit' });
     this.withdrawForm.reset({ amount: 500, description: 'ATM cash withdrawal' });
@@ -247,7 +252,13 @@ export class BankingComponent {
     this.depositSubmitted.set(false);
     this.withdrawSubmitted.set(false);
     this.internalSubmitted.set(false);
+  }
 
+  onOtpVerified(): void {
+    this.showOtpModal.set(false);
+    this.actionSuccess.set(this.pendingSuccessMessage());
+    this.pendingSuccessMessage.set(null);
+    this.resetForms();
     setTimeout(() => this.actionSuccess.set(null), 5000);
   }
 
