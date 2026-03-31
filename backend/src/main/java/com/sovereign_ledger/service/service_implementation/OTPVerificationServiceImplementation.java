@@ -73,11 +73,14 @@ public class OTPVerificationServiceImplementation implements OTPVerificationServ
 
         otpVerificationRepository.findByEmailAndOtpPurpose(email, purpose)
                 .ifPresent(existingOtp -> {
-                    LocalDateTime cooldownExpiry = existingOtp.getCreatedAt()
-                            .plusMinutes(otpResendCooldownMinutes);
-                    if (LocalDateTime.now().isBefore(cooldownExpiry)) {
-                        throw new RuntimeException(
-                                "Please wait before requesting a new OTP");
+                    // Only apply cooldown if OTP is still active (not yet verified)
+                    if (!existingOtp.getVerified()) {
+                        LocalDateTime cooldownExpiry = existingOtp.getCreatedAt()
+                                .plusMinutes(otpResendCooldownMinutes);
+                        if (LocalDateTime.now().isBefore(cooldownExpiry)) {
+                            throw new RuntimeException(
+                                    "Please wait before requesting a new OTP");
+                        }
                     }
                 });
         // Delete any existing OTP for this email + purpose
