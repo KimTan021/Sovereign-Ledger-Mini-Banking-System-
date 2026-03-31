@@ -198,6 +198,10 @@ public class TransactionServiceImplementation implements TransactionService {
         String sourceAccountOwnerName = managedSourceAccount.getUser().getFirstName() + " " + managedSourceAccount.getUser().getLastName();
         String receivingAccountName = managedReceivingAccount.getUser().getFirstName() + " " + managedReceivingAccount.getUser().getLastName();
 
+        if (managedSourceAccount.getAccountId() == managedReceivingAccount.getAccountId()){
+            throw new IllegalArgumentException("All accounts involved in this transaction must be unique");
+        }
+
         if ((!managedSourceAccount.getAccountStatus().equals("Verified")) || (!managedReceivingAccount.getAccountStatus().equals("Verified"))){
             throw new AccountNotVerifiedException("An account involved in the transaction is currently unverified. Transaction cannot proceed unless all accounts involved are verified.");
         }
